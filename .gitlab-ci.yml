@@ -41,3 +41,7 @@ nugetize:
      - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Client/Abitech.NextApi.Client.csproj
      - cd src/Abitech.NextApi.Client
      - dotnet pack
+     - dotnet dotnet nuget push "bin/Debug/Abitech.NextApi.Client.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
+     - cd ../src/Abitech.NextApi.Server
+     - dotnet pack
+     - dotnet dotnet nuget push "bin/Debug/Abitech.NextApi.Server.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
