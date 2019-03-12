@@ -14,7 +14,8 @@ namespace Abitech.NextApi.Server.Tests.Common
         protected override IWebHostBuilder CreateWebHostBuilder()
         {
             return WebHost.CreateDefaultBuilder()
-                .UseStartup<TestStartup>();
+                .UseStartup<TestStartup>()
+                .ConfigureLogging(log => log.ClearProviders());
         }
 
         protected override TestServer CreateServer(IWebHostBuilder builder)

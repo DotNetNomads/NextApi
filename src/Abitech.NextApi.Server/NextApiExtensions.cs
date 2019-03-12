@@ -67,7 +67,6 @@ namespace Abitech.NextApi.Server
         public static void UseNextApiServices(this IApplicationBuilder builder, string path = "/nextApi")
         {
             builder.UseSignalR(routes => { routes.MapHub<NextApiHub>(new PathString(path)); });
-            Console.WriteLine($"NextApi activated by SignalR at path: {path}");
         }
 
         /// <summary>
