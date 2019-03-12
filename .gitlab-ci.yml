@@ -42,6 +42,6 @@ nugetize:
      - cd src/Abitech.NextApi.Client
      - dotnet pack
      - dotnet nuget push "bin/Debug/Abitech.NextApi.Client.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
-     - cd ../src/Abitech.NextApi.Server
+     - cd ../Abitech.NextApi.Server
      - dotnet pack
      - dotnet nuget push "bin/Debug/Abitech.NextApi.Server.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
