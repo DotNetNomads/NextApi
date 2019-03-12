@@ -14,8 +14,6 @@
 
 .dotnet-restore: &dotnet-restore "dotnet restore -v q --configfile ../../NuGet.config"
 
-.main-master: &main-master "master@development/common/Abitech.NextApi"
-
 variables:
   VERSION: "1.0.0.$CI_PIPELINE_ID"
 
@@ -33,7 +31,7 @@ test:
 nugetize: 
   <<: *dotnet-job
   only:
-     - *main-master
+     - master@development/common/abitech.nextapi
   stage: nugetize
   script:
      - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Server/Abitech.NextApi.Server.csproj
