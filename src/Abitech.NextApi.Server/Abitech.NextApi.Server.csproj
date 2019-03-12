@@ -1,29 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Abitech.NextApi.Server</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Binali Rustamov</Authors>
+    <Company>Abitech LLC</Company>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-    </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Abitech.NextApi.Server.xml</DocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DocumentationFile>bin\Debug\Abitech.NextApi.Server.xml</DocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\Abitech.NextApi.Server.xml</DocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DocumentationFile>bin\Release\Abitech.NextApi.Server.xml</DocumentationFile>
-    </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="8.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2"/>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0"/>
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.2"/>
+  </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="8.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
-      <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.2.0" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0" />
-      <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.2" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj"/>
+  </ItemGroup>
 
 </Project>
