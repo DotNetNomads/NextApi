@@ -12,10 +12,9 @@
   tags:
     - docker
 
-.dotnet-restore: &dotnet-restore dotnet restore -v q --configfile ../../NuGet.config
-.dotnet-release: &dotnet-release dotnet publish -c Release
+.dotnet-restore: &dotnet-restore "dotnet restore -v q --configfile ../../NuGet.config"
 
-.main-master: &main-master master@development/common/Abitech.NextApi
+.main-master: &main-master "master@development/common/Abitech.NextApi"
 
 variables:
   VERSION: "1.0.0.$CI_PIPELINE_ID"
@@ -33,15 +32,19 @@ test:
      - dotnet test -v n
 nugetize: 
   <<: *dotnet-job
-  # only:
-    #  - *main-master
+  only:
+     - *main-master
   stage: nugetize
   script:
      - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Server/Abitech.NextApi.Server.csproj
      - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Client/Abitech.NextApi.Client.csproj
+     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Model/Abitech.NextApi.Model.csproj
      - cd src/Abitech.NextApi.Client
      - dotnet pack
      - dotnet nuget push "bin/Debug/Abitech.NextApi.Client.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
      - cd ../Abitech.NextApi.Server
      - dotnet pack
      - dotnet nuget push "bin/Debug/Abitech.NextApi.Server.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
+     - cd ../Abitech.NextApi.Model
+     - dotnet pack
+     - dotnet nuget push "bin/Debug/Abitech.NextApi.Model.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
