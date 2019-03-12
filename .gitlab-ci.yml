@@ -8,7 +8,7 @@
   tags:
     - docker
 
-.dotnet-restore: &dotnet-restore dotnet restore --configfile ../../NuGet.config
+.dotnet-restore: &dotnet-restore dotnet restore -v q --configfile ../../NuGet.config
 .dotnet-release: &dotnet-release dotnet publish -c Release
 
 .main-master: &main-master master@development/common/Abitech.NextApi
