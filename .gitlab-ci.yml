@@ -37,7 +37,7 @@ nugetize:
     #  - *main-master
   stage: nugetize
   script:
-     - sed -i "s/<Version>1.0.0</Version>/<Version>$VERSION</Version>/g" src/Abitech.NextApi.Server/Abitech.NextApi.Server.csproj
-     - sed -i "s/<Version>1.0.0</Version>/<Version>$VERSION</Version>/g" src/Abitech.NextApi.Client/Abitech.NextApi.Client.csproj
+     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Server/Abitech.NextApi.Server.csproj
+     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Client/Abitech.NextApi.Client.csproj
      - cd src/Abitech.NextApi.Client
      - dotnet pack
