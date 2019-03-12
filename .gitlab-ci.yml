@@ -1,0 +1,26 @@
+.dotnet-job: &dotnet-job
+  image: hub.abitech.kz/microsoft/dotnet:latest
+  tags:
+    - docker
+
+.docker-job: &docker-job
+  image: hub.abitech.kz/docker:latest
+  tags:
+    - docker
+
+.dotnet-restore: &dotnet-restore dotnet restore --configfile ../../NuGet.Config
+.dotnet-release: &dotnet-release dotnet publish -c Release
+
+.main-master: &main-master master@development/common/Abitech.NextApi
+
+stages:
+  - test
+  - nugetize
+  
+test:
+  <<: *dotnet-job
+  stage: test
+  script:
+     - cd test/Abitech.NextApi.Server.Tests
+     - *dotnet-restore
+     - dotnet test
