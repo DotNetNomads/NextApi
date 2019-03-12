@@ -102,7 +102,7 @@ namespace Abitech.NextApi.Server.Base
 
                     //entityProp.SetValue(entity, Convert.ChangeType(value, entityProp.PropertyType));
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw new Exception($"Entity patching error {propNameAsIs}: {value}");
                 }

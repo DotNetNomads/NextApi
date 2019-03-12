@@ -6,8 +6,15 @@ using System.Threading.Tasks;
 
 namespace Abitech.NextApi.Server.Entity
 {
+    /// <summary>
+    /// Represents unit of work commit manager
+    /// </summary>
     public interface INextApiUnitOfWork
     {
+        /// <summary>
+        /// Commit changes into db
+        /// </summary>
+        /// <returns></returns>
         Task Commit();
     }
 }

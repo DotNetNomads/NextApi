@@ -48,6 +48,11 @@ namespace Abitech.NextApi.Server
             return serviceCollection;
         }
 
+        /// <summary>
+        /// Add permission provider for NextApi
+        /// </summary>
+        /// <param name="serviceCollection"></param>
+        /// <typeparam name="T"></typeparam>
         public static void AddPermissionProvider<T>(this IServiceCollection serviceCollection)
             where T : class, INextApiPermissionProvider
         {

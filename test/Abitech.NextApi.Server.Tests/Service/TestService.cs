@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.SignalR;
-
+#pragma warning disable 1998
 namespace Abitech.NextApi.Server.Tests.Service
 {
     [NextApiAnonymous]
@@ -86,4 +86,5 @@ namespace Abitech.NextApi.Server.Tests.Service
             // invalid method
         }
     }
+#pragma warning restore 1998
 }

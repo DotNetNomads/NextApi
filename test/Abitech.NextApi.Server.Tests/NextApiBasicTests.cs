@@ -45,7 +45,7 @@ namespace Abitech.NextApi.Server.Tests
                 });
                 Assert.False(true);
             }
-            catch (Exception ex)
+            catch
             {
                 // ignored
             }

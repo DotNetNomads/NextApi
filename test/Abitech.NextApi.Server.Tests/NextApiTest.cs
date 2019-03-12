@@ -8,7 +8,9 @@ namespace Abitech.NextApi.Server.Tests
 {
     public class NextApiTest
     {
+#pragma warning disable 1998
         protected async Task<NextApiClient> GetClient()
+#pragma warning restore 1998
         {
             if (_client != null) return _client;
 

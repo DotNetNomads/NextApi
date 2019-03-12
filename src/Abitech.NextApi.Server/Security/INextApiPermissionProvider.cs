@@ -16,9 +16,15 @@ namespace Abitech.NextApi.Server.Security
         Task<bool> HasPermission(string userName, object permission);
     }
 
+    /// <summary>
+    /// Stub for disabled permission provider
+    /// </summary>
     public class DisabledNextApiPermissionProvider : INextApiPermissionProvider
     {
+        /// <inheritdoc />
+#pragma warning disable 1998
         public async Task<bool> HasPermission(string userName, object permission)
+#pragma warning restore 1998
         {
             return true;
         }
