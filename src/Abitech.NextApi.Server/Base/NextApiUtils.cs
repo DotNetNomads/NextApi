@@ -53,7 +53,13 @@ namespace Abitech.NextApi.Server.Base
                 if (entityProp == null)
                     throw new Exception($"Unknown property detected {propNameAsIs}");
 
-                if (entityProp.GetGetMethod().IsVirtual)
+                // see: https://docs.microsoft.com/en-us/dotnet/api/system.valuetype?view=netstandard-2.0, as issue #1
+//                if (entityProp.GetGetMethod().IsVirtual)
+//                {
+//                    continue;
+//                }
+                if (!entityProp.PropertyType.IsPrimitive && !entityProp.PropertyType.IsValueType &&
+                    entityProp.PropertyType != typeof(string))
                 {
                     continue;
                 }

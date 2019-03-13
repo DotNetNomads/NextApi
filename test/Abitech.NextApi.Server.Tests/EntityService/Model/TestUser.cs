@@ -6,7 +6,8 @@ namespace Abitech.NextApi.Server.Tests.EntityService.Model
     {
         [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
+        // as issue #1 
+        public virtual string Name { get; set; }
         public string Surname { get; set; }
         public string Email { get; set; }
         public bool Enabled { get; set; }
