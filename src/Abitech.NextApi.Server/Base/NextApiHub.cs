@@ -71,8 +71,6 @@ namespace Abitech.NextApi.Server.Base
                 .FirstOrDefault();
             if (attribute is NextApiAuthorizeAttribute permissionAuthorizeAttribute)
             {
-                if (!userAuthorized)
-                    throw new Exception("This method available only for authorized users");
                 if (!await _permissionProvider.HasPermission(Context.User, permissionAuthorizeAttribute.Permission))
                     throw new Exception("This method disabled for current user");
             }
