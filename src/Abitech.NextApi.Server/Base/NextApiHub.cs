@@ -58,7 +58,7 @@ namespace Abitech.NextApi.Server.Base
 
             // service access validation
             var isAnonymousService = _options.AnonymousByDefault || NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
-            var userAuthorized = !string.IsNullOrWhiteSpace(Context.User?.Identity?.Name);
+            var userAuthorized = Context.User.Identity.IsAuthenticated;
             if (!isAnonymousService && !userAuthorized)
                 throw new Exception("This service available only for authorized users");
 
@@ -73,8 +73,7 @@ namespace Abitech.NextApi.Server.Base
             {
                 if (!userAuthorized)
                     throw new Exception("This method available only for authorized users");
-                var userName = Context.User?.Identity?.Name;
-                if (!await _permissionProvider.HasPermission(userName, permissionAuthorizeAttribute.Permission))
+                if (!await _permissionProvider.HasPermission(Context.User, permissionAuthorizeAttribute.Permission))
                     throw new Exception("This method disabled for current user");
             }
 
