@@ -18,13 +18,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.1.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj"/>
+    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
   </ItemGroup>
 
 </Project>

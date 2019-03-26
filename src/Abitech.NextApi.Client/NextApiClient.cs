@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using MessagePack;
 using MessagePack.Resolvers;
+using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -41,39 +42,67 @@ namespace Abitech.NextApi.Client
     /// </summary>
     public class NextApiClient : INextApiClient
     {
-        private HubConnection _connection;
-        private readonly HttpMessageHandler _messageHandler;
-        private bool _reconnectAutomatically = true;
-        private int _reconnectDelayMs = 5000;
+        /// <summary>
+        /// NextApi server url
+        /// </summary>
+        protected readonly string Url;
 
         /// <summary>
-        /// Initializes NextApi client (for testing)
+        /// Access token provider
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="accessKey"></param>
-        /// <param name="messageHandler"></param>
-        public NextApiClient(string url, Func<Task<string>> accessKey,
-            HttpMessageHandler messageHandler)
-        {
-            _messageHandler = messageHandler ?? throw new ArgumentNullException(nameof(messageHandler));
-            InitializeClient(url, accessKey);
-        }
+        protected readonly INextApiAccessTokenProvider TokenProvider;
+
+        /// <summary>
+        /// Reconnect automatically
+        /// </summary>
+        protected bool ReconnectAutomatically;
+
+        /// <summary>
+        /// Delay between reconnect tries
+        /// </summary>
+        protected int ReconnectDelayMs;
+
+        private HubConnection _connection;
 
         /// <summary>
         /// Initializes NextApi client
         /// </summary>
         /// <param name="url">NextApi servers url</param>
-        /// <param name="accessKey">Function provides accessKey factory</param>
+        /// <param name="tokenProvider">Provides accessKey factory</param>
         /// <param name="reconnectAutomatically">Reconnect when connection fails</param>
         /// <param name="reconnectDelayMs">Delay between connection fail and trying to reconnect</param>
-        public NextApiClient(string url, Func<Task<string>> accessKey,
+        public NextApiClient(string url, INextApiAccessTokenProvider tokenProvider,
             bool reconnectAutomatically = true, int reconnectDelayMs = 5000)
         {
-            _reconnectAutomatically = reconnectAutomatically;
-            _reconnectDelayMs = reconnectDelayMs;
-            InitializeClient(url, accessKey);
+            Url = url ?? throw new ArgumentNullException(nameof(url));
+            TokenProvider = tokenProvider;
+            ReconnectAutomatically = reconnectAutomatically;
+            ReconnectDelayMs = reconnectDelayMs;
         }
 
+        /// <summary>
+        /// Initializes client (when first request)
+        /// </summary>
+        /// <returns></returns>
+        protected virtual HubConnection InitializeClient()
+        {
+            var connection = new HubConnectionBuilder()
+                .WithUrl(Url, ConnectionOptionsConfig)
+                .AddMessagePackProtocol(options =>
+                {
+                    options.FormatterResolvers = new List<IFormatterResolver>
+                        {TypelessContractlessStandardResolver.Instance};
+                })
+                .Build();
+
+            if (ReconnectAutomatically)
+                connection.Closed += async error =>
+                {
+                    await Task.Delay(ReconnectDelayMs);
+                    await connection.StartAsync();
+                };
+            return connection;
+        }
 
         /// <summary>
         /// Invoke method of specific service and return result
@@ -114,45 +143,30 @@ namespace Abitech.NextApi.Client
             };
         }
 
-
-        private void InitializeClient(string url, Func<Task<string>> accessKey)
+        /// <summary>
+        /// Configures http connection
+        /// </summary>
+        /// <param name="options"></param>
+        protected virtual void ConnectionOptionsConfig(HttpConnectionOptions options)
         {
-            if (url == null)
+            if (TokenProvider != null)
             {
-                throw new ArgumentNullException(nameof(url));
+                options.AccessTokenProvider = TokenProvider.ResolveToken;
             }
-
-            _connection = new HubConnectionBuilder()
-                .WithUrl(url, o =>
-                {
-                    // for testing purposes
-                    if (_messageHandler != null)
-                    {
-                        o.HttpMessageHandlerFactory = _ => _messageHandler;
-                    }
-
-                    if (accessKey != null)
-                    {
-                        o.AccessTokenProvider = accessKey;
-                    }
-                })
-                .AddMessagePackProtocol(options =>
-                {
-                    options.FormatterResolvers = new List<IFormatterResolver>
-                        {TypelessContractlessStandardResolver.Instance};
-                })
-                .Build();
-
-            if (_reconnectAutomatically)
-                _connection.Closed += async error =>
-                {
-                    await Task.Delay(_reconnectDelayMs);
-                    await _connection.StartAsync();
-                };
         }
 
-        private async Task<HubConnection> GetConnection()
+        /// <summary>
+        /// Resolves connection to NextApi server
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        protected async Task<HubConnection> GetConnection()
         {
+            if (_connection == null)
+            {
+                _connection = InitializeClient();
+            }
+
             if (_connection.State == HubConnectionState.Disconnected)
             {
                 try
@@ -161,7 +175,7 @@ namespace Abitech.NextApi.Client
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Problem with NextApi connection occurred. Try later.", ex);
+                    throw new Exception($"Problem with NextApi connection occurred. Try later. ({Url})", ex);
                 }
             }
 
