@@ -10,14 +10,16 @@ namespace Abitech.NextApi.Client
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TKey"></typeparam>
-    public class NextApiEntityService<TEntity, TKey> : INextApiEntityService<TEntity, TKey>
+    /// <typeparam name="TClient"></typeparam>
+    public class NextApiEntityService<TEntity, TKey, TClient> : INextApiEntityService<TEntity, TKey>
         where TEntity : class
+        where TClient : class, INextApiClient
     {
         /// <summary>
         /// NextApi client
         /// </summary>
         /// <returns></returns>
-        private readonly INextApiClient _nextApiClient;
+        private readonly TClient _nextApiClient;
 
         /// <summary>
         /// Service name
@@ -29,7 +31,7 @@ namespace Abitech.NextApi.Client
         /// </summary>
         /// <param name="nextApiClient"></param>
         /// <param name="serviceName"></param>
-        public NextApiEntityService(NextApiClient nextApiClient, string serviceName)
+        public NextApiEntityService(TClient nextApiClient, string serviceName)
         {
             _nextApiClient = nextApiClient;
             _serviceName = serviceName;

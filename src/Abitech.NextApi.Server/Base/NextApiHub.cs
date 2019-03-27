@@ -57,7 +57,8 @@ namespace Abitech.NextApi.Server.Base
                                   $"Service with name {command.Service} is not found");
 
             // service access validation
-            var isAnonymousService = _options.AnonymousByDefault || NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
+            var isAnonymousService = _options.AnonymousByDefault ||
+                                     NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
             var userAuthorized = Context.User.Identity.IsAuthenticated;
             if (!isAnonymousService && !userAuthorized)
                 throw new Exception("This service available only for authorized users");
@@ -87,6 +88,15 @@ namespace Abitech.NextApi.Server.Base
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Returns list of supported permissions
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetSupportedPermissions()
+        {
+            return _permissionProvider.SupportedPermissions;
         }
     }
 }
