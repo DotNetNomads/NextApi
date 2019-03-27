@@ -54,6 +54,8 @@ nugetize-client-di:
   <<: *dotnet-job
   stage: nugetize
   when: manual
+  only:
+    - master@development/common/abitech.nextapi
   script:
     - cd src/Abitech.NextApi.Client.DI
     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" Abitech.NextApi.Client.DI.csproj
