@@ -18,17 +18,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="8.0.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2"/>
-    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.2.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0"/>
-    <PackageReference Include="Microsoft.CSharp" Version="4.5.0"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.2"/>
+    <PackageReference Include="AutoMapper" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj"/>
+    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
   </ItemGroup>
 
 </Project>

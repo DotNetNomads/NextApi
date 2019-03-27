@@ -15,6 +15,11 @@ namespace Abitech.NextApi.Server.Security
         /// <param name="permission">Permission</param>
         /// <returns>Returns <c>true</c> if user has requested permission</returns>
         Task<bool> HasPermission(ClaimsPrincipal userInfo, object permission);
+
+        /// <summary>
+        /// List of supported permissions
+        /// </summary>
+        string[] SupportedPermissions { get; }
     }
 
     /// <summary>
@@ -29,5 +34,8 @@ namespace Abitech.NextApi.Server.Security
         {
             return true;
         }
+
+        /// <inheritdoc />
+        public string[] SupportedPermissions { get; } = {""};
     }
 }

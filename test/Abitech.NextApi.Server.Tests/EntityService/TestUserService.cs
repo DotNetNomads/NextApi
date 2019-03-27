@@ -6,12 +6,11 @@ using AutoMapper;
 
 namespace Abitech.NextApi.Server.Tests.EntityService
 {
-    public class TestUserService : NextApiEntityService<TestUserDTO, TestUser, int>
+    public class TestUserService : NextApiEntityService<TestUserDTO, TestUser, int, TestUserRepository, TestUnitOfWork>
     {
-        public TestUserService(TestUnitOfWork unitOfWork, IMapper mapper, TestUserRepository repository)
-            : base(unitOfWork, mapper, repository)
+        public TestUserService(TestUnitOfWork unitOfWork, IMapper mapper, TestUserRepository repository) : base(
+            unitOfWork, mapper, repository)
         {
         }
-        
     }
 }

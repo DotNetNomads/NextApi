@@ -1,3 +1,4 @@
+using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Tests.EntityService.DTO;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 using AutoMapper;
@@ -8,9 +9,9 @@ namespace Abitech.NextApi.Server.Tests.EntityService
     {
         public TestDTOProfile()
         {
-            CreateMap<TestUser, TestUserDTO>();
-            CreateMap<TestRole, TestRoleDTO>();
-            CreateMap<TestCity, TestCityDTO>();
+            this.CreateTwoWayMap<TestUser, TestUserDTO>();
+            this.CreateTwoWayMap<TestRole, TestRoleDTO>();
+            this.CreateTwoWayMap<TestCity, TestCityDTO>();
         }
     }
 }

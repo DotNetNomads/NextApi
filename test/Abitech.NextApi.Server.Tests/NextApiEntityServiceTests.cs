@@ -185,12 +185,12 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
 
-        private async Task<NextApiEntityService<TestUserDTO, int>> GetServiceClient()
+        private async Task<NextApiEntityService<TestUserDTO, int, INextApiClient>> GetServiceClient()
         {
             return _nextApiEntityService ?? (_nextApiEntityService =
-                       new NextApiEntityService<TestUserDTO, int>(await GetClient(), "TestUser"));
+                       new NextApiEntityService<TestUserDTO, int, INextApiClient>(await GetClient(), "TestUser"));
         }
 
-        private NextApiEntityService<TestUserDTO, int> _nextApiEntityService;
+        private NextApiEntityService<TestUserDTO, int, INextApiClient> _nextApiEntityService;
     }
 }
