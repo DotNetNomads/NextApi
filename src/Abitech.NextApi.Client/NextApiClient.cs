@@ -35,6 +35,11 @@ namespace Abitech.NextApi.Client
         /// <param name="arguments"></param>
         /// <returns>nothing</returns>
         Task Invoke(string serviceName, string serviceMethod, params NextApiArgument[] arguments);
+
+        /// <summary>
+        /// List of supported permissions
+        /// </summary>
+        Task<string[]> SupportedPermissions { get; }
     }
 
     /// <summary>
@@ -42,6 +47,26 @@ namespace Abitech.NextApi.Client
     /// </summary>
     public class NextApiClient : INextApiClient
     {
+        #region SuportedPermissions
+
+        private string[] _supportedPermissions;
+
+        /// <summary>
+        /// List of supported permissions (awaitable)
+        /// </summary>
+        public Task<string[]> SupportedPermissions => LoadSupportedPermissions();
+
+        private async Task<string[]> LoadSupportedPermissions()
+        {
+            if (_supportedPermissions != null)
+                return _supportedPermissions;
+            var connection = await GetConnection();
+            _supportedPermissions = await connection.InvokeAsync<string[]>("GetSupportedPermissions");
+            return _supportedPermissions;
+        }
+
+        #endregion
+
         /// <summary>
         /// NextApi server url
         /// </summary>

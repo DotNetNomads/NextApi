@@ -28,6 +28,9 @@ test:
      - cd test/Abitech.NextApi.Server.Tests
      - *dotnet-restore
      - dotnet test -v n
+     - cd ../Abitech.NextApi.Client.DI.Tests
+     - *dotnet-restore
+     - dotnet test -v n
 nugetize: 
   <<: *dotnet-job
   only:
@@ -46,3 +49,13 @@ nugetize:
      - cd ../Abitech.NextApi.Model
      - dotnet pack
      - dotnet nuget push "bin/Debug/Abitech.NextApi.Model.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
+
+nugetize-client-di:
+  <<: *dotnet-job
+  stage: nugetize
+  when: manual
+  script:
+    - cd src/Abitech.NextApi.Client.DI
+    - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" Abitech.NextApi.Client.DI.csproj
+    - dotnet pack
+    - dotnet nuget push "bin/Debug/Abitech.NextApi.Client.DI.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
