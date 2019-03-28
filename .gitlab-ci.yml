@@ -31,7 +31,7 @@
   <<: *dotnet-job
   script:
     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" $projectFile
-  artifacts:
+  cache:
     paths:
      - $projectFile
 
