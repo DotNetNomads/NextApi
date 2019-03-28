@@ -54,7 +54,7 @@
 
 # declaration
 variables:
-  VERSION: "1.0.0.$CI_PIPELINE_ID"
+  VERSION: "1.2.1.$CI_PIPELINE_ID"
 
 stages:
   - test
@@ -65,15 +65,15 @@ stages:
 test-server:
   <<: *dotnet-test
   variables:
-    project: tests/Abitech.NextApi.Server.Tests
+    project: test/Abitech.NextApi.Server.Tests
 test-server-efcore:
   <<: *dotnet-test
   variables:
-    project: tests/Abitech.NextApi.Server.EfCore.Tests
+    project: test/Abitech.NextApi.Server.EfCore.Tests
 test-client-di:
   <<: *dotnet-test
   variables:
-    project: tests/Abitech.NextApi.Client.DI.Tests
+    project: test/Abitech.NextApi.Client.DI.Tests
 
 # versions
 version-client:
