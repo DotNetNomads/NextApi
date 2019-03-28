@@ -19,10 +19,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.Client.DI",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.Client.DI.Tests", "test\Abitech.NextApi.Client.DI.Tests\Abitech.NextApi.Client.DI.Tests.csproj", "{220CBE49-3B7D-42A8-8BDE-B1EC5C47ECA1}"
 EndProject
+<<<<<<< Abitech.NextApi.sln
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.Server.EfCore", "src\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj", "{7A440BF1-09D2-4DF8-B894-FEA301E67E65}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.Server.EfCore.Tests", "test\Abitech.NextApi.Server.EfCore.Tests\Abitech.NextApi.Server.EfCore.Tests.csproj", "{553BD4C0-EF6E-4622-A105-FE7044481E0A}"
 EndProject
+=======
+>>>>>>> Abitech.NextApi.sln
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,6 +111,7 @@ Global
 		{220CBE49-3B7D-42A8-8BDE-B1EC5C47ECA1}.Release|x64.Build.0 = Release|Any CPU
 		{220CBE49-3B7D-42A8-8BDE-B1EC5C47ECA1}.Release|x86.ActiveCfg = Release|Any CPU
 		{220CBE49-3B7D-42A8-8BDE-B1EC5C47ECA1}.Release|x86.Build.0 = Release|Any CPU
+<<<<<<< Abitech.NextApi.sln
 		{7A440BF1-09D2-4DF8-B894-FEA301E67E65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7A440BF1-09D2-4DF8-B894-FEA301E67E65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A440BF1-09D2-4DF8-B894-FEA301E67E65}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -132,6 +136,8 @@ Global
 		{553BD4C0-EF6E-4622-A105-FE7044481E0A}.Release|x64.Build.0 = Release|Any CPU
 		{553BD4C0-EF6E-4622-A105-FE7044481E0A}.Release|x86.ActiveCfg = Release|Any CPU
 		{553BD4C0-EF6E-4622-A105-FE7044481E0A}.Release|x86.Build.0 = Release|Any CPU
+=======
+>>>>>>> Abitech.NextApi.sln
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{92A6DA32-6BDE-4698-8595-028FA91CDC54} = {C527902E-EBCC-47F2-B6FC-A0AC3A0FC1DB}
@@ -140,7 +146,10 @@ Global
 		{2B6DA4E9-47B6-47E5-A2E9-2D181DB831BC} = {D4BDCE23-4F7E-416B-9B17-3A414DE8F9EA}
 		{B575090D-AAC6-4EB2-BFD4-54317CFBDA46} = {C527902E-EBCC-47F2-B6FC-A0AC3A0FC1DB}
 		{220CBE49-3B7D-42A8-8BDE-B1EC5C47ECA1} = {D4BDCE23-4F7E-416B-9B17-3A414DE8F9EA}
+<<<<<<< Abitech.NextApi.sln
 		{7A440BF1-09D2-4DF8-B894-FEA301E67E65} = {C527902E-EBCC-47F2-B6FC-A0AC3A0FC1DB}
 		{553BD4C0-EF6E-4622-A105-FE7044481E0A} = {D4BDCE23-4F7E-416B-9B17-3A414DE8F9EA}
+=======
+>>>>>>> Abitech.NextApi.sln
 	EndGlobalSection
 EndGlobal
