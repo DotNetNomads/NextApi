@@ -1,3 +1,5 @@
+# common
+.main-master: &main-master "master@development/common/abitech.nextapi"
 .dotnet-job: &dotnet-job
   image: hub.abitech.kz/microsoft/dotnet:latest
   tags:
@@ -14,50 +16,110 @@
 
 .dotnet-restore: &dotnet-restore "dotnet restore -v q --configfile ../../NuGet.config"
 
+.dotnet-test: &dotnet-test
+  stage: test
+  <<: *dotnet-job
+  script:
+    - cd $project
+    - *dotnet-restore
+    - dotnet test -v q
+
+.set-version: &set-version
+  stage: version
+  # only:
+  #   - *main-master
+  <<: *dotnet-job
+  script:
+    - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" $projectFile
+  artifacts:
+    paths:
+     - $projectFile
+
+.nugetize: &nugetize
+  stage: build
+  dependencies:
+    - version-client
+    - version-model
+    - version-client-di
+    - version-server
+    - version-server-efcore
+  # only:
+  #   - *main-master
+  <<: *dotnet-job
+  script:
+    - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" $projectFolder/$projectName.csproj
+    - cd $projectFolder
+    - dotnet pack
+    - dotnet nuget push "bin/Debug/$projectName.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
+
+# declaration
 variables:
   VERSION: "1.0.0.$CI_PIPELINE_ID"
 
 stages:
   - test
-  - nugetize
-  
-test:
-  <<: *dotnet-job
-  stage: test
-  script:
-     - cd test/Abitech.NextApi.Server.Tests
-     - *dotnet-restore
-     - dotnet test -v n
-     - cd ../Abitech.NextApi.Client.DI.Tests
-     - *dotnet-restore
-     - dotnet test -v n
-nugetize: 
-  <<: *dotnet-job
-  only:
-     - master@development/common/abitech.nextapi
-  stage: nugetize
-  script:
-     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Server/Abitech.NextApi.Server.csproj
-     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Client/Abitech.NextApi.Client.csproj
-     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" src/Abitech.NextApi.Model/Abitech.NextApi.Model.csproj
-     - cd src/Abitech.NextApi.Client
-     - dotnet pack
-     - dotnet nuget push "bin/Debug/Abitech.NextApi.Client.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
-     - cd ../Abitech.NextApi.Server
-     - dotnet pack
-     - dotnet nuget push "bin/Debug/Abitech.NextApi.Server.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
-     - cd ../Abitech.NextApi.Model
-     - dotnet pack
-     - dotnet nuget push "bin/Debug/Abitech.NextApi.Model.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
+  - version
+  - build
 
+# tests
+test-server:
+  <<: *dotnet-test
+  variables:
+    project: tests/Abitech.NextApi.Server.Tests
+test-server-efcore:
+  <<: *dotnet-test
+  variables:
+    project: tests/Abitech.NextApi.Server.EfCore.Tests
+test-client-di:
+  <<: *dotnet-test
+  variables:
+    project: tests/Abitech.NextApi.Client.DI.Tests
+
+# versions
+version-client:
+  <<: *set-version
+  variables:
+    projectFile: src/Abitech.NextApi.Client/Abitech.NextApi.Client.csproj
+version-model:
+  <<: *set-version
+  variables:
+    projectFile: src/Abitech.NextApi.Model/Abitech.NextApi.Model.csproj
+version-client-di:
+  <<: *set-version
+  variables:
+    projectFile: src/Abitech.NextApi.Client.DI/Abitech.NextApi.Client.DI.csproj
+version-server:
+  <<: *set-version
+  variables:
+    projectFile: src/Abitech.NextApi.Server/Abitech.NextApi.Server.csproj
+version-server-efcore:
+  <<: *set-version
+  variables:
+    projectFile: src/Abitech.NextApi.Server.EfCore/Abitech.NextApi.Server.EfCore.csproj
+
+# build/nugetize
+nugetize-client:
+  <<: *nugetize
+  variables:
+    projectFolder: src/Abitech.NextApi.Client
+    projectName: Abitech.NextApi.Client
 nugetize-client-di:
-  <<: *dotnet-job
-  stage: nugetize
-  when: manual
-  only:
-    - master@development/common/abitech.nextapi
-  script:
-    - cd src/Abitech.NextApi.Client.DI
-    - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" Abitech.NextApi.Client.DI.csproj
-    - dotnet pack
-    - dotnet nuget push "bin/Debug/Abitech.NextApi.Client.DI.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
+  <<: *nugetize
+  variables:
+    projectFolder: src/Abitech.NextApi.Client.DI
+    projectName: Abitech.NextApi.Client.DI
+nugetize-model:
+  <<: *nugetize
+  variables:
+    projectFolder: src/Abitech.NextApi.Model
+    projectName: Abitech.NextApi.Model
+nugetize-server:
+  <<: *nugetize
+  variables:
+    projectFolder: src/Abitech.NextApi.Server
+    projectName: Abitech.NextApi.Server
+nugetize-server-efcore:
+  <<: *nugetize
+  variables:
+    projectFolder: src/Abitech.NextApi.Server.EfCore
+    projectName: Abitech.NextApi.Client.EfCore
