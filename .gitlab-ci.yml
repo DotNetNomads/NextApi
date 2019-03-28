@@ -26,8 +26,8 @@
 
 .set-version: &set-version
   stage: version
-  # only:
-  #   - *main-master
+  only:
+    - *main-master
   <<: *dotnet-job
   script:
     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" $projectFile
@@ -43,8 +43,8 @@
     - version-client-di
     - version-server
     - version-server-efcore
-  # only:
-  #   - *main-master
+  only:
+    - *main-master
   <<: *dotnet-job
   script:
     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" $projectFolder/$projectName.csproj
