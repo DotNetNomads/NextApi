@@ -10,7 +10,7 @@ namespace Abitech.NextApi.Client.DI
     /// </summary>
     public class ServiceRegistrationMaster
     {
-        private readonly Dictionary<Type, Type> _registeredServices = new Dictionary<Type, Type>();
+        private readonly List<ServiceInfo> _registeredServices = new List<ServiceInfo>();
 
         /// <summary>
         /// Add service to register
@@ -21,7 +21,11 @@ namespace Abitech.NextApi.Client.DI
         public ServiceRegistrationMaster Add<TInterface, TImplementation>()
             where TImplementation : class, TInterface
         {
-            _registeredServices.Add(typeof(TInterface), typeof(TImplementation));
+            _registeredServices.Add(new ServiceInfo()
+            {
+                InterfaceType = typeof(TInterface),
+                ImplementationType = typeof(TImplementation)
+            });
             return this;
         }
 
@@ -45,7 +49,7 @@ namespace Abitech.NextApi.Client.DI
             // services
             foreach (var service in _registeredServices)
             {
-                builder.RegisterType(service.Value).As(service.Key);
+                builder.RegisterType(service.ImplementationType).As(service.InterfaceType);
             }
         }
 
@@ -69,8 +73,35 @@ namespace Abitech.NextApi.Client.DI
             // services
             foreach (var service in _registeredServices)
             {
-                services.AddTransient(service.Key, service.Value);
+                services.AddTransient(service.InterfaceType, service.ImplementationType);
             }
         }
+
+        /// <summary>
+        /// Register all services manually.
+        /// </summary>
+        /// <param name="serviceRegistrationHandler"></param>
+        public void ManualRegistration(Action<ServiceInfo> serviceRegistrationHandler)
+        {
+            foreach (var service in _registeredServices)
+            {
+                serviceRegistrationHandler(service);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Contains service info
+    /// </summary>
+    public struct ServiceInfo
+    {
+        /// <summary>
+        /// Service interface type
+        /// </summary>
+        public Type InterfaceType { get; set; }
+        /// <summary>
+        /// Service implementation type
+        /// </summary>
+        public Type ImplementationType { get; set; }
     }
 }
