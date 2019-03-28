@@ -122,4 +122,4 @@ nugetize-server-efcore:
   <<: *nugetize
   variables:
     projectFolder: src/Abitech.NextApi.Server.EfCore
-    projectName: Abitech.NextApi.Client.EfCore
+    projectName: Abitech.NextApi.Server.EfCore
