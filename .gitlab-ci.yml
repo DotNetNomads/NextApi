@@ -32,17 +32,14 @@
   script:
     - sed -i "s/<Version>1.0.0<\/Version>/<Version>$VERSION<\/Version>/g" $projectFile
   cache:
+    key: version-cache
     paths:
      - $projectFile
 
 .nugetize: &nugetize
   stage: build
-  dependencies:
-    - version-client
-    - version-model
-    - version-client-di
-    - version-server
-    - version-server-efcore
+  cache:
+    key: version-cache
   only:
     - *main-master
   <<: *dotnet-job
