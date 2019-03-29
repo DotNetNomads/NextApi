@@ -31,6 +31,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
+      <ProjectReference Include="..\..\src\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
       <ProjectReference Include="..\..\src\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
     </ItemGroup>
 

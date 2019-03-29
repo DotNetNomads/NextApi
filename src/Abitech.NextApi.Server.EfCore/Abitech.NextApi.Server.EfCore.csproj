@@ -5,9 +5,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>Abitech.NextApi.Server.EfCore</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>Binali Rustamov</Authors>
+    <Authors>Abitech Team</Authors>
     <Company>Abitech LLC</Company>
+    <Description>NextApi integration with EF Core</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
