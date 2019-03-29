@@ -1,12 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>Abitech.NextApi.Model</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>Binali Rustamov</Authors>
-    <Company>Abitech LLC</Company>
-  </PropertyGroup>
-  <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackage>false</IsPackage>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

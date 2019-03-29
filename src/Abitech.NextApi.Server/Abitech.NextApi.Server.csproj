@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Abitech.NextApi.Server</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>Binali Rustamov</Authors>
+    <Authors>Abitech Team</Authors>
     <Company>Abitech LLC</Company>
+    <Description>NextApi server-side components</Description>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2PAssets</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -26,9 +27,16 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.2" />
   </ItemGroup>
-
+  <!-- workaround, thanx @daMulli, see: https://github.com/dotnet/cli/issues/3959#issuecomment-333318028 -->
   <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
+    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" PrivateAssets="All"/>
   </ItemGroup>
+
+  <Target Name="IncludeP2PAssets">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.dll"/>
+      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.xml"/>
+    </ItemGroup>
+  </Target>
 
 </Project>
