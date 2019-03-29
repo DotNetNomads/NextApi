@@ -12,11 +12,6 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     public interface INextApiDbContext
     {
         /// <summary>
-        /// Accessor to ColumnChangesLogs
-        /// </summary>
-        DbSet<ColumnChangesLog> ColumnChangesLogs { get; set; }
-
-        /// <summary>
         /// Get specific entity set
         /// </summary>
         /// <typeparam name="T">Entity Type</typeparam>
@@ -74,7 +69,9 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     public abstract class NextApiDbContext : DbContext, INextApiDbContext
     {
         // system for sync
-        /// <inheritdoc />
+        /// <summary>
+        /// Accessor to ColumnChangesLogs
+        /// </summary>
         public DbSet<ColumnChangesLog> ColumnChangesLogs { get; set; }
 
         /// <inheritdoc />
