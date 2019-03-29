@@ -26,8 +26,8 @@
 
 .nugetize: &nugetize
   stage: build
-  # only:
-  #   - *main-master
+  only:
+    - *main-master
   <<: *dotnet-job
   script:
     - cd $projectFolder
