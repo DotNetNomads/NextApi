@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using MessagePack;
@@ -9,12 +10,13 @@ using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 namespace Abitech.NextApi.Client
 {
+    
     /// <summary>
     /// NextApi client
     /// </summary>
+    
     public interface INextApiClient
     {
         /// <summary>
