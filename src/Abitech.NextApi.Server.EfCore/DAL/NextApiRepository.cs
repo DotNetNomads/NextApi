@@ -20,7 +20,13 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     {
         private readonly TDbContext _context;
         private readonly DbSet<T> _dbset;
-        private bool _isIEntity;
+        private readonly bool _isIEntity;
+        private readonly bool _isSoftDeleteSupported;
+
+        /// <summary>
+        /// Indicates that soft-delete enabled for this repo
+        /// </summary>
+        protected bool SoftDeleteEnabled { get; set; } = true;
 
         /// <summary>
         /// 
@@ -31,6 +37,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             _context = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _dbset = _context.Set<T>();
             _isIEntity = typeof(IEntity<TKey>).IsAssignableFrom(typeof(T));
+            _isSoftDeleteSupported = typeof(ISoftDeletableEntity).IsAssignableFrom(typeof(T));
         }
 
         /// <summary>
@@ -59,7 +66,14 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <param name="entity">entity instance</param>
         public virtual void Delete(T entity)
         {
-            _dbset.Remove(entity);
+            if (_isSoftDeleteSupported && SoftDeleteEnabled)
+            {
+                ((ISoftDeletableEntity)entity).IsRemoved = true;
+            }
+            else
+            {
+                _dbset.Remove(entity);
+            }
         }
 
         /// <summary>
@@ -70,7 +84,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         {
             var objects = _dbset.Where(where).AsEnumerable();
             foreach (var obj in objects)
-                _dbset.Remove(obj);
+                Delete(obj);
         }
 
         /// <summary>
@@ -80,7 +94,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <returns>entity</returns>
         public virtual async Task<T> GetByIdAsync(TKey id)
         {
-            return await _dbset.FirstOrDefaultAsync(KeyPredicate(id));
+            return await GetAll().FirstOrDefaultAsync(KeyPredicate(id));
         }
 
         /// <summary>
@@ -89,7 +103,13 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <returns></returns>
         public virtual IQueryable<T> GetAll()
         {
-            return _dbset.AsQueryable();
+            var query = _dbset.AsQueryable();
+            if (_isSoftDeleteSupported && SoftDeleteEnabled)
+            {
+                query = query.Where(i => !((ISoftDeletableEntity)i).IsRemoved);
+            }
+
+            return query;
         }
 
         /// <summary>

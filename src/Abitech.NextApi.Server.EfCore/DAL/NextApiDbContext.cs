@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
@@ -68,23 +69,33 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// </summary>
     public abstract class NextApiDbContext : DbContext, INextApiDbContext
     {
+        private readonly INextApiUserInfoProvider _userInfoProvider;
+        public bool ColumnChangesLogEnabled { get; set; } = true;
+
         // system for sync
         /// <summary>
         /// Accessor to ColumnChangesLogs
         /// </summary>
         public DbSet<ColumnChangesLog> ColumnChangesLogs { get; set; }
 
-        /// <inheritdoc />
-        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
+        public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            // TODO: implement logic for ILoggedEntity and IColumnLoggedEntity
-            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            var userId = await _userInfoProvider.CurrentUserId();
+            foreach (var entityEntry in ChangeTracker.Entries())
+            {
+                this.RecordAuditInfo(userId, entityEntry);
+                if (ColumnChangesLogEnabled)
+                    await this.RecordColumnChangesInfo(entityEntry);
+            }
+
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
 
         /// <inheritdoc />
-        protected NextApiDbContext(DbContextOptions options) : base(options)
+        protected NextApiDbContext(DbContextOptions options, INextApiUserInfoProvider userInfoProvider) : base(options)
         {
+            _userInfoProvider = userInfoProvider ?? throw new ArgumentNullException(nameof(userInfoProvider));
         }
 
         /// <inheritdoc />
