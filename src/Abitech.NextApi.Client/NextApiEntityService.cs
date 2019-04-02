@@ -11,52 +11,17 @@ namespace Abitech.NextApi.Client
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TClient"></typeparam>
-    public class NextApiEntityService<TEntity, TKey, TClient> : INextApiEntityService<TEntity, TKey>
+    public abstract class NextApiEntityService<TEntity, TKey, TClient> : NextApiService<TClient> ,INextApiEntityService<TEntity, TKey>
         where TEntity : class
         where TClient : class, INextApiClient
     {
         /// <summary>
-        /// NextApi client
-        /// </summary>
-        /// <returns></returns>
-        private readonly TClient _nextApiClient;
-
-        /// <summary>
-        /// Service name
-        /// </summary>
-        private readonly string _serviceName;
-
-        /// <summary>
         /// Initializes client for entity service
         /// </summary>
-        /// <param name="nextApiClient"></param>
+        /// <param name="client"></param>
         /// <param name="serviceName"></param>
-        public NextApiEntityService(TClient nextApiClient, string serviceName)
+        protected NextApiEntityService(TClient client, string serviceName) : base(client, serviceName)
         {
-            _nextApiClient = nextApiClient;
-            _serviceName = serviceName;
-        }
-
-        /// <summary>
-        /// Invoke service method
-        /// </summary>
-        /// <param name="method">Method name</param>
-        /// <param name="arguments">Method arguments</param>
-        /// <typeparam name="T">Execution result type</typeparam>
-        /// <returns>Execution result</returns>
-        protected async Task<T> InvokeService<T>(string method, params NextApiArgument[] arguments)
-        {
-            return await _nextApiClient.Invoke<T>(_serviceName, method, arguments);
-        }
-
-        /// <summary>
-        /// Invoke service method
-        /// </summary>
-        /// <param name="method">Method name</param>
-        /// <param name="arguments">Method arguments</param>
-        protected async Task InvokeService(string method, params NextApiArgument[] arguments)
-        {
-            await _nextApiClient.Invoke(_serviceName, method, arguments);
         }
 
         /// <summary>

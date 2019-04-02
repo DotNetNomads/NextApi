@@ -24,6 +24,6 @@ namespace Abitech.NextApi.Server.EfCore.Model.Base
         /// <summary>
         /// Contains time when entity last time updated
         /// </summary>
-        DateTimeOffset Updated { get; set; }
+        DateTimeOffset? Updated { get; set; }
     }
 }
