@@ -86,14 +86,14 @@ namespace Abitech.NextApi.Server.EfCore.DAL
 
         protected virtual async Task HandleTrackedEntity(EntityEntry entityEntry)
         {
-            var userId = await _userInfoProvider.CurrentUserId();
+            var userId = _userInfoProvider != null ? await _userInfoProvider.CurrentUserId() : null;
             this.RecordAuditInfo(userId, entityEntry);
         }
 
         /// <inheritdoc />
         protected NextApiDbContext(DbContextOptions options, INextApiUserInfoProvider userInfoProvider) : base(options)
         {
-            _userInfoProvider = userInfoProvider ?? throw new ArgumentNullException(nameof(userInfoProvider));
+            _userInfoProvider = userInfoProvider;
         }
 
         /// <inheritdoc />
