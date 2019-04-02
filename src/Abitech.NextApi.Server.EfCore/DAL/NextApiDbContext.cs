@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
+using Abitech.NextApi.Server.EfCore.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -70,26 +72,22 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     public abstract class NextApiDbContext : DbContext, INextApiDbContext
     {
         private readonly INextApiUserInfoProvider _userInfoProvider;
-        public bool ColumnChangesLogEnabled { get; set; } = true;
-
-        // system for sync
-        /// <summary>
-        /// Accessor to ColumnChangesLogs
-        /// </summary>
-        public DbSet<ColumnChangesLog> ColumnChangesLogs { get; set; }
 
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            var userId = await _userInfoProvider.CurrentUserId();
-            foreach (var entityEntry in ChangeTracker.Entries())
+            foreach (var entityEntry in ChangeTracker.Entries().ToList())
             {
-                this.RecordAuditInfo(userId, entityEntry);
-                if (ColumnChangesLogEnabled)
-                    await this.RecordColumnChangesInfo(entityEntry);
+                await HandleTrackedEntity(entityEntry);
             }
 
             return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        protected virtual async Task HandleTrackedEntity(EntityEntry entityEntry)
+        {
+            var userId = await _userInfoProvider.CurrentUserId();
+            this.RecordAuditInfo(userId, entityEntry);
         }
 
         /// <inheritdoc />
@@ -112,6 +110,47 @@ namespace Abitech.NextApi.Server.EfCore.DAL
                 config.Property(p => p.ColumnName).IsRequired();
                 config.Property(p => p.LastChangedOn);
             });
+        }
+    }
+
+    /// <summary>
+    /// NextApiDbContext with column changes logging
+    /// </summary>
+    public interface IColumnChangesEnabledNextApiDbContext : INextApiDbContext
+    {
+        /// <summary>
+        /// Accessor to ColumnChangesLogs
+        /// </summary>
+        DbSet<ColumnChangesLog> ColumnChangesLogs { get; set; }
+
+        /// <summary>
+        /// Indicates that column changes logger enabled
+        /// </summary>
+        bool ColumnChangesLogEnabled { get; set; }
+    }
+
+    /// <summary>
+    /// NextApiDbContext with column changes logging
+    /// </summary>
+    public abstract class ColumnChangesEnabledNextApiDbContext : NextApiDbContext, IColumnChangesEnabledNextApiDbContext
+    {
+        /// <inheritdoc />
+        public DbSet<ColumnChangesLog> ColumnChangesLogs { get; set; }
+
+        /// <inheritdoc />
+        public bool ColumnChangesLogEnabled { get; set; } = true;
+
+        /// <inheritdoc />
+        protected ColumnChangesEnabledNextApiDbContext(DbContextOptions options,
+            INextApiUserInfoProvider userInfoProvider)
+            : base(options, userInfoProvider)
+        {
+        }
+
+        protected override async Task HandleTrackedEntity(EntityEntry entityEntry)
+        {
+            await base.HandleTrackedEntity(entityEntry);
+            await this.RecordColumnChangesInfo(entityEntry);
         }
     }
 }

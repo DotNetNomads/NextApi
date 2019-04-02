@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
@@ -152,9 +153,70 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 await unitOfWork.Commit();
 
                 var updatedEntity = await repo.GetByIdAsync(entity1.Id);
-                
+
                 Assert.NotNull(updatedEntity.UpdatedById);
                 Assert.NotNull(updatedEntity.Updated);
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CheckColumnChangesLog(bool loggingEnabled)
+        {
+            using (var scope = Services)
+            {
+                var provider = scope.ServiceProvider;
+                var repo = provider.GetService<TestColumnChangesRepo>();
+                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
+
+                // enable-or-disable logging
+                columnChangesLogger.LoggingEnabled = loggingEnabled;
+
+                var entity = new TestColumnChangesEnabledEntity
+                {
+                    Name = $"testColumnLog{loggingEnabled}"
+                };
+
+                await repo.AddAsync(entity);
+                await unitOfWork.Commit();
+
+                // update
+                entity.Name = $"testColumnLogUpdated{loggingEnabled}";
+                repo.Update(entity);
+                await unitOfWork.Commit();
+                // check log
+                var lastChangedOn =
+                    await columnChangesLogger.GetLastChange("TestColumnChangesEnabledEntity", "Name", entity.RowGuid);
+                Assert.True(loggingEnabled ? lastChangedOn.HasValue : lastChangedOn == null);
+            }
+        }
+
+        [Fact]
+        public async Task CheckColumnChangesLoggerDisabledForNotSupportedEntities()
+        {
+            using (var scope = Services)
+            {
+                var provider = scope.ServiceProvider;
+                var repo = provider.GetService<TestEntityRepository>();
+                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
+
+                var entity = new TestEntity
+                {
+                    Name = "lolkek2222"
+                };
+
+                await repo.AddAsync(entity);
+                await unitOfWork.Commit();
+
+                entity.Name = "updatedNameFromTests";
+
+                repo.Update(entity);
+                await unitOfWork.Commit();
+
+                Assert.Null(await columnChangesLogger.GetLastChange("TestEntity", "Name", entity.RowGuid));
             }
         }
 
@@ -164,12 +226,14 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             if (_services != null)
                 return _services.CreateScope();
             var builder = new ServiceCollection();
-            builder.AddSingleton<TestUserInfoProvider>();
+            builder.AddUserInfoProvider<TestUserInfoProvider>();
             builder.AddDbContext<TestDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); });
+            builder.AddColumnChangesLogger<TestDbContext>();
             builder.AddTransient<TestEntityRepository>();
             builder.AddTransient<TestSoftDeletableRepository>();
             builder.AddTransient<TestEntityPredicatesRepository>();
             builder.AddTransient<TestAuditEntityRepository>();
+            builder.AddTransient<TestColumnChangesRepo>();
             builder.AddTransient<TestUnitOfWork>();
             _services = builder.BuildServiceProvider();
 

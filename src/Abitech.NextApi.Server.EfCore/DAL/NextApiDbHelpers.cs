@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
 using Abitech.NextApi.Server.EfCore.Model.Base;
+using Abitech.NextApi.Server.EfCore.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -19,7 +20,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <param name="context"></param>
         /// <param name="userId"></param>
         /// <param name="entityEntry"></param>
-        public static void RecordAuditInfo(this DbContext context, int? userId, EntityEntry entityEntry)
+        public static void RecordAuditInfo(this NextApiDbContext context, int? userId, EntityEntry entityEntry)
         {
             if (entityEntry.Entity is ILoggedEntity entity)
             {
@@ -42,39 +43,49 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// </summary>
         /// <param name="context"></param>
         /// <param name="entityEntry"></param>
-        public static async Task RecordColumnChangesInfo(this DbContext context, EntityEntry entityEntry)
+        public static async Task RecordColumnChangesInfo(this ColumnChangesEnabledNextApiDbContext context,
+            EntityEntry entityEntry)
         {
-            if (entityEntry.Entity is IColumnLoggedEntity
-                && entityEntry.State == EntityState.Modified
-                && entityEntry.Entity is IRowGuidEnabled entity)
+            if (context.ColumnChangesLogEnabled &&
+                entityEntry.Entity is IColumnLoggedEntity &&
+                entityEntry.State == EntityState.Modified &&
+                entityEntry.Entity is IRowGuidEnabled entity)
             {
-                var columnChangesDbSet = context.Set<ColumnChangesLog>();
                 var rowGuid = entity.RowGuid;
                 var mapping = context.Model.FindEntityType(
                     entityEntry.Entity.GetType()).Relational();
                 var tableName = mapping.TableName;
-                foreach (var propertyEntry in entityEntry.Properties.Where(p => p.IsModified))
+                foreach (var propertyEntry in entityEntry.Properties.Where(p =>
+                    p.IsModified && p.Metadata.Name != "RowGuid"))
                 {
                     var columnName = propertyEntry.Metadata.Name;
-
-                    var columnChangesRecord = await columnChangesDbSet.FirstOrDefaultAsync(e =>
-                        e.RowGuid == rowGuid && e.TableName == tableName && e.ColumnName == columnName);
-                    if (columnChangesRecord == null)
-                    {
-                        columnChangesRecord = new ColumnChangesLog()
-                        {
-                            RowGuid = rowGuid,
-                            TableName = tableName,
-                            ColumnName = columnName,
-                            LastChangedOn = DateTimeOffset.Now
-                        };
-                        await columnChangesDbSet.AddAsync(columnChangesRecord);
-                    }
-                    else
-                    {
-                        columnChangesRecord.LastChangedOn = DateTimeOffset.Now;
-                    }
+                    await context.ColumnChangesLogs.SetLastColumnChange(tableName, columnName, rowGuid,
+                        DateTimeOffset.Now);
                 }
+            }
+        }
+
+        public static async Task SetLastColumnChange(this DbSet<ColumnChangesLog> dbSet, string tableName,
+            string columnName, Guid rowGuid, DateTimeOffset time)
+        {
+            var columnChangesRecord = await dbSet.FirstOrDefaultAsync(e =>
+                e.RowGuid == rowGuid &&
+                e.TableName == tableName &&
+                e.ColumnName == columnName);
+            if (columnChangesRecord == null)
+            {
+                columnChangesRecord = new ColumnChangesLog()
+                {
+                    RowGuid = rowGuid,
+                    TableName = tableName,
+                    ColumnName = columnName,
+                    LastChangedOn = time
+                };
+                await dbSet.AddAsync(columnChangesRecord);
+            }
+            else
+            {
+                columnChangesRecord.LastChangedOn = time;
             }
         }
     }
