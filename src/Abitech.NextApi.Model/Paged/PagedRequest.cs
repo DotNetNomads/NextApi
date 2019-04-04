@@ -1,3 +1,5 @@
+using Abitech.NextApi.Model.Filtering;
+
 namespace Abitech.NextApi.Model.Paged
 {
     /// <summary>
@@ -17,5 +19,10 @@ namespace Abitech.NextApi.Model.Paged
         /// Expand references aka Include
         /// </summary>
         public string[] Expand { get; set; }
+        
+        /// <summary>
+        /// Filter instance for this request
+        /// </summary>
+        public Filter Filter { get; set; }
     }
 }
