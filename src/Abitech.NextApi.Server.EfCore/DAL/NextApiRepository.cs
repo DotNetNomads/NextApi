@@ -136,7 +136,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <returns>Filtered entity with includes</returns>
         public async Task<T> GetAsync(Expression<Func<T, bool>> where)
         {
-            return await _dbset.FirstOrDefaultAsync<T>(where);
+            return await GetAll().FirstOrDefaultAsync<T>(where);
         }
     }
 }
