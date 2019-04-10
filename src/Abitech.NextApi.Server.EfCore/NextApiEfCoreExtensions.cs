@@ -9,18 +9,6 @@ namespace Abitech.NextApi.Server.EfCore
     /// </summary>
     public static class NextApiEfCoreExtensions
     {
-        /// <summary>
-        /// Adds INextApiUserInfoProvider implementation to IServiceCollection
-        /// </summary>
-        /// <param name="services"></param>
-        /// <typeparam name="T">Type of implementation</typeparam>
-        /// <returns></returns>
-        public static IServiceCollection AddUserInfoProvider<T>(this IServiceCollection services)
-            where T : class, INextApiUserInfoProvider
-        {
-            services.AddTransient<INextApiUserInfoProvider, T>();
-            return services;
-        }
 
         /// <summary>
         /// Adds ColumnChangesLogger to IServiceCollection

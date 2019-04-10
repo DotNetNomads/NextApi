@@ -11,19 +11,17 @@ namespace Abitech.NextApi.Server.Tests
     public class NextApiTest
     {
 #pragma warning disable 1998
-        protected async Task<NextApiClient> GetClient()
+        protected async Task<NextApiClient> GetClient(string token = null)
 #pragma warning restore 1998
         {
-            if (_client != null) return _client;
 
             var handler = _server.CreateHandler();
-            _client = new NextApiClientForTests(
-                "ws://localhost/nextapi", null, handler);
-
-            return _client;
+            return new NextApiClientForTests(
+                "ws://localhost/nextapi",
+                token != null ? new TestTokenProvider(token) : null,
+                handler);
         }
-
-        private NextApiClient _client;
+        
         protected IServiceProvider ServiceProvider;
         private readonly TestServer _server;
 
@@ -55,6 +53,21 @@ namespace Abitech.NextApi.Server.Tests
             {
                 options.HttpMessageHandlerFactory = _ => _messageHandler;
             }
+        }
+    }
+
+    public class TestTokenProvider : INextApiAccessTokenProvider
+    {
+        private string _token;
+
+        public TestTokenProvider(string token)
+        {
+            _token = token;
+        }
+
+        public async Task<string> ResolveToken()
+        {
+            return _token;
         }
     }
 }
