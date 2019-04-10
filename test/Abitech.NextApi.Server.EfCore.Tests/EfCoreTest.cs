@@ -4,6 +4,7 @@ using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
+using Abitech.NextApi.Server.Security;
 using DeepEqual.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -226,7 +227,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             if (_services != null)
                 return _services.CreateScope();
             var builder = new ServiceCollection();
-            builder.AddUserInfoProvider<TestUserInfoProvider>();
+            builder.AddScoped<INextApiUserAccessor, TestNextApiUserAccessor>();
             builder.AddDbContext<TestDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); });
             builder.AddColumnChangesLogger<TestDbContext>();
             builder.AddTransient<TestEntityRepository>();

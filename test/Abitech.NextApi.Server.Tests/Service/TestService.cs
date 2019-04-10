@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.Attributes;
+using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.SignalR;
 #pragma warning disable 1998
@@ -10,6 +11,12 @@ namespace Abitech.NextApi.Server.Tests.Service
     [NextApiAnonymous]
     public class TestService : NextApiService
     {
+        private INextApiUserAccessor _nextApiUserAccessor;
+
+        public TestService(INextApiUserAccessor nextApiUserAccessor)
+        {
+            _nextApiUserAccessor = nextApiUserAccessor;
+        }
 
         // tested
         public async Task<TestDTO> DtoTest(TestDTO model)
@@ -84,6 +91,11 @@ namespace Abitech.NextApi.Server.Tests.Service
         public async void AsyncVoidDenied()
         {
             // invalid method
+        }
+
+        public int? GetCurrentUser()
+        {
+            return _nextApiUserAccessor.SubjectId;
         }
     }
 #pragma warning restore 1998

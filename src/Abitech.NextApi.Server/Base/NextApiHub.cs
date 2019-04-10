@@ -20,6 +20,7 @@ namespace Abitech.NextApi.Server.Base
         private readonly INextApiPermissionProvider _permissionProvider;
         private readonly IHubContext<NextApiHub> _hubContext;
         private readonly NextApiServicesOptions _options;
+        private readonly INextApiUserAccessor _nextApiUserAccessor;
 
         /// <summary>
         /// Initialize Hub
@@ -28,15 +29,17 @@ namespace Abitech.NextApi.Server.Base
         /// <param name="permissionProvider">Used for users validation by permissions</param>
         /// <param name="hubContext">Hub context</param>
         /// <param name="options">NextApi options</param>
+        /// <param name="nextApiUserAccessor"></param>
         public NextApiHub(IServiceProvider serviceProvider,
             INextApiPermissionProvider permissionProvider,
             IHubContext<NextApiHub> hubContext,
-            NextApiServicesOptions options)
+            NextApiServicesOptions options, INextApiUserAccessor nextApiUserAccessor)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _permissionProvider = permissionProvider ?? throw new ArgumentNullException(nameof(permissionProvider));
             _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _nextApiUserAccessor = nextApiUserAccessor ?? throw new ArgumentNullException(nameof(nextApiUserAccessor));
         }
 
         /// <summary>
@@ -47,6 +50,9 @@ namespace Abitech.NextApi.Server.Base
         /// <exception cref="Exception">When security issues, or service issues</exception>
         public async Task<dynamic> ExecuteCommand(NextApiCommand command)
         {
+            // set current nextapi user
+            _nextApiUserAccessor.User = Context.User;
+            
             if (string.IsNullOrWhiteSpace(command.Service))
                 throw new Exception("Service name is not provided");
             if (string.IsNullOrWhiteSpace(command.Method))
