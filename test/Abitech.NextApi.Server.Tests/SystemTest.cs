@@ -10,7 +10,7 @@ namespace Abitech.NextApi.Server.Tests.System
         {
             var client = await GetClient();
 
-            var permissions = await client.SupportedPermissions;
+            var permissions = await client.SupportedPermissions();
             Assert.Equal(new[] {"permission1", "permission2"}, permissions);
         }
 
