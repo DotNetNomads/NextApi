@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.Paged;
@@ -23,7 +24,7 @@ namespace Abitech.NextApi.Server.Entity
         INextApiEntityService<TDto, TKey>
         where TDto : class
         where TEntity : class
-        where TRepo : class, INextApiRepository<TEntity, TKey>
+        where TRepo: class, INextApiRepository<TEntity, TKey>
         where TUnitOfWork : class, INextApiUnitOfWork
     {
         private readonly TUnitOfWork _unitOfWork;
@@ -110,28 +111,24 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <summary>
-        ///  Get Entities by array of Id
+        /// Implementation of GetByIds(get array of entities)
         /// </summary>
         /// <param name="keys"></param>
         /// <param name="expand"></param>
-        /// <returns>array of entities</returns>
+        /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public virtual async Task<TDto[]> GetByIds(TKey[] keys, string[] expand = null)
         {
-            var request = _repository
-                .GetAll();
-            foreach (var key in keys)
-            {
-                request = request.Where(_repository.KeyPredicate(key));
-            }
-
-            var result = await request.Expand(expand)
+            var entities = await _repository
+                .GetAll()
+                .Where(_repository.KeyPredicate(keys))
+                .Expand(expand)
                 .ToArrayAsync();
             
-            if (result == null)
-                throw new Exception("The empty list");
-
-            return _mapper.Map<TEntity[], TDto[]>(result);
+            if (entities == null)
+                throw new Exception("Entity is not exists");
+            
+            return _mapper.Map<TEntity[], TDto[]>(entities);
         }
 
         /// <summary>

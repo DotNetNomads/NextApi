@@ -58,5 +58,11 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="key"></param>
         /// <returns></returns>
         Expression<Func<T, bool>> KeyPredicate(TKey key);
+        /// <summary>
+        /// Given a entity and ids, return true if entity's key property contains in current array.
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        Expression<Func<T, bool>> KeyPredicate(TKey[] keys);
     }
 }

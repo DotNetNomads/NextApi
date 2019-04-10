@@ -46,7 +46,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
         {
             return await _dbset.FindAsync(id);
         }
-
+        
         public async Task<TestUser> GetAsync(Expression<Func<TestUser, bool>> @where)
         {
             return await _dbset.FirstOrDefaultAsync(where);
@@ -60,6 +60,11 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
         public Expression<Func<TestUser, bool>> KeyPredicate(int key)
         {
             return e => e.Id == key;
+        }
+
+        public Expression<Func<TestUser, bool>> KeyPredicate(int[] keys)
+        {
+            return entity => keys.Contains(entity.Id);
         }
     }
 }

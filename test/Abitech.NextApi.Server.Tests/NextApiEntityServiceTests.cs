@@ -193,43 +193,44 @@ namespace Abitech.NextApi.Server.Tests
         public async Task GetByIds(params string[] expand)
         {
             var client = await GetServiceClient();
-            var IdArray = new int[]
-                {
-                    13, 13
-                };
             
-            var users = await client.GetByIds(IdArray, expand.Contains("") ? null : expand);
-
-            foreach (var user in users.ToArray())
+            int[] idArray = new int[]
             {
-                Assert.Equal(13, user.Id);
+                14, 12, 13
+            };
+
+            idArray = idArray.OrderBy(i => i).ToArray();
+
+            var users = await client.GetByIds(idArray, expand.Contains("") ? null : expand);
+          
+            for (int i = 0; i < users.Length; i++)
+            {
+                Assert.Equal(idArray[i], users[i].Id);
+                
                 if (expand.Contains("City"))
                 {
-                    Assert.NotNull(user.City);
+                    Assert.NotNull(users.ToList()[i].City);
                 }
                 else
                 {
-                    Assert.Null(user.City);
+                    Assert.Null(users.ToList()[i].City);
                 }
 
                 if (expand.Contains("Role"))
                 {
-                    Assert.NotNull(user.Role);
+                    Assert.NotNull(users.ToList()[i].Role);
                 }
                 else
                 {
-                    Assert.Null(user.Role);
+                    Assert.Null(users.ToList()[i].Role);
                 }
             }
-
-            // Assert.Equal(13, user.ToArray()[1].Id);
-            //Assert.Equal(14, user.ToArray()[1].Id);
-            
         }
 
         private async Task<TestEntityService> GetServiceClient()
         {
-            return _nextApiEntityService ?? (_nextApiEntityService = new TestEntityService(await GetClient(), "TestUser"));
+            return _nextApiEntityService ??
+                   (_nextApiEntityService = new TestEntityService(await GetClient(), "TestUser"));
         }
 
         private TestEntityService _nextApiEntityService;

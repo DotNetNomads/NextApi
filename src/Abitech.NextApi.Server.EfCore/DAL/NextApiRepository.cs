@@ -129,6 +129,18 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             return entity => (entity as IEntity<TKey>).Id.Equals(id);
         }
 
+        public Expression<Func<T, bool>> KeyPredicate(TKey[] keys)
+        {
+            if (!_isIEntity)
+            {
+                throw new NotSupportedException(
+                    "Default implementation of KeyPredicate method supports only entities that implements IEntity<TKey>." +
+                    "Override KeyPredicate for your entity type.");
+            }
+
+            return entity => keys.Contains((entity as IEntity<TKey>).Id);
+        }
+
         /// <summary>
         /// Returns entity using where expression
         /// </summary>
