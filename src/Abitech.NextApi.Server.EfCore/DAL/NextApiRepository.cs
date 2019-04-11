@@ -141,7 +141,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
 
 
         /// <inheritdoc />
-        public Expression<Func<T, bool>> KeyPredicate(TKey[] keys)
+        public virtual Expression<Func<T, bool>> KeyPredicate(TKey[] keys)
         {
             if (!_isIEntity)
             {
