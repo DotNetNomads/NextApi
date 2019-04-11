@@ -46,5 +46,13 @@ namespace Abitech.NextApi.Model.Abstractions
         /// <param name="expand">expand references aka Include</param>
         /// <returns>entity</returns>
         Task<TDto> GetById(TKey key, string[] expand = null);
+
+        /// <summary>
+        /// Get array of entities by id
+        /// </summary>
+        /// <param name="keys">array of entity ids</param>
+        /// <param name="expand">expand references aka Include</param>
+        /// <returns>array of entities</returns>
+        Task<TDto[]> GetByIds(TKey[] keys, string[] expand = null);
     }
 }

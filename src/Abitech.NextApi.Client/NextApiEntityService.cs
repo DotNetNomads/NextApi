@@ -11,7 +11,8 @@ namespace Abitech.NextApi.Client
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TClient"></typeparam>
-    public abstract class NextApiEntityService<TEntity, TKey, TClient> : NextApiService<TClient> ,INextApiEntityService<TEntity, TKey>
+    public abstract class NextApiEntityService<TEntity, TKey, TClient> : NextApiService<TClient>,
+        INextApiEntityService<TEntity, TKey>
         where TEntity : class
         where TClient : class, INextApiClient
     {
@@ -78,10 +79,27 @@ namespace Abitech.NextApi.Client
             });
         }
 
+
         /// <inheritdoc />
         public async Task<TEntity> GetById(TKey key, string[] expand = null)
         {
             return await InvokeService<TEntity>("GetById", KeyArgument(key),
+                new NextApiArgument()
+                {
+                    Name = "expand",
+                    Value = expand
+                });
+        }
+
+
+        /// <inheritdoc />
+        public async Task<TEntity[]> GetByIds(TKey[] keys, string[] expand = null)
+        {
+            return await InvokeService<TEntity[]>("GetByIds", new NextApiArgument()
+                {
+                    Name = "keys",
+                    Value = keys
+                },
                 new NextApiArgument()
                 {
                     Name = "expand",
