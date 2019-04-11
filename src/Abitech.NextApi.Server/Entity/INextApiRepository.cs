@@ -64,5 +64,12 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="keys"></param>
         /// <returns></returns>
         Expression<Func<T, bool>> KeyPredicate(TKey[] keys);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        Task<T[]> GetByIdsAsync(TKey[] ids);
     }
 }
