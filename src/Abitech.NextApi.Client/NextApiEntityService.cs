@@ -91,6 +91,8 @@ namespace Abitech.NextApi.Client
                 });
         }
 
+
+        /// <inheritdoc />
         public async Task<TEntity[]> GetByIds(TKey[] keys, string[] expand = null)
         {
             return await InvokeService<TEntity[]>("GetByIds", new NextApiArgument()
