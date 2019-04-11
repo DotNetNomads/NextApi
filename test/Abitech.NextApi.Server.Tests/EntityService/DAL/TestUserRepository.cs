@@ -62,6 +62,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
             return e => e.Id == key;
         }
 
+        /// <inheritdoc />
         public Expression<Func<TestUser, bool>> KeyPredicate(int[] keys)
         {
             return entity => keys.Contains(entity.Id);

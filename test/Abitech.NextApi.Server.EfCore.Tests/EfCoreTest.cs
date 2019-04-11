@@ -83,6 +83,37 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdAsync(id));
             }
         }
+        
+        [Fact]
+        public async Task CheckKeyPredicateArrayNotSupportedException()
+        {
+            using (var scope = Services)
+            {
+                var provider = scope.ServiceProvider;
+                var repo = provider.GetService<TestEntityPredicatesRepository>();
+                var unitOfWork = provider.GetService<TestUnitOfWork>();
+
+                // create entity 
+                string[] ids = {"id1", "id2"};
+                
+                await repo.AddAsync(new TestEntityKeyPredicate
+                {
+                    Id = ids[0],
+                    Description = "testException"
+                });
+                
+                await repo.AddAsync(new TestEntityKeyPredicate
+                {
+                    Id = ids[1],
+                    Description = "testException"
+                });
+                
+                await unitOfWork.Commit();
+
+                // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
+                await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdsAsync(ids));
+            }
+        }
 
         [Fact]
         public async Task CheckSoftDeletable()

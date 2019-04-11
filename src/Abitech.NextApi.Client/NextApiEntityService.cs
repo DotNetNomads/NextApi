@@ -79,6 +79,7 @@ namespace Abitech.NextApi.Client
             });
         }
 
+
         /// <inheritdoc />
         public async Task<TEntity> GetById(TKey key, string[] expand = null)
         {
