@@ -1,9 +1,8 @@
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
-using Abitech.NextApi.Server.EfCore.Service;
+using Abitech.NextApi.Server.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -71,7 +70,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// </summary>
     public abstract class NextApiDbContext : DbContext, INextApiDbContext
     {
-        private readonly INextApiUserInfoProvider _userInfoProvider;
+        private readonly INextApiUserAccessor _nextApiUserAccessor;
 
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
             CancellationToken cancellationToken = new CancellationToken())
@@ -86,14 +85,14 @@ namespace Abitech.NextApi.Server.EfCore.DAL
 
         protected virtual async Task HandleTrackedEntity(EntityEntry entityEntry)
         {
-            var userId = _userInfoProvider != null ? await _userInfoProvider.CurrentUserId() : null;
+            var userId = _nextApiUserAccessor?.SubjectId;
             this.RecordAuditInfo(userId, entityEntry);
         }
 
         /// <inheritdoc />
-        protected NextApiDbContext(DbContextOptions options, INextApiUserInfoProvider userInfoProvider) : base(options)
+        protected NextApiDbContext(DbContextOptions options, INextApiUserAccessor nextApiUserAccessor) : base(options)
         {
-            _userInfoProvider = userInfoProvider;
+            _nextApiUserAccessor = nextApiUserAccessor;
         }
 
         /// <inheritdoc />
@@ -140,17 +139,17 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <inheritdoc />
         public bool ColumnChangesLogEnabled { get; set; } = true;
 
-        /// <inheritdoc />
-        protected ColumnChangesEnabledNextApiDbContext(DbContextOptions options,
-            INextApiUserInfoProvider userInfoProvider)
-            : base(options, userInfoProvider)
-        {
-        }
 
         protected override async Task HandleTrackedEntity(EntityEntry entityEntry)
         {
             await base.HandleTrackedEntity(entityEntry);
             await this.RecordColumnChangesInfo(entityEntry);
+        }
+
+        /// <inheritdoc />
+        protected ColumnChangesEnabledNextApiDbContext(DbContextOptions options,
+            INextApiUserAccessor nextApiUserAccessor) : base(options, nextApiUserAccessor)
+        {
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.Paged;
@@ -107,6 +108,27 @@ namespace Abitech.NextApi.Server.Entity
             if (entity == null)
                 throw new Exception("Entity is not exists");
             return _mapper.Map<TEntity, TDto>(entity);
+        }
+
+        /// <summary>
+        /// Implementation of GetByIds(get array of entities)
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <param name="expand"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public virtual async Task<TDto[]> GetByIds(TKey[] keys, string[] expand = null)
+        {
+            var entities = await _repository
+                .GetAll()
+                .Where(_repository.KeyPredicate(keys))
+                .Expand(expand)
+                .ToArrayAsync();
+            
+            if (entities == null)
+                throw new Exception("Entity is not exists");
+            
+            return _mapper.Map<TEntity[], TDto[]>(entities);
         }
 
         /// <summary>

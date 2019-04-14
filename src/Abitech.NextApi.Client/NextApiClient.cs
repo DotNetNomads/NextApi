@@ -41,7 +41,7 @@ namespace Abitech.NextApi.Client
         /// <summary>
         /// List of supported permissions
         /// </summary>
-        Task<string[]> SupportedPermissions { get; }
+        Task<string[]> SupportedPermissions();
     }
 
     /// <summary>
@@ -56,9 +56,8 @@ namespace Abitech.NextApi.Client
         /// <summary>
         /// List of supported permissions (awaitable)
         /// </summary>
-        public Task<string[]> SupportedPermissions => LoadSupportedPermissions();
 
-        private async Task<string[]> LoadSupportedPermissions()
+        public async Task<string[]> SupportedPermissions()
         {
             if (_supportedPermissions != null)
                 return _supportedPermissions;

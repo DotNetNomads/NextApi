@@ -8,7 +8,6 @@ using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Abitech.NextApi.Server
@@ -41,7 +40,7 @@ namespace Abitech.NextApi.Server
             }
 
             serviceCollection.AddSingleton(nextApiOptions);
-            serviceCollection.AddHttpContextAccessor();
+            serviceCollection.AddScoped<INextApiUserAccessor, NextApiUserAccessor>();
             NextApiServiceHelper
                 .FindAllServices()
                 .ForEach(type => { serviceCollection.AddTransient(type); });

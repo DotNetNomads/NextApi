@@ -185,9 +185,52 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
 
+        [Theory]
+        [InlineData("")]
+        [InlineData("City")]
+        [InlineData("Role")]
+        [InlineData("Role", "City")]
+        public async Task GetByIds(params string[] expand)
+        {
+            var client = await GetServiceClient();
+            
+            int[] idArray = new int[]
+            {
+                14, 12, 13
+            };
+
+            idArray = idArray.OrderBy(i => i).ToArray();
+
+            var users = await client.GetByIds(idArray, expand.Contains("") ? null : expand);
+          
+            for (int i = 0; i < users.Length; i++)
+            {
+                Assert.Equal(idArray[i], users[i].Id);
+                
+                if (expand.Contains("City"))
+                {
+                    Assert.NotNull(users.ToList()[i].City);
+                }
+                else
+                {
+                    Assert.Null(users.ToList()[i].City);
+                }
+
+                if (expand.Contains("Role"))
+                {
+                    Assert.NotNull(users.ToList()[i].Role);
+                }
+                else
+                {
+                    Assert.Null(users.ToList()[i].Role);
+                }
+            }
+        }
+
         private async Task<TestEntityService> GetServiceClient()
         {
-            return _nextApiEntityService ?? (_nextApiEntityService = new TestEntityService(await GetClient(), "TestUser"));
+            return _nextApiEntityService ??
+                   (_nextApiEntityService = new TestEntityService(await GetClient(), "TestUser"));
         }
 
         private TestEntityService _nextApiEntityService;

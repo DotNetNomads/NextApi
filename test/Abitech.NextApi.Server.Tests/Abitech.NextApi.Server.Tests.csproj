@@ -19,6 +19,7 @@
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.0.0" />
         <PackageReference Include="DeepEqual" Version="2.0.0" />
         <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.1.0" />
@@ -33,6 +34,10 @@
       <ProjectReference Include="..\..\src\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
       <ProjectReference Include="..\..\src\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
       <ProjectReference Include="..\..\src\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Security" />
     </ItemGroup>
 
 </Project>

@@ -96,6 +96,16 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         {
             return await GetAll().FirstOrDefaultAsync(KeyPredicate(id));
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public virtual async Task<T[]> GetByIdsAsync(TKey[] ids)
+        {
+            return await GetAll().Where(KeyPredicate(ids)).ToArrayAsync();
+        }
 
         /// <summary>
         /// Returns all entities
@@ -127,6 +137,20 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             }
 
             return entity => (entity as IEntity<TKey>).Id.Equals(id);
+        }
+
+
+        /// <inheritdoc />
+        public virtual Expression<Func<T, bool>> KeyPredicate(TKey[] keys)
+        {
+            if (!_isIEntity)
+            {
+                throw new NotSupportedException(
+                    "Default implementation of KeyPredicate method supports only entities that implements IEntity<TKey>." +
+                    "Override KeyPredicate for your entity type.");
+            }
+
+            return entity => keys.Contains((entity as IEntity<TKey>).Id);
         }
 
         /// <summary>

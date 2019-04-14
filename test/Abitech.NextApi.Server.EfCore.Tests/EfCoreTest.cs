@@ -4,6 +4,7 @@ using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
+using Abitech.NextApi.Server.Security;
 using DeepEqual.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -81,6 +82,37 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
                 await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdAsync(id));
+            }
+        }
+        
+        [Fact]
+        public async Task CheckKeyPredicateArrayNotSupportedException()
+        {
+            using (var scope = Services)
+            {
+                var provider = scope.ServiceProvider;
+                var repo = provider.GetService<TestEntityPredicatesRepository>();
+                var unitOfWork = provider.GetService<TestUnitOfWork>();
+
+                // create entity 
+                string[] ids = {"id1", "id2"};
+                
+                await repo.AddAsync(new TestEntityKeyPredicate
+                {
+                    Id = ids[0],
+                    Description = "testException"
+                });
+                
+                await repo.AddAsync(new TestEntityKeyPredicate
+                {
+                    Id = ids[1],
+                    Description = "testException"
+                });
+                
+                await unitOfWork.Commit();
+
+                // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
+                await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdsAsync(ids));
             }
         }
 
@@ -226,7 +258,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             if (_services != null)
                 return _services.CreateScope();
             var builder = new ServiceCollection();
-            builder.AddUserInfoProvider<TestUserInfoProvider>();
+            builder.AddScoped<INextApiUserAccessor, TestNextApiUserAccessor>();
             builder.AddDbContext<TestDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); });
             builder.AddColumnChangesLogger<TestDbContext>();
             builder.AddTransient<TestEntityRepository>();
