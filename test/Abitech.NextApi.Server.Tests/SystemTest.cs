@@ -47,6 +47,9 @@ namespace Abitech.NextApi.Server.Tests.System
         {
             var data = TestSource.GetData();
 
+            // filter: entity => entity.ReferenceModel.Name.Contains("Model") &&
+            //                   (entity.Number == 1 || entity.Number == 2) &&
+            //                   (new [] {5,6,10}).Contains("Number")
             var filter = new FilterBuilder()
                 .Contains("ReferenceModel.Name", "Model")
                 .Or(f => f
