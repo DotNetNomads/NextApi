@@ -1,7 +1,11 @@
 namespace Abitech.NextApi.Model.Filtering
 {
+    /// <summary>
+    /// Supported filter expression types
+    /// </summary>
     public enum FilterExpressionTypes
     {
+#pragma warning disable 1591
         Contains,
         Equal,
         MoreThan,
@@ -11,5 +15,6 @@ namespace Abitech.NextApi.Model.Filtering
         In,
         Filter,
         NotEqual
+#pragma warning restore 1591
     }
 }

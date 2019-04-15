@@ -1,4 +1,8 @@
+using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Model.Filtering;
+using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Tests.Filtering;
 using Xunit;
 
 namespace Abitech.NextApi.Server.Tests.System
@@ -36,6 +40,28 @@ namespace Abitech.NextApi.Server.Tests.System
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Equal(2, userId.Value);
             }
+        }
+
+        [Fact]
+        public async Task FilterTests()
+        {
+            var data = TestSource.GetData();
+
+            var filter = new FilterBuilder()
+                .Contains("ReferenceModel.Name", "Model")
+                .Or(f => f
+                    .MoreThan<int>("Number", 1)
+                    .LessThan<int>("Number", 2)
+                )
+                .In<int>("Number", new[] {5, 6, 10})
+                .Build();
+
+            var expression = filter.ToLambdaFilter<TestModel>();
+
+            var filtered = data.Where(expression).ToList();
+
+            Assert.True(filtered.Count == 3);
+            Assert.True(filtered.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
         }
     }
 }

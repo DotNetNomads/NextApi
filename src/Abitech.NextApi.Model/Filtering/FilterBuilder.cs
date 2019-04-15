@@ -2,66 +2,134 @@ using System;
 
 namespace Abitech.NextApi.Model.Filtering
 {
+    /// <summary>
+    /// Helps with filter building
+    /// </summary>
     public class FilterBuilder
     {
-        private Filtering.Filter _filter;
+        private readonly Filter _filter;
 
+        
+        /// <summary>
+        /// Initializes filter builder
+        /// </summary>
+        /// <param name="logicalOperator">Logical operation for expressions (default: and)</param>
         public FilterBuilder(LogicalOperators logicalOperator = LogicalOperators.And)
         {
-            _filter = new Filtering.Filter
+            _filter = new Filter
             {
                 LogicalOperator = logicalOperator
             };
         }
 
-        public FilterBuilder Contains(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: string.Contains()
+        /// </summary>
+        /// <param name="property">Name of property</param>
+        /// <param name="value"></param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder Contains(string property, string value)
         {
             AddExpression(property, FilterExpressionTypes.Contains, value);
             return this;
         }
 
-        public FilterBuilder Equal(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: property == value
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder Equal<TProperty>(string property, TProperty value)
         {
             AddExpression(property, FilterExpressionTypes.Equal, value);
             return this;
         }
 
-        public FilterBuilder NotEqual(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: property != value
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder NotEqual<TProperty>(string property, TProperty value)
         {
             AddExpression(property, FilterExpressionTypes.NotEqual, value);
             return this;
         }
 
-        public FilterBuilder MoreThan(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: property &gt; value
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder MoreThan<TProperty>(string property, TProperty value)
         {
             AddExpression(property, FilterExpressionTypes.MoreThan, value);
             return this;
         }
 
-        public FilterBuilder LessThan(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: property &lt; value
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder LessThan<TProperty>(string property, TProperty value)
         {
             AddExpression(property, FilterExpressionTypes.LessThan, value);
             return this;
         }
 
-        public FilterBuilder MoreThanOrEqual(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: property &gt;= value
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder MoreThanOrEqual<TProperty>(string property, TProperty value)
         {
             AddExpression(property, FilterExpressionTypes.MoreThanOrEqual, value);
             return this;
         }
 
-        public FilterBuilder LessThanOrEqual(string property, dynamic value)
+        /// <summary>
+        /// Operation represents: property &lt;= value
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder LessThanOrEqual<TProperty>(string property, TProperty value)
         {
             AddExpression(property, FilterExpressionTypes.LessThanOrEqual, value);
             return this;
         }
 
-        public FilterBuilder In(string property, dynamic[] array)
+        /// <summary>
+        /// Operation represents: array.Contains(property)
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="array"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder In<TProperty>(string property, TProperty[] array)
         {
             AddExpression(property, FilterExpressionTypes.In, array);
             return this;
         }
 
+        /// <summary>
+        /// Operation represents logical expressions group (AND)
+        /// </summary>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
         public FilterBuilder And(Action<FilterBuilder> builder)
         {
             var filterBuilder = new FilterBuilder();
@@ -70,6 +138,11 @@ namespace Abitech.NextApi.Model.Filtering
             return this;
         }
 
+        /// <summary>
+        /// Operation represents logical expressions group (OR)
+        /// </summary>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
         public FilterBuilder Or(Action<FilterBuilder> builder)
         {
             var filterBuilder = new FilterBuilder(LogicalOperators.Or);
@@ -78,16 +151,16 @@ namespace Abitech.NextApi.Model.Filtering
             return this;
         }
 
-        private void AddFilter(Filtering.Filter filter)
+        private void AddFilter(Filter filter)
         {
-            _filter.Expressions.Add(new FilterExpression()
+            _filter.Expressions.Add(new FilterExpression
             {
                 ExpressionType = FilterExpressionTypes.Filter,
                 Value = filter
             });
         }
 
-        private void AddExpression(string property, FilterExpressionTypes expressionType, dynamic value)
+        private void AddExpression(string property, FilterExpressionTypes expressionType, object value)
         {
             _filter.Expressions.Add(new FilterExpression
             {
@@ -97,7 +170,11 @@ namespace Abitech.NextApi.Model.Filtering
             });
         }
 
-        public Filtering.Filter Build()
+        /// <summary>
+        /// Builds and returns filter
+        /// </summary>
+        /// <returns></returns>
+        public Filter Build()
         {
             return _filter;
         }
