@@ -24,7 +24,7 @@ namespace Abitech.NextApi.Server.Entity
         INextApiEntityService<TDto, TKey>
         where TDto : class
         where TEntity : class
-        where TRepo: class, INextApiRepository<TEntity, TKey>
+        where TRepo : class, INextApiRepository<TEntity, TKey>
         where TUnitOfWork : class, INextApiUnitOfWork
     {
         private readonly TUnitOfWork _unitOfWork;
@@ -84,6 +84,13 @@ namespace Abitech.NextApi.Server.Entity
         public virtual async Task<PagedList<TDto>> GetPaged(PagedRequest request)
         {
             var entitiesQuery = _repository.GetAll().Expand(request.Expand);
+            // apply filter
+            var filterExpression = request.Filter?.ToLambdaFilter<TEntity>();
+            if (filterExpression != null)
+            {
+                entitiesQuery = entitiesQuery.Where(filterExpression);
+            }
+
             var totalCount = entitiesQuery.Count();
             if (request.Skip != null)
                 entitiesQuery = entitiesQuery.Skip(request.Skip.Value);
@@ -124,10 +131,10 @@ namespace Abitech.NextApi.Server.Entity
                 .Where(_repository.KeyPredicate(keys))
                 .Expand(expand)
                 .ToArrayAsync();
-            
+
             if (entities == null)
                 throw new Exception("Entity is not exists");
-            
+
             return _mapper.Map<TEntity[], TDto[]>(entities);
         }
 

@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
+using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.DTO;
@@ -193,7 +194,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task GetByIds(params string[] expand)
         {
             var client = await GetServiceClient();
-            
+
             int[] idArray = new int[]
             {
                 14, 12, 13
@@ -202,11 +203,11 @@ namespace Abitech.NextApi.Server.Tests
             idArray = idArray.OrderBy(i => i).ToArray();
 
             var users = await client.GetByIds(idArray, expand.Contains("") ? null : expand);
-          
+
             for (int i = 0; i < users.Length; i++)
             {
                 Assert.Equal(idArray[i], users[i].Id);
-                
+
                 if (expand.Contains("City"))
                 {
                     Assert.NotNull(users.ToList()[i].City);
@@ -225,6 +226,31 @@ namespace Abitech.NextApi.Server.Tests
                     Assert.Null(users.ToList()[i].Role);
                 }
             }
+        }
+
+        [Fact]
+        public async Task GetPagedFiltered()
+        {
+            var client = await GetServiceClient();
+            // filter:
+            // entity => entity.Enabled == true &&
+            //          (new [] {5,10,23}).Contains(entity.Id) &&
+            //          (entity.Name.Contains("a") || entity.Role.Name.Contains("role"))
+            var paged = new PagedRequest
+            {
+                Filter = new FilterBuilder()
+                    .Equal("Enabled", true)
+                    .In("Id", new[] {5, 10, 14})
+                    .Or(f => f
+                        .Contains("Name", "a")
+                        .Contains("Role.Name", "role"))
+                    .Build()
+            };
+
+            var data = await client.GetPaged(paged);
+
+            Assert.True(data.TotalItems == 3);
+            Assert.True(data.Items.All(e => e.Id == 5 || e.Id == 10 || e.Id == 14));
         }
 
         private async Task<TestEntityService> GetServiceClient()
