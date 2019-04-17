@@ -24,18 +24,18 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
             await _context.AddAsync(entity);
         }
 
-        public void Update(TestUser entity)
+        public async Task UpdateAsync(TestUser entity)
         {
             _context.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
         }
 
-        public void Delete(TestUser entity)
+        public async Task DeleteAsync(TestUser entity)
         {
             _context.Users.Remove(entity);
         }
 
-        public void Delete(Expression<Func<TestUser, bool>> where)
+        public async Task DeleteAsync(Expression<Func<TestUser, bool>> where)
         {
             var objects = _dbset.Where(where).AsEnumerable();
             foreach (var obj in objects)

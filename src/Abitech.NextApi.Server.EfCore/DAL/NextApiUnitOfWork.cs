@@ -25,7 +25,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// Save all changes
         /// </summary>
         /// <returns></returns>
-        public async Task Commit()
+        public async Task CommitAsync()
         {
             await Context.SaveChangesAsync();
         }

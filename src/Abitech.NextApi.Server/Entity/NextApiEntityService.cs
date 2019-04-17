@@ -56,7 +56,7 @@ namespace Abitech.NextApi.Server.Entity
         {
             var entityFromDto = _mapper.Map<TDto, TEntity>(entity);
             await _repository.AddAsync(entityFromDto);
-            await Commit();
+            await CommitAsync();
             return _mapper.Map<TEntity, TDto>(entityFromDto);
         }
 
@@ -64,8 +64,8 @@ namespace Abitech.NextApi.Server.Entity
         /// <inheritdoc />
         public virtual async Task Delete(TKey key)
         {
-            _repository.Delete(_repository.KeyPredicate(key));
-            await Commit();
+            await _repository.DeleteAsync(_repository.KeyPredicate(key));
+            await CommitAsync();
         }
 
 
@@ -76,7 +76,8 @@ namespace Abitech.NextApi.Server.Entity
             if (entity == null)
                 throw new Exception($"Entity with id {key} is not exists");
             NextApiUtils.PatchEntity(patch, entity);
-            await Commit();
+            await _repository.UpdateAsync(entity);
+            await CommitAsync();
             return _mapper.Map<TEntity, TDto>(entity);
         }
 
@@ -139,14 +140,14 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <summary>
-        /// Commit changes in repo
+        /// Commits changes in repo
         /// </summary>
         /// <returns></returns>
-        protected async Task Commit()
+        protected async Task CommitAsync()
         {
             if (AutoCommit)
             {
-                await _unitOfWork.Commit();
+                await _unitOfWork.CommitAsync();
             }
         }
     }

@@ -34,7 +34,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                     };
 
                     await repo.AddAsync(entityToAdd);
-                    await unitOfWork.Commit();
+                    await unitOfWork.CommitAsync();
                     // should contain id after commit
                     Assert.True(entityToAdd.Id > 0);
                     var entityAdded = await repo.GetByIdAsync(entityToAdd.Id);
@@ -47,16 +47,16 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                     Assert.Equal("TestEntityToAdd", entityToUpdate.Name);
                     var newName = "TestEntityUpdate";
                     entityToUpdate.Name = newName;
-                    repo.Update(entityToUpdate);
-                    await unitOfWork.Commit();
+                    await repo.UpdateAsync(entityToUpdate);
+                    await unitOfWork.CommitAsync();
                     var updatedEntity = await repo.GetByIdAsync(entityToUpdate.Id);
                     updatedEntity.ShouldDeepEqual(entityToUpdate);
                 }
                 // check delete
                 {
                     Assert.True(await repo.GetAll().AnyAsync());
-                    repo.Delete(e => e.Id == 1);
-                    await unitOfWork.Commit();
+                    await repo.DeleteAsync(e => e.Id == 1);
+                    await unitOfWork.CommitAsync();
                     Assert.False(await repo.GetAll().AnyAsync());
                 }
             }
@@ -78,7 +78,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                     Id = id,
                     Description = "testException"
                 });
-                await unitOfWork.Commit();
+                await unitOfWork.CommitAsync();
 
                 // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
                 await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdAsync(id));
@@ -109,7 +109,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                     Description = "testException"
                 });
                 
-                await unitOfWork.Commit();
+                await unitOfWork.CommitAsync();
 
                 // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
                 await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdsAsync(ids));
@@ -136,15 +136,15 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 await repo.AddAsync(createdEntity1);
                 await repo.AddAsync(createdEntity2);
-                await unitOfWork.Commit();
+                await unitOfWork.CommitAsync();
 
                 // check entities successfully created
                 Assert.True(createdEntity1.Id > 0 && !createdEntity1.IsRemoved);
                 Assert.True(createdEntity2.Id > 0 && !createdEntity2.IsRemoved);
 
                 // check soft-deletable mechanism
-                repo.Delete(createdEntity1);
-                await unitOfWork.Commit();
+                await repo.DeleteAsync(createdEntity1);
+                await unitOfWork.CommitAsync();
 
                 // check entity soft-deleted
                 Assert.True(createdEntity1.IsRemoved);
@@ -173,7 +173,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 };
 
                 await repo.AddAsync(entity1);
-                await unitOfWork.Commit();
+                await unitOfWork.CommitAsync();
 
                 var entityForUpdate = await repo.GetByIdAsync(entity1.Id);
                 Assert.NotNull(entityForUpdate.CreatedById);
@@ -181,8 +181,8 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 entityForUpdate.Name = "name2";
 
-                repo.Update(entityForUpdate);
-                await unitOfWork.Commit();
+                await repo.UpdateAsync(entityForUpdate);
+                await unitOfWork.CommitAsync();
 
                 var updatedEntity = await repo.GetByIdAsync(entity1.Id);
 
@@ -212,12 +212,12 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 };
 
                 await repo.AddAsync(entity);
-                await unitOfWork.Commit();
+                await unitOfWork.CommitAsync();
 
                 // update
                 entity.Name = $"testColumnLogUpdated{loggingEnabled}";
-                repo.Update(entity);
-                await unitOfWork.Commit();
+                await repo.UpdateAsync(entity);
+                await unitOfWork.CommitAsync();
                 // check log
                 var lastChangedOn =
                     await columnChangesLogger.GetLastChange("TestColumnChangesEnabledEntity", "Name", entity.RowGuid);
@@ -241,12 +241,12 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 };
 
                 await repo.AddAsync(entity);
-                await unitOfWork.Commit();
+                await unitOfWork.CommitAsync();
 
                 entity.Name = "updatedNameFromTests";
 
-                repo.Update(entity);
-                await unitOfWork.Commit();
+                await repo.UpdateAsync(entity);
+                await unitOfWork.CommitAsync();
 
                 Assert.Null(await columnChangesLogger.GetLastChange("TestEntity", "Name", entity.RowGuid));
             }

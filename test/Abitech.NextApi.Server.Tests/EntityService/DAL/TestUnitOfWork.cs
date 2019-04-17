@@ -13,7 +13,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task Commit()
+        public async Task CommitAsync()
         {
             await _context.SaveChangesAsync();
         }
