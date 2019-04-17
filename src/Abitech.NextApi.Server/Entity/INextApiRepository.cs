@@ -22,17 +22,17 @@ namespace Abitech.NextApi.Server.Entity
         /// Updates entity by instance
         /// </summary>
         /// <param name="entity">entity instance</param>
-        void Update(T entity);
+        Task UpdateAsync(T entity);
         /// <summary>
         /// Deletes item by entity instance
         /// </summary>
         /// <param name="entity">entity instance</param>
-        void Delete(T entity);
+        Task DeleteAsync(T entity);
         /// <summary>
         /// Deletes items by condition
         /// </summary>
         /// <param name="where">delete condition</param>
-        void Delete(Expression<Func<T, bool>> where);
+        Task DeleteAsync(Expression<Func<T, bool>> where);
         /// <summary>
         /// Returns entity by id
         /// </summary>

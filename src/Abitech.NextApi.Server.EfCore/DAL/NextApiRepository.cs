@@ -54,7 +54,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// Updates entity by instance
         /// </summary>
         /// <param name="entity">entity instance</param>
-        public virtual void Update(T entity)
+        public virtual async Task UpdateAsync(T entity)
         {
             _dbset.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
@@ -64,7 +64,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// Deletes item by entity instance
         /// </summary>
         /// <param name="entity">entity instance</param>
-        public virtual void Delete(T entity)
+        public virtual async Task DeleteAsync(T entity)
         {
             if (_isSoftDeleteSupported && SoftDeleteEnabled)
             {
@@ -80,11 +80,11 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// Deletes items by condition
         /// </summary>
         /// <param name="where">delete condition</param>
-        public virtual void Delete(Expression<Func<T, bool>> where)
+        public virtual async Task DeleteAsync(Expression<Func<T, bool>> where)
         {
             var objects = _dbset.Where(where).AsEnumerable();
             foreach (var obj in objects)
-                Delete(obj);
+                await DeleteAsync(obj);
         }
 
         /// <summary>
