@@ -31,8 +31,10 @@ namespace Abitech.NextApi.Server.EfCore.DAL
                         entity.Updated = DateTimeOffset.Now;
                         break;
                     case EntityState.Added:
-                        entity.CreatedById = userId;
-                        entity.Created = DateTimeOffset.Now;
+                        if (!entity.CreatedById.HasValue)
+                            entity.CreatedById = userId;
+                        if (!entity.Created.HasValue)
+                            entity.Created = DateTimeOffset.Now;
                         break;
                 }
             }

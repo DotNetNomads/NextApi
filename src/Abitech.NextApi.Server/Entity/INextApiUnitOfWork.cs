@@ -12,9 +12,9 @@ namespace Abitech.NextApi.Server.Entity
     public interface INextApiUnitOfWork
     {
         /// <summary>
-        /// Commit changes into db
+        /// Commits changes into db
         /// </summary>
         /// <returns></returns>
-        Task Commit();
+        Task CommitAsync();
     }
 }
