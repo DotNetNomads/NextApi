@@ -54,16 +54,29 @@ namespace Abitech.NextApi.Server.Service
         /// Resolves service method for service type
         /// </summary>
         /// <param name="serviceType">Type of service</param>
-        /// <param name="command">NextApi command</param>
+        /// <param name="methodName">Method name</param>
+        /// <param name="signature">Method signature</param>
         /// <returns>MethodInfo that represents requested method</returns>
-        public static MethodInfo GetServiceMethod(Type serviceType, NextApiCommand command)
+        public static MethodInfo GetServiceMethod(Type serviceType,  string methodName, Type[] signature = null)
         {
-            var methods = serviceType.GetMethods();
-            return methods.FirstOrDefault(m =>
-                m.Name.Equals(command.Method) &&
-                m.MemberType == MemberTypes.Method &&
-                m.IsPublic &&
-                !m.IsStatic);
+            MethodInfo result = null;
+            if (signature == null)
+            {
+                var methods = serviceType.GetMethods();
+                result = methods.FirstOrDefault(m =>
+                    m.Name.Equals(methodName) &&
+                    m.MemberType == MemberTypes.Method &&
+                    m.IsPublic &&
+                    !m.IsStatic);
+            }
+            else
+            {
+                var m = serviceType.GetMethod(methodName, signature);
+                if (m != null && m.MemberType == MemberTypes.Method && m.IsPublic && !m.IsStatic)
+                    result = m;
+            }
+            
+            return result;
         }
 
         /// <summary>
@@ -80,19 +93,19 @@ namespace Abitech.NextApi.Server.Service
         /// Resolves parameters for method call from NextApiCommand
         /// </summary>
         /// <param name="methodInfo">Information about method</param>
-        /// <param name="command">Information about NextApi call</param>
+        /// <param name="parameters">Method parameters (Key - param name; Value - param value)</param>
         /// <returns>Array of parameters</returns>
         /// <exception cref="Exception">when parameter is not exist in command</exception>
-        public static object[] ResolveMethodParameters(MethodInfo methodInfo, NextApiCommand command)
+        public static object[] ResolveMethodParameters(MethodInfo methodInfo, Dictionary<string, object> parameters)
         {
             var paramValues = new List<object>();
             foreach (var parameter in methodInfo.GetParameters())
             {
                 var paramName = parameter.Name;
 
-                var arg = command.Args.FirstOrDefault(d => d.Name == paramName);
+                var res = parameters.TryGetValue(paramName, out var value);
 
-                if (arg == null)
+                if (!res)
                 {
                     if (!parameter.IsOptional)
                         throw new Exception($"Parameter with {paramName} is not exist in request");
@@ -102,11 +115,8 @@ namespace Abitech.NextApi.Server.Service
                     paramValues.Add(Type.Missing);
                     continue;
                 }
-
-                var paramType = parameter.ParameterType;
-                //var deserializedObject = JsonConvert.DeserializeObject((string) arg.Value.Value, paramType);
-                //var deserializedObject = MessagePackSerializer.Typeless.Deserialize(arg.Value);
-                paramValues.Add(arg.Value);
+                
+                paramValues.Add(value);
             }
 
             return paramValues.ToArray();
@@ -132,7 +142,7 @@ namespace Abitech.NextApi.Server.Service
         /// <param name="arguments">Method arguments</param>
         /// <returns>dynamic result of method call</returns>
         /// <remarks>Do not use <c>async void</c> for service methods. See: https://docs.microsoft.com/en-us/dotnet/csharp/async</remarks>
-        public static async Task<object> CallService(MethodInfo methodInfo, NextApiService serviceInstance,
+        public static async Task<object> CallService(object serviceInstance, MethodInfo methodInfo,
             object[] arguments)
         {
             var returnType = methodInfo.ReturnType;

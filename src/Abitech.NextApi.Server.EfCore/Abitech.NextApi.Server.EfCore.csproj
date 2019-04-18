@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
     <ProjectReference Include="..\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
   </ItemGroup>
 

@@ -70,9 +70,13 @@ namespace Abitech.NextApi.Server.Tests.EntityService
 
         private static TestCity CreateCity(int cityId)
         {
+            var rand = new Random();
+            var name = $"cityName{cityId}";
             return new TestCity
             {
-                Name = $"cityName{cityId}"
+                Name = name,
+                Population = rand.Next(),
+                Demonym = name + "er"
             };
         }
     }

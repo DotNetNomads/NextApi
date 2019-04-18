@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
@@ -69,7 +70,7 @@ namespace Abitech.NextApi.Server.Base
             if (!isAnonymousService && !userAuthorized)
                 throw new Exception("This service available only for authorized users");
 
-            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command)
+            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command.Method)
                              ?? throw new Exception(
                                  $"Method with name {command.Method} is not found in service {command.Service}");
 
@@ -82,13 +83,14 @@ namespace Abitech.NextApi.Server.Base
                     throw new Exception("This method disabled for current user");
             }
 
-            var methodParameters = NextApiServiceHelper.ResolveMethodParameters(methodInfo, command);
+            var methodParameters = NextApiServiceHelper.ResolveMethodParameters(methodInfo, 
+                command.Args.ToDictionary(nextApiArgument => nextApiArgument.Name, nextApiArgument => nextApiArgument.Value));
             var serviceInstance = (NextApiService)_serviceProvider.GetService(serviceType);
             serviceInstance.ClientContext = Context;
             serviceInstance.HubContext = _hubContext;
             try
             {
-                return await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParameters);
+                return await NextApiServiceHelper.CallService(serviceInstance, methodInfo, methodParameters);
             }
             catch (Exception ex)
             {
