@@ -72,8 +72,8 @@ namespace Abitech.NextApi.Server.Tests
             });
 
             Assert.Equal(uploadQueue.Count, resultDict.Count);
-            Assert.True(resultDict.Any(pair => pair.Value.Error == UploadQueueError.NoError));
-            Assert.True(resultDict.Any(pair => pair.Value.Error == UploadQueueError.OnlyOneCreateOperationAllowed));
+            Assert.Contains(resultDict, pair => pair.Value.Error == UploadQueueError.NoError);
+            Assert.Contains(resultDict, pair => pair.Value.Error == UploadQueueError.OnlyOneCreateOperationAllowed);
         }
         
         [Fact]

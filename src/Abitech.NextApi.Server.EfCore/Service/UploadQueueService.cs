@@ -55,7 +55,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
 
             var repoType = typeof(T);
 
-            if (!repoType.IsAssignableToGenericType(typeof(INextApiRepository<,>)))
+            if (!typeof(INextApiRepository).IsAssignableFrom(repoType))
                 throw new ArgumentException($"Type {repoType.Name} must implement INextApiRepository<>");
             
             _repositoryDictionary.Add(modelName, repoType);
@@ -110,8 +110,8 @@ namespace Abitech.NextApi.Server.EfCore.Service
                 foreach (var genericType in genericArguments)
                 {
                     if (genericType.Name != entityName) continue;
-                    if (genericType.IsAssignableFrom(typeof(IGuidEntity<>)) 
-                        || genericType.IsAssignableFrom(typeof(IRowGuidEnabled)))
+                    if (genericType.IsAssignableFrom(typeof(IRowGuidEnabled))
+                        || genericType.IsAssignableFrom(typeof(IGuidEntity<>)))
                         continue;
                     
                     repoGenericModelType = genericType;
@@ -121,39 +121,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                 if (repoGenericModelType == null)
                     throw new Exception($"Repo {repoType.Name} is not for {entityName}");
                 
-                var repoInstance = _serviceProvider.GetService(repoType);
-                var methodSignature = new[] { repoGenericModelType };
-                MethodInfo getEntityMethodInfo = null;
-                MethodInfo createMethodInfo = null;
-                MethodInfo updateMethodInfo = null;
-                MethodInfo deleteMethodInfo = null;
-
-                const string getEntityMethodName = nameof(INextApiRepository<object, object>.GetAsync);
-                var funcType = typeof(Func<,>).MakeGenericType(repoGenericModelType, typeof(bool));
-                var expressionType = typeof(Expression<>).MakeGenericType(funcType);
-                getEntityMethodInfo = NextApiServiceHelper
-                    .GetServiceMethod(repoType, getEntityMethodName, new[] { expressionType });
-
-                if (groupByEntityNameList.Any(dto => dto.OperationType == OperationType.Create))
-                {
-                    const string createMethodName = nameof(INextApiRepository<object, object>.AddAsync);
-                    createMethodInfo = NextApiServiceHelper
-                        .GetServiceMethod(repoType, createMethodName, methodSignature);
-                }
-                
-                if (groupByEntityNameList.Any(dto => dto.OperationType == OperationType.Update))
-                {
-                    const string updateMethodName = nameof(INextApiRepository<object, object>.UpdateAsync);
-                    updateMethodInfo = NextApiServiceHelper
-                        .GetServiceMethod(repoType, updateMethodName, methodSignature);
-                }
-
-                if (groupByEntityNameList.Any(dto => dto.OperationType == OperationType.Delete))
-                {
-                    const string deleteMethodName = nameof(INextApiRepository<object, object>.DeleteAsync);
-                    deleteMethodInfo = NextApiServiceHelper
-                        .GetServiceMethod(repoType, deleteMethodName, methodSignature);
-                }
+                var repoInstance = (INextApiRepository) _serviceProvider.GetService(repoType);
                 
                 #endregion
                 
@@ -209,19 +177,9 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     
                     try
                     {
-                        var where = UploadQueueServiceHelper.GetEqualsExpression(
-                            repoGenericModelType,
-                            nameof(IGuidEntity<object>.RowGuid),
-                            rowGuid);
-                        var parameters = NextApiServiceHelper.ResolveMethodParameters(getEntityMethodInfo, 
-                            new Dictionary<string, object>
-                            {
-                                { "where", where }
-                            });
-                                
                         // result of get method - entity instance
                         _lock.Wait();
-                        var result = await NextApiServiceHelper.CallService(repoInstance, getEntityMethodInfo, parameters);
+                        var result = await repoInstance.GetByRowGuid(rowGuid);
                         _lock.Release();
                         
                         entityInstance = Convert.ChangeType(result, repoGenericModelType);
@@ -252,21 +210,14 @@ namespace Abitech.NextApi.Server.EfCore.Service
                             {
                                 entityInstance = JsonConvert.DeserializeObject((string)createOperation.NewValue,
                                     repoGenericModelType);
-                                var parameters = NextApiServiceHelper
-                                    .ResolveMethodParameters(createMethodInfo, new Dictionary<string, object>
-                                    {
-                                        {"entity", entityInstance}
-                                    });
 
                                 // Add entity, if only create operation is in the batch
                                 if (!createAndUpdateInSameBatch)
                                 {
                                     _lock.Wait();
-                                    await NextApiServiceHelper.CallService(repoInstance, createMethodInfo, parameters);
+                                    await repoInstance.AddAsync(entityInstance);
                                     _lock.Release();
                                 }
-
-                                
                                 
                                 createResult.Error = UploadQueueError.NoError;
                             }
@@ -352,25 +303,19 @@ namespace Abitech.NextApi.Server.EfCore.Service
                             {
                                 var rejected = UploadQueueActions.ApplyModifications(entityInstance, updateList) 
                                     as Dictionary<Guid, Exception>;
-                        
-                                var parameters = NextApiServiceHelper.ResolveMethodParameters(updateMethodInfo, 
-                                    new Dictionary<string, object>
-                                    {
-                                        { "entity", entityInstance }
-                                    });
                                 
                                 // Add entity, if create and update ops are in the same batch
                                 if (createAndUpdateInSameBatch)
                                 {
                                     _lock.Wait();
-                                    await NextApiServiceHelper.CallService(repoInstance, createMethodInfo, parameters);
+                                    await repoInstance.AddAsync(entityInstance);
                                     _lock.Release();
                                 }
                                 // Else just update existing entity
                                 else
                                 {
                                     _lock.Wait();
-                                    await NextApiServiceHelper.CallService(repoInstance, updateMethodInfo, parameters);
+                                    await repoInstance.UpdateAsync(entityInstance);
                                     _lock.Release();
                                 }
     
@@ -442,15 +387,9 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         var result = new UploadQueueResult();
                         try
                         {
-                            var parameters = NextApiServiceHelper.ResolveMethodParameters(deleteMethodInfo,
-                                new Dictionary<string, object>
-                                {
-                                    {"entity", entityInstance}
-                                });
-
                             // Delete entity
                             _lock.Wait();
-                            await NextApiServiceHelper.CallService(repoInstance, deleteMethodInfo, parameters);
+                            await repoInstance.DeleteAsync(entityInstance);
                             _lock.Release();
                             
                             result.Error = UploadQueueError.NoError;

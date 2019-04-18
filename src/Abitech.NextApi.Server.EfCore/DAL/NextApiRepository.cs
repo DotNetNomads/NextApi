@@ -22,6 +22,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         private readonly DbSet<T> _dbset;
         private readonly bool _isIEntity;
         private readonly bool _isSoftDeleteSupported;
+        private readonly bool _isRowGuidSupported;
 
         /// <summary>
         /// Indicates that soft-delete enabled for this repo
@@ -38,6 +39,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             _dbset = _context.Set<T>();
             _isIEntity = typeof(IEntity<TKey>).IsAssignableFrom(typeof(T));
             _isSoftDeleteSupported = typeof(ISoftDeletableEntity).IsAssignableFrom(typeof(T));
+            _isRowGuidSupported = typeof(IRowGuidEnabled).IsAssignableFrom(typeof(T));
         }
 
         /// <summary>
@@ -161,6 +163,29 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         public async Task<T> GetAsync(Expression<Func<T, bool>> where)
         {
             return await GetAll().FirstOrDefaultAsync<T>(where);
+        }
+
+        public async Task AddAsync(object entity)
+        {
+            await AddAsync((T)entity);
+        }
+
+        public async Task UpdateAsync(object entity)
+        {
+            await UpdateAsync((T)entity);
+        }
+
+        public async Task DeleteAsync(object entity)
+        {
+            await DeleteAsync((T)entity);
+        }
+
+        public async Task<object> GetByRowGuid(Guid rowGuid)
+        {
+            if (!_isRowGuidSupported)
+                throw new Exception("RowGuid is not supported");
+
+            return await GetAsync(arg => ((IRowGuidEnabled)arg).RowGuid == rowGuid);
         }
     }
 }

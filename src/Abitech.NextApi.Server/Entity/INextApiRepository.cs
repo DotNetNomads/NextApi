@@ -10,7 +10,7 @@ namespace Abitech.NextApi.Server.Entity
     /// </summary>
     /// <typeparam name="T">Entity type</typeparam>
     /// <typeparam name="TKey">Entity key type</typeparam>
-    public interface INextApiRepository<T, TKey> where T : class
+    public interface INextApiRepository<T, TKey> : INextApiRepository where T : class
     {
         /// <summary>
         /// Adds entity to dbset
@@ -71,5 +71,33 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="ids"></param>
         /// <returns></returns>
         Task<T[]> GetByIdsAsync(TKey[] ids);
+    }
+    
+    /// <summary>
+    /// Base interface for INextApiRepository<T,TKey> repo
+    /// </summary>
+    public interface INextApiRepository
+    {
+        /// <summary>
+        /// Adds entity to dbset
+        /// </summary>
+        /// <param name="entity">entity instance as object</param>
+        /// <returns></returns>
+        Task AddAsync(object entity);
+        /// <summary>
+        /// Updates entity by instance
+        /// </summary>
+        /// <param name="entity">entity instance as object</param>
+        Task UpdateAsync(object entity);
+        /// <summary>
+        /// Deletes item by entity instance
+        /// </summary>
+        /// <param name="entity">entity instance as object</param>
+        Task DeleteAsync(object entity);
+        /// <summary>
+        /// Get entity by row guid
+        /// </summary>
+        /// <param name="rowGuid">Entity row guid</param>
+        Task<object> GetByRowGuid(Guid rowGuid);
     }
 }
