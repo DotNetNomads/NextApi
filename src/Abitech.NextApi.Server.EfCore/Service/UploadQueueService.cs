@@ -76,7 +76,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
             
             await Task.WhenAll(taskList);
             
-            await _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
             
             foreach (var operation in uploadQueue)
             {
@@ -143,14 +143,14 @@ namespace Abitech.NextApi.Server.EfCore.Service
                 
                 if (groupByEntityNameList.Any(dto => dto.OperationType == OperationType.Update))
                 {
-                    const string updateMethodName = nameof(INextApiRepository<object, object>.Update);
+                    const string updateMethodName = nameof(INextApiRepository<object, object>.UpdateAsync);
                     updateMethodInfo = NextApiServiceHelper
                         .GetServiceMethod(repoType, updateMethodName, methodSignature);
                 }
 
                 if (groupByEntityNameList.Any(dto => dto.OperationType == OperationType.Delete))
                 {
-                    const string deleteMethodName = nameof(INextApiRepository<object, object>.Delete);
+                    const string deleteMethodName = nameof(INextApiRepository<object, object>.DeleteAsync);
                     deleteMethodInfo = NextApiServiceHelper
                         .GetServiceMethod(repoType, deleteMethodName, methodSignature);
                 }
