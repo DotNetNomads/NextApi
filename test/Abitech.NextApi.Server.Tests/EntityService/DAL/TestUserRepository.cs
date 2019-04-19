@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,13 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
     {
         private readonly TestDbContext _context;
         private readonly DbSet<TestUser> _dbset;
+        private readonly bool _isRowGuidSupported;
 
         public TestUserRepository(TestDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _dbset = _context.Users;
+            _isRowGuidSupported = typeof(IRowGuidEnabled).IsAssignableFrom(typeof(TestUser));
         }
 
         public async Task AddAsync(TestUser entity)
@@ -71,6 +74,29 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
         public async Task<TestUser[]> GetByIdsAsync(int[] ids)
         {
             return await _dbset.ToArrayAsync();
+        }
+        
+        public async Task AddAsync(object entity)
+        {
+            await AddAsync((TestUser)entity);
+        }
+
+        public async Task UpdateAsync(object entity)
+        {
+            await UpdateAsync((TestUser)entity);
+        }
+
+        public async Task DeleteAsync(object entity)
+        {
+            await DeleteAsync((TestUser)entity);
+        }
+
+        public async Task<object> GetByRowGuid(Guid rowGuid)
+        {
+            if (_isRowGuidSupported)
+                throw new Exception("RowGuid is not supported");
+
+            return await GetAsync(arg => ((IRowGuidEnabled) arg).RowGuid == rowGuid);
         }
     }
 }
