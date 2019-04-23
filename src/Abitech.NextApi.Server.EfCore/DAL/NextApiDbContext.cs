@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
@@ -87,6 +87,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         {
             var userId = _nextApiUserAccessor?.SubjectId;
             this.RecordAuditInfo(userId, entityEntry);
+            this.CheckRowGuid(entityEntry);
         }
 
         /// <inheritdoc />

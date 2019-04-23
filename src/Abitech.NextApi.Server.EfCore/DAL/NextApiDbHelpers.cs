@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
@@ -35,6 +35,27 @@ namespace Abitech.NextApi.Server.EfCore.DAL
                             entity.CreatedById = userId;
                         if (!entity.Created.HasValue)
                             entity.Created = DateTimeOffset.Now;
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates RowGuid in the entity if it does not exist
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="entityEntry"></param>
+        public static void CheckRowGuid(this NextApiDbContext context, EntityEntry entityEntry)
+        {
+            if (entityEntry.Entity is IRowGuidEnabled rowGuidEnabled)
+            {
+                switch (entityEntry.State)
+                {
+                    case EntityState.Added:
+                        if (rowGuidEnabled.RowGuid == null)
+                            rowGuidEnabled.RowGuid = Guid.NewGuid();
+                        break;
+                    default:
                         break;
                 }
             }
