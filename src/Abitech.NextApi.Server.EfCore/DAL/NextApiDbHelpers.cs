@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
@@ -35,6 +35,19 @@ namespace Abitech.NextApi.Server.EfCore.DAL
                             entity.CreatedById = userId;
                         if (!entity.Created.HasValue)
                             entity.Created = DateTimeOffset.Now;
+                        break;
+                }
+            }
+
+            if(entityEntry.Entity is IRowGuidEnabled rowGuidEnabled)
+            {
+                switch (entityEntry.State)
+                {
+                    case EntityState.Added:
+                        if (rowGuidEnabled.RowGuid == null)
+                            rowGuidEnabled.RowGuid = new Guid();
+                        break;
+                    default:
                         break;
                 }
             }
