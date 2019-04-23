@@ -38,14 +38,22 @@ namespace Abitech.NextApi.Server.EfCore.DAL
                         break;
                 }
             }
+        }
 
-            if(entityEntry.Entity is IRowGuidEnabled rowGuidEnabled)
+        /// <summary>
+        /// Creates RowGuid in the entity if it does not exist
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="entityEntry"></param>
+        public static void CheckRowGuid(this NextApiDbContext context, EntityEntry entityEntry)
+        {
+            if (entityEntry.Entity is IRowGuidEnabled rowGuidEnabled)
             {
                 switch (entityEntry.State)
                 {
                     case EntityState.Added:
                         if (rowGuidEnabled.RowGuid == null)
-                            rowGuidEnabled.RowGuid = new Guid();
+                            rowGuidEnabled.RowGuid = Guid.NewGuid();
                         break;
                     default:
                         break;
