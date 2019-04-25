@@ -12,7 +12,7 @@ namespace Abitech.NextApi.Server.Tests.Service
             TestUnitOfWork unitOfWork, 
             IServiceProvider serviceProvider) : base(columnChangesLogger, unitOfWork, serviceProvider)
         {
-            RegisterRepository<TestCityRepository>(nameof(TestCity));
+            RegisterRepository<TestCity, ITestCityRepository>();
         }
     }
 }

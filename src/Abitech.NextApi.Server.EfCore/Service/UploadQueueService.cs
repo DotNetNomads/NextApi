@@ -23,7 +23,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
     public abstract class UploadQueueService<TUnitOfWork> : NextApiService
         where TUnitOfWork : class, INextApiUnitOfWork
     {
-        private readonly Dictionary<string, Type> _repositoryDictionary = new Dictionary<string, Type>();
+        private static readonly List<(Type modelType, Type repoType)> _repositoryList = new List<(Type modelType, Type repoType)>();
         
         private readonly IColumnChangesLogger _columnChangesLogger;
         private readonly TUnitOfWork _unitOfWork;
@@ -45,23 +45,31 @@ namespace Abitech.NextApi.Server.EfCore.Service
         /// Use this method to register repositories (that implement INextApiRepository) allowed in UploadQueue process
         /// </summary>
         /// <param name="modelName">This repository's generic model's name</param>
-        /// <typeparam name="T">Repository type</typeparam>
+        /// <typeparam name="TModel">Model type for this repository</typeparam>
+        /// <typeparam name="TRepository">Repository type</typeparam>
         /// <exception cref="ArgumentNullException">If modelName is null or whitespace</exception>
         /// <exception cref="ArgumentException">If repository type does not implement INextApiRepository</exception>
-        protected void RegisterRepository<T>(string modelName)
+        protected void RegisterRepository<TModel, TRepository>() 
+            where TModel : class, IRowGuidEnabled
+            where TRepository : class, INextApiRepository
         {
-            if (string.IsNullOrWhiteSpace(modelName))
-                throw new ArgumentNullException(nameof(modelName));
+            var modelType = typeof(TModel);
 
-            var repoType = typeof(T);
-
-            if (!typeof(INextApiRepository).IsAssignableFrom(repoType))
-                throw new ArgumentException($"Type {repoType.Name} must implement INextApiRepository<>");
+            var alreadyAdded = _repositoryList.FirstOrDefault(tuple => tuple.modelType.IsAssignableFrom(modelType)) != (null, null);
+            if (alreadyAdded)
+                return;
             
-            _repositoryDictionary.Add(modelName, repoType);
+            var repoType = typeof(TRepository);
+            
+            var genericArguments = repoType.AllBaseTypes().Concat(repoType.GetInterfaces()).SelectMany(type => type.GetGenericArguments());
+            var notForThisRepo = genericArguments.FirstOrDefault(type => type.IsAssignableFrom(modelType)) == null;
+            if (notForThisRepo)
+                throw new Exception($"Repo {repoType.Name} is not for {modelType.Name}");
+            
+            _repositoryList.Add((modelType, repoType));
         }
 
-        public async Task<ConcurrentDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
+        public virtual async Task<ConcurrentDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
         {
             _columnChangesLogger.LoggingEnabled = false;
             
@@ -99,40 +107,16 @@ namespace Abitech.NextApi.Server.EfCore.Service
                 if (string.IsNullOrWhiteSpace(entityName))
                     throw new ArgumentNullException(entityName);
                 
-                #region Resolve repo
-            
-                var res = _repositoryDictionary.TryGetValue(entityName, out var repoType);
-                if (!res)
+                // Resolve repo
+                var (modelType, repoType) = _repositoryList.FirstOrDefault(tuple => tuple.modelType.Name == entityName);
+                if (repoType == null)
                     throw new Exception($"No repo for {entityName}");
-
-                Type repoGenericModelType = null;
-                var genericArguments = repoType.AllBaseTypes().SelectMany(type => type.GetGenericArguments());
-                foreach (var genericType in genericArguments)
-                {
-                    if (genericType.Name != entityName) continue;
-                    if (genericType.IsAssignableFrom(typeof(IRowGuidEnabled))
-                        || genericType.IsAssignableFrom(typeof(IGuidEntity<>)))
-                        continue;
-                    
-                    repoGenericModelType = genericType;
-                    break;
-                }
-
-                if (repoGenericModelType == null)
-                    throw new Exception($"Repo {repoType.Name} is not for {entityName}");
                 
                 var repoInstance = (INextApiRepository) _serviceProvider.GetService(repoType);
                 
-                #endregion
-                
-                var taskList = new List<Task>();
+                // Process by row guid
                 var rowGuidGrouping = groupByEntityNameList.GroupBy(dto => dto.EntityRowGuid);
-                foreach (var group in rowGuidGrouping)
-                {
-                    taskList.Add(ProcessByRowGuid(group));
-                }
-
-                await Task.WhenAll(taskList);
+                await Task.WhenAll(rowGuidGrouping.Select(ProcessByRowGuid));
                 
                 #region Nested method ProcessByRowGuid
                 
@@ -143,7 +127,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     // IGrouping is IEnumerable, so it cant be enumerated multiple times
                     var groupByRowGuidList = groupByRowGuid.ToList();
                     
-                    #region Check if create and delete ops are in the same batch
+                    #region Reject all operations if create and delete ops are in the same batch
 
                     if (groupByRowGuidList.Any(dto => dto.OperationType == OperationType.Create)
                         && groupByRowGuidList.Any(dto => dto.OperationType == OperationType.Delete))
@@ -162,14 +146,10 @@ namespace Abitech.NextApi.Server.EfCore.Service
 
                     #endregion
 
-                    bool createAndUpdateInSameBatch;
-
-                    #region Check if create and update ops are in the same batch
-
-                    createAndUpdateInSameBatch = groupByRowGuidList.Any(dto => dto.OperationType == OperationType.Create)
-                                                 && groupByRowGuidList.Any(dto => dto.OperationType == OperationType.Update);
-
-                    #endregion
+                    // If create and update are in the same batch,
+                    // DbContext.Add is called after all updates are applied
+                    var createAndUpdateInSameBatch = groupByRowGuidList.Any(dto => dto.OperationType == OperationType.Create)
+                                                     && groupByRowGuidList.Any(dto => dto.OperationType == OperationType.Update);
                     
                     dynamic entityInstance = null;
                     
@@ -178,11 +158,8 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     try
                     {
                         // result of get method - entity instance
-                        _lock.Wait();
                         var result = await repoInstance.GetByRowGuid(rowGuid);
-                        _lock.Release();
-                        
-                        entityInstance = Convert.ChangeType(result, repoGenericModelType);
+                        entityInstance = Convert.ChangeType(result, modelType);
                     }
                     catch (Exception e)
                     {
@@ -196,7 +173,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     
                     // should only be one create operation for this rowguid
                     var createList = groupByRowGuidList.Where(dto => dto.OperationType == OperationType.Create 
-                                                                          && dto.EntityRowGuid == rowGuid).ToList();
+                                                                     && dto.EntityRowGuid == rowGuid).ToList();
                     
                     // get only first create operation for this rowguid
                     var createOperation = createList.FirstOrDefault();
@@ -208,8 +185,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         {
                             if (entityInstance == null)
                             {
-                                entityInstance = JsonConvert.DeserializeObject((string)createOperation.NewValue,
-                                    repoGenericModelType);
+                                entityInstance = JsonConvert.DeserializeObject((string)createOperation.NewValue, modelType);
 
                                 // Add entity, if only create operation is in the batch
                                 if (!createAndUpdateInSameBatch)
@@ -269,10 +245,9 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         for (int i = 0; i < updateList.Count; i++)
                         {
                             var updateOperation = updateList[i];
-                            _lock.Wait();
+                            
                             lastChangeTaskArray[i] = _columnChangesLogger.GetLastChange(updateOperation.EntityName,
                                 updateOperation.ColumnName, updateOperation.EntityRowGuid);
-                            _lock.Release();
                         }
 
                         await Task.WhenAll(lastChangeTaskArray);
