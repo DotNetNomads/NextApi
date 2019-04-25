@@ -12,7 +12,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService
         {
             services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase("TestAbitechDb"));
             services.AddTransient<TestUserRepository>();
-            services.AddTransient<TestCityRepository>();
+            services.AddTransient<ITestCityRepository, TestCityRepository>();
             services.AddTransient<TestUnitOfWork>();
             services.AddAutoMapper(typeof(TestDTOProfile));
             services.AddColumnChangesLogger<TestDbContext>();
