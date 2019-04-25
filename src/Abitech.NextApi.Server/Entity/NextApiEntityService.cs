@@ -55,7 +55,9 @@ namespace Abitech.NextApi.Server.Entity
         public virtual async Task<TDto> Create(TDto entity)
         {
             var entityFromDto = _mapper.Map<TDto, TEntity>(entity);
+            await BeforeCreate(entityFromDto);
             await _repository.AddAsync(entityFromDto);
+            await AfterCreate(entityFromDto);
             await CommitAsync();
             return _mapper.Map<TEntity, TDto>(entityFromDto);
         }
@@ -64,7 +66,15 @@ namespace Abitech.NextApi.Server.Entity
         /// <inheritdoc />
         public virtual async Task Delete(TKey key)
         {
-            await _repository.DeleteAsync(_repository.KeyPredicate(key));
+            var entity = await _repository.GetByIdAsync(key);
+            if (entity == null)
+            {
+                throw new InvalidOperationException($"Entity with id {key.ToString()} is not found!");
+            }
+
+            await BeforeDelete(entity);
+            await _repository.DeleteAsync(entity);
+            await AfterDelete(entity);
             await CommitAsync();
         }
 
@@ -75,8 +85,10 @@ namespace Abitech.NextApi.Server.Entity
             var entity = await _repository.GetByIdAsync(key);
             if (entity == null)
                 throw new Exception($"Entity with id {key} is not exists");
+            await BeforeUpdate(entity, patch);
             NextApiUtils.PatchEntity(patch, entity);
             await _repository.UpdateAsync(entity);
+            await AfterUpdate(entity);
             await CommitAsync();
             return _mapper.Map<TEntity, TDto>(entity);
         }
@@ -97,6 +109,7 @@ namespace Abitech.NextApi.Server.Entity
                 entitiesQuery = entitiesQuery.Skip(request.Skip.Value);
             if (request.Take != null)
                 entitiesQuery = entitiesQuery.Take(request.Take.Value);
+            entitiesQuery = await BeforeGet(entitiesQuery);
             var entities = await entitiesQuery.ToListAsync();
             return new PagedList<TDto>
             {
@@ -108,11 +121,12 @@ namespace Abitech.NextApi.Server.Entity
         /// <inheritdoc />
         public virtual async Task<TDto> GetById(TKey key, string[] expand = null)
         {
-            var entity = await _repository
+            var entityQuery = _repository
                 .GetAll()
                 .Where(_repository.KeyPredicate(key))
-                .Expand(expand)
-                .FirstOrDefaultAsync();
+                .Expand(expand);
+            entityQuery = await BeforeGet(entityQuery);
+            var entity = await entityQuery.FirstOrDefaultAsync();
             if (entity == null)
                 throw new Exception("Entity is not exists");
             return _mapper.Map<TEntity, TDto>(entity);
@@ -127,12 +141,12 @@ namespace Abitech.NextApi.Server.Entity
         /// <exception cref="Exception"></exception>
         public virtual async Task<TDto[]> GetByIds(TKey[] keys, string[] expand = null)
         {
-            var entities = await _repository
+            var entitiesQuery = _repository
                 .GetAll()
                 .Where(_repository.KeyPredicate(keys))
-                .Expand(expand)
-                .ToArrayAsync();
-
+                .Expand(expand);
+            entitiesQuery = await BeforeGet(entitiesQuery);
+            var entities = await entitiesQuery.ToArrayAsync();
             if (entities == null)
                 throw new Exception("Entity is not exists");
 
@@ -140,7 +154,7 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <summary>
-        /// Commits changes in repo
+        /// Commits changes in data repository
         /// </summary>
         /// <returns></returns>
         protected async Task CommitAsync()
@@ -150,5 +164,80 @@ namespace Abitech.NextApi.Server.Entity
                 await _unitOfWork.CommitAsync();
             }
         }
+
+
+        #region hooks
+
+        /// <summary>
+        /// Hook: runs before entity added to data repository
+        /// </summary>
+        /// <param name="entity">Entity instance</param>
+        /// <returns></returns>
+        protected virtual async Task BeforeCreate(TEntity entity)
+        {
+        }
+
+        /// <summary>
+        /// Hook: runs after entity added to data repository
+        /// </summary>
+        /// <remarks>Should call CommitAsync in
+        /// case you want to work with saved entity</remarks>
+        /// <param name="entity">Entity instance</param>
+        /// <returns></returns>
+        protected virtual async Task AfterCreate(TEntity entity)
+        {
+        }
+
+        /// <summary>
+        /// Hook: runs before entity updated in data repository
+        /// </summary>
+        /// <param name="entity">Original entity instance</param>
+        /// <param name="patch">Patch for original entity</param>
+        /// <returns></returns>
+        protected virtual async Task BeforeUpdate(TEntity entity, TDto patch)
+        {
+        }
+
+        /// <summary>
+        /// Hook: runs after entity updated in data repository
+        /// </summary>
+        /// <param name="entity">Patched entity instance</param>
+        /// <remarks>Should call CommitAsync in
+        /// case you want to work with saved entity</remarks>
+        /// <returns></returns>
+        protected virtual async Task AfterUpdate(TEntity entity)
+        {
+        }
+
+        /// <summary>
+        /// Hook: runs before entity deleted from data repository
+        /// </summary>
+        /// <param name="entity">Entity instance for delete</param>
+        /// <returns></returns>
+        protected virtual async Task BeforeDelete(TEntity entity)
+        {
+        }
+
+        /// <summary>
+        /// Hook: runs after entity deleted from data repository
+        /// </summary>
+        /// <param name="entity">Deleted entity instance</param>
+        /// <remarks>Should call CommitAsync in case you finalize delete operation</remarks>
+        /// <returns></returns>
+        protected virtual async Task AfterDelete(TEntity entity)
+        {
+        }
+
+        /// <summary>
+        /// Hook: runs before data loaded from repository
+        /// </summary>
+        /// <param name="query">Prepared query to repo</param>
+        /// <returns>Modified query to repo</returns>
+        protected virtual async Task<IQueryable<TEntity>> BeforeGet(IQueryable<TEntity> query)
+        {
+            return query;
+        }
+
+        #endregion
     }
 }

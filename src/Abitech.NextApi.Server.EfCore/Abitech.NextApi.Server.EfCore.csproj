@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2PAssets</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>Abitech.NextApi.Server.EfCore</PackageId>
@@ -26,10 +27,19 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.4" />
   </ItemGroup>
 
+  <!-- workaround, thanx @daMulli, see: https://github.com/dotnet/cli/issues/3959#issuecomment-333318028 -->
   <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
+    <ProjectReference Include="..\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" PrivateAssets="All" />
     <ProjectReference Include="..\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
   </ItemGroup>
+
+
+  <Target Name="IncludeP2PAssets">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.dll" />
+      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.xml" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <Folder Include="Repository" />
