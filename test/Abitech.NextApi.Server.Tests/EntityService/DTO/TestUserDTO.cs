@@ -11,5 +11,6 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DTO
         public int? RoleId { get; set; }
         public virtual TestCityDTO City { get; set; }
         public virtual TestRoleDTO Role { get; set; }
+        public string UnknownProperty { get; set; }
     }
 }

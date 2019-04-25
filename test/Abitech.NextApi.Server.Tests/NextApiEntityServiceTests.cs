@@ -105,6 +105,9 @@ namespace Abitech.NextApi.Server.Tests
 
                 // update field
                 userDTO.Name = name;
+                // should skip as
+                // https://gitlab.abitech.kz/development/common/abitech.nextapi/issues/12
+                userDTO.UnknownProperty = "someValue";
                 var updatedDTO = await client.Update(14, userDTO);
                 Assert.Equal(14, updatedDTO.Id);
                 Assert.Equal(name, updatedDTO.Name);
