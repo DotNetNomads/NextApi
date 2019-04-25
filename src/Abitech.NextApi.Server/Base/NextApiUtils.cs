@@ -50,15 +50,9 @@ namespace Abitech.NextApi.Server.Base
                 var value = patchProperty.GetMethod.Invoke(patch, null);
                 var entityProp = entity.GetType().GetProperty(propNameUpper) ??
                                  entity.GetType().GetProperty(propNameAsIs);
-                if (entityProp == null)
-                    throw new Exception($"Unknown property detected {propNameAsIs}");
 
-                // see: https://docs.microsoft.com/en-us/dotnet/api/system.valuetype?view=netstandard-2.0, as issue #1
-//                if (entityProp.GetGetMethod().IsVirtual)
-//                {
-//                    continue;
-//                }
-                if (!entityProp.PropertyType.IsPrimitive && !entityProp.PropertyType.IsValueType &&
+                if (entityProp == null || !entityProp.PropertyType.IsPrimitive &&
+                    !entityProp.PropertyType.IsValueType &&
                     entityProp.PropertyType != typeof(string))
                 {
                     continue;
@@ -105,8 +99,6 @@ namespace Abitech.NextApi.Server.Base
                     {
                         entityProp.SetValue(entity, null);
                     }
-
-                    //entityProp.SetValue(entity, Convert.ChangeType(value, entityProp.PropertyType));
                 }
                 catch
                 {
