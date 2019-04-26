@@ -71,6 +71,14 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="ids"></param>
         /// <returns></returns>
         Task<T[]> GetByIdsAsync(TKey[] ids);
+
+        /// <summary>
+        /// Given a entity, returns id value of entity
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns>Entity id</returns>
+        /// <exception cref="NotSupportedException">In case entity doesn't implements IEntity</exception>
+        TKey GetEntityId(T entity);
     }
     
     /// <summary>

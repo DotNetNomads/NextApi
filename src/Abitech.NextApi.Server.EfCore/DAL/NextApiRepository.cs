@@ -58,6 +58,15 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <param name="entity">entity instance</param>
         public virtual async Task UpdateAsync(T entity)
         {
+            // find local copy if exists and detach it
+            var entityId = GetEntityId(entity);
+            var local = _dbset.Local.FirstOrDefault(KeyPredicate(entityId).Compile());
+            if (local != null)
+            {
+                _context.Entry(local).State = EntityState.Detached;
+            }
+
+            // attach updated entity
             _dbset.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
         }
@@ -98,7 +107,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         {
             return await GetAll().FirstOrDefaultAsync(KeyPredicate(id));
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -121,13 +130,14 @@ namespace Abitech.NextApi.Server.EfCore.DAL
                 query = query.Where(i => !((ISoftDeletableEntity)i).IsRemoved);
             }
 
-            return query;
+            return query.AsNoTracking();
         }
 
         /// <summary>
         /// Given a entity and id, return true if entity's key property equals id.
         /// </summary>
         /// <param name="id"></param>
+        /// <exception cref="NotSupportedException">In case entity doesn't implements IEntity</exception>
         /// <returns></returns>
         public virtual Expression<Func<T, bool>> KeyPredicate(TKey id)
         {
@@ -139,6 +149,24 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             }
 
             return entity => (entity as IEntity<TKey>).Id.Equals(id);
+        }
+
+        /// <summary>
+        /// Given a entity, returns id value of entity
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns>Entity id</returns>
+        /// <exception cref="NotSupportedException">In case entity doesn't implements IEntity</exception>
+        public virtual TKey GetEntityId(T entity)
+        {
+            if (!_isIEntity)
+            {
+                throw new NotSupportedException(
+                    "Default implementation of GetEntityId method supports only entity that implements IEntity<TKey>." +
+                    "Override GetEntityId for your entity type.");
+            }
+
+            return ((IEntity<TKey>)entity).Id;
         }
 
 

@@ -59,7 +59,10 @@ namespace Abitech.NextApi.Server.Entity
             await _repository.AddAsync(entityFromDto);
             await AfterCreate(entityFromDto);
             await CommitAsync();
-            return _mapper.Map<TEntity, TDto>(entityFromDto);
+            var insertedEntity = await _repository.GetByIdAsync(
+                _repository.GetEntityId(entityFromDto)
+            );
+            return _mapper.Map<TEntity, TDto>(insertedEntity);
         }
 
 
@@ -90,7 +93,10 @@ namespace Abitech.NextApi.Server.Entity
             await _repository.UpdateAsync(entity);
             await AfterUpdate(entity);
             await CommitAsync();
-            return _mapper.Map<TEntity, TDto>(entity);
+            var updatedEntity = await _repository.GetByIdAsync(
+                _repository.GetEntityId(entity)
+            );
+            return _mapper.Map<TEntity, TDto>(updatedEntity);
         }
 
         /// <inheritdoc />
