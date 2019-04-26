@@ -75,7 +75,12 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
         {
             return await _dbset.ToArrayAsync();
         }
-        
+
+        public int GetEntityId(TestUser entity)
+        {
+            return entity.Id;
+        }
+
         public async Task AddAsync(object entity)
         {
             await AddAsync((TestUser)entity);
