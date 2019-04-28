@@ -5,6 +5,7 @@ using Abitech.NextApi.Client;
 using Abitech.NextApi.Server.Tests.Common;
 using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.TestHost;
+using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
@@ -14,14 +15,13 @@ namespace Abitech.NextApi.Server.Tests
         protected async Task<NextApiClient> GetClient(string token = null)
 #pragma warning restore 1998
         {
-
             var handler = _server.CreateHandler();
             return new NextApiClientForTests(
                 "ws://localhost/nextapi",
                 token != null ? new TestTokenProvider(token) : null,
                 handler);
         }
-        
+
         protected IServiceProvider ServiceProvider;
         private readonly TestServer _server;
 
@@ -40,7 +40,8 @@ namespace Abitech.NextApi.Server.Tests
 
         public NextApiClientForTests(string url, INextApiAccessTokenProvider tokenProvider,
             HttpMessageHandler messageHandler,
-            bool reconnectAutomatically = true, int reconnectDelayMs = 5000) : base(url, tokenProvider,
+            NextApiTransport transport = NextApiTransport.Http,
+            bool reconnectAutomatically = true, int reconnectDelayMs = 5000) : base(url, tokenProvider, transport,
             reconnectAutomatically, reconnectDelayMs)
         {
             _messageHandler = messageHandler;
@@ -53,6 +54,11 @@ namespace Abitech.NextApi.Server.Tests
             {
                 options.HttpMessageHandlerFactory = _ => _messageHandler;
             }
+        }
+
+        protected override HttpClient GetHttpClient()
+        {
+            return _messageHandler != null ? new HttpClient(_messageHandler) : new HttpClient();
         }
     }
 

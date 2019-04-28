@@ -18,6 +18,6 @@ namespace Abitech.NextApi.Model
         /// <summary>
         /// Method arguments. Will be parsed and passed when method invoke.
         /// </summary>
-        public NextApiArgument[] Args { get; set; }
+        public INextApiArgument[] Args { get; set; }
     }
 }

@@ -1,14 +1,22 @@
 namespace Abitech.NextApi.Model
 {
     /// <summary>
+    /// Basic interface for NextApi service method argument
+    /// </summary>
+    public interface INextApiArgument
+    {
+    }
+
+    /// <summary>
     /// NextApi service method argument
     /// </summary>
-    public class NextApiArgument
+    public class NextApiArgument : INextApiArgument
     {
         /// <summary>
         /// Argument name
         /// </summary>
         public string Name { get; set; }
+
         /// <summary>
         /// Argument value
         /// </summary>
@@ -29,5 +37,16 @@ namespace Abitech.NextApi.Model
         public NextApiArgument()
         {
         }
+    }
+
+    /// <summary>
+    /// NextApi service method file argument
+    /// </summary>
+    public class NextApiFileArgument : INextApiArgument
+    {
+        /// <summary>
+        /// Path to file
+        /// </summary>
+        public string FilePath { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -10,13 +11,13 @@ using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
 namespace Abitech.NextApi.Client
 {
-    
     /// <summary>
     /// NextApi client
     /// </summary>
-    
     public interface INextApiClient
     {
         /// <summary>
@@ -27,7 +28,7 @@ namespace Abitech.NextApi.Client
         /// <param name="arguments">Arguments for method</param>
         /// <typeparam name="T">Execution result</typeparam>
         /// <returns></returns>
-        Task<T> Invoke<T>(string serviceName, string serviceMethod, params NextApiArgument[] arguments);
+        Task<T> Invoke<T>(string serviceName, string serviceMethod, params INextApiArgument[] arguments);
 
         /// <summary>
         /// Invoke method of specific service
@@ -36,7 +37,7 @@ namespace Abitech.NextApi.Client
         /// <param name="serviceMethod"></param>
         /// <param name="arguments"></param>
         /// <returns>nothing</returns>
-        Task Invoke(string serviceName, string serviceMethod, params NextApiArgument[] arguments);
+        Task Invoke(string serviceName, string serviceMethod, params INextApiArgument[] arguments);
 
         /// <summary>
         /// List of supported permissions
@@ -49,6 +50,8 @@ namespace Abitech.NextApi.Client
     /// </summary>
     public class NextApiClient : INextApiClient
     {
+        public NextApiTransport TransportType { get; }
+
         #region SuportedPermissions
 
         private string[] _supportedPermissions;
@@ -56,7 +59,6 @@ namespace Abitech.NextApi.Client
         /// <summary>
         /// List of supported permissions (awaitable)
         /// </summary>
-
         public async Task<string[]> SupportedPermissions()
         {
             if (_supportedPermissions != null)
@@ -89,17 +91,25 @@ namespace Abitech.NextApi.Client
         protected int ReconnectDelayMs;
 
         private HubConnection _connection;
+        private HttpClient _httpClient;
 
         /// <summary>
         /// Initializes NextApi client
         /// </summary>
         /// <param name="url">NextApi servers url</param>
         /// <param name="tokenProvider">Provides accessKey factory</param>
+        /// <param name="transportType">Option to set transport type for this client</param>
         /// <param name="reconnectAutomatically">Reconnect when connection fails</param>
         /// <param name="reconnectDelayMs">Delay between connection fail and trying to reconnect</param>
-        public NextApiClient(string url, INextApiAccessTokenProvider tokenProvider,
-            bool reconnectAutomatically = true, int reconnectDelayMs = 5000)
+        /// <remarks>Transport type automatically changed by client in case of request with NextApiFileArgument</remarks>
+        public NextApiClient(
+            string url,
+            INextApiAccessTokenProvider tokenProvider,
+            NextApiTransport transportType = NextApiTransport.SignalR,
+            bool reconnectAutomatically = true,
+            int reconnectDelayMs = 5000)
         {
+            TransportType = transportType;
             Url = url ?? throw new ArgumentNullException(nameof(url));
             TokenProvider = tokenProvider;
             ReconnectAutomatically = reconnectAutomatically;
@@ -110,7 +120,7 @@ namespace Abitech.NextApi.Client
         /// Initializes client (when first request)
         /// </summary>
         /// <returns></returns>
-        protected virtual HubConnection InitializeClient()
+        protected virtual HubConnection InitializeClientSignalR()
         {
             var connection = new HubConnectionBuilder()
                 .WithUrl(Url, ConnectionOptionsConfig)
@@ -131,6 +141,15 @@ namespace Abitech.NextApi.Client
         }
 
         /// <summary>
+        /// Gets HTTP client instance for current NextApi client
+        /// </summary>
+        /// <returns></returns>
+        protected virtual HttpClient GetHttpClient()
+        {
+            return _httpClient ?? (_httpClient = new HttpClient());
+        }
+
+        /// <summary>
         /// Invoke method of specific service and return result
         /// </summary>
         /// <param name="serviceName">Name of NextApi service</param>
@@ -138,11 +157,51 @@ namespace Abitech.NextApi.Client
         /// <param name="arguments">Arguments for method</param>
         /// <typeparam name="T">Execution result</typeparam>
         /// <returns></returns>
-        public async Task<T> Invoke<T>(string serviceName, string serviceMethod, params NextApiArgument[] arguments)
+        public async Task<T> Invoke<T>(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
         {
             var command = PrepareCommand(serviceName, serviceMethod, arguments);
+            if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
+            {
+                return await InvokeHttp<T>(command);
+            }
+
+            return await InvokeSignalR<T>(command);
+        }
+
+        private async Task<T> InvokeSignalR<T>(NextApiCommand command)
+        {
             var connection = await GetConnection();
             return await connection.InvokeAsync<T>("ExecuteCommand", command);
+        }
+
+        private async Task<T> InvokeHttp<T>(NextApiCommand command)
+        {
+            var client = GetHttpClient();
+            if (TokenProvider != null)
+            {
+                var token = await TokenProvider.ResolveToken();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            }
+
+            var form = new MultipartFormDataContent
+            {
+                {new StringContent(command.Service), "Service"},
+                {new StringContent(command.Method), "Method"},
+                {new StringContent(JsonConvert.SerializeObject(command.Args)), "Args"}
+            };
+            var response = await client.PostAsync($"{Url}/http", form);
+            var data = await response.Content.ReadAsStringAsync();
+            return ;
+        }
+
+        private async Task InvokeSignalR(NextApiCommand command)
+        {
+            var connection = await GetConnection();
+            await connection.InvokeAsync("ExecuteCommand", command);
+        }
+
+        private async Task InvokeHttp(NextApiCommand command)
+        {
         }
 
         /// <summary>
@@ -152,14 +211,19 @@ namespace Abitech.NextApi.Client
         /// <param name="serviceMethod"></param>
         /// <param name="arguments"></param>
         /// <returns>nothing</returns>
-        public async Task Invoke(string serviceName, string serviceMethod, params NextApiArgument[] arguments)
+        public async Task Invoke(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
         {
             var command = PrepareCommand(serviceName, serviceMethod, arguments);
-            var connection = await GetConnection();
-            await connection.InvokeAsync("ExecuteCommand", command);
+            if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
+            {
+                await InvokeHttp(command);
+                return;
+            }
+
+            await InvokeSignalR(command);
         }
 
-        private NextApiCommand PrepareCommand(string serviceName, string serviceMethod, NextApiArgument[] arguments)
+        private NextApiCommand PrepareCommand(string serviceName, string serviceMethod, INextApiArgument[] arguments)
         {
             return new NextApiCommand
             {
@@ -182,7 +246,7 @@ namespace Abitech.NextApi.Client
         }
 
         /// <summary>
-        /// Resolves connection to NextApi server
+        /// Resolves connection to NextApi server (via SignalR)
         /// </summary>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
@@ -190,22 +254,40 @@ namespace Abitech.NextApi.Client
         {
             if (_connection == null)
             {
-                _connection = InitializeClient();
+                _connection = InitializeClientSignalR();
             }
 
-            if (_connection.State == HubConnectionState.Disconnected)
+            if (_connection.State != HubConnectionState.Disconnected)
             {
-                try
-                {
-                    await _connection.StartAsync();
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Problem with NextApi connection occurred. Try later. ({Url})", ex);
-                }
+                return _connection;
+            }
+
+            try
+            {
+                await _connection.StartAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Problem with NextApi connection occurred. Try later. ({Url})", ex);
             }
 
             return _connection;
         }
+    }
+
+    /// <summary>
+    /// Supported transport types for NextApi
+    /// </summary>
+    public enum NextApiTransport
+    {
+        /// <summary>
+        /// SignalR
+        /// </summary>
+        SignalR,
+
+        /// <summary>
+        /// HTTP
+        /// </summary>
+        Http
     }
 }

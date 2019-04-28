@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Abitech.NextApi.Server.Base;
+using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Abitech.NextApi.Server
@@ -25,6 +27,9 @@ namespace Abitech.NextApi.Server
         {
             var nextApiOptions = new NextApiServicesOptions();
 
+            // mvc
+            serviceCollection.AddMvc();
+            // signalr
             serviceCollection
                 .AddSignalR(srOptions => { srOptions.EnableDetailedErrors = true; })
                 .AddMessagePackProtocol(mpOptions =>
@@ -41,6 +46,8 @@ namespace Abitech.NextApi.Server
 
             serviceCollection.AddSingleton(nextApiOptions);
             serviceCollection.AddScoped<INextApiUserAccessor, NextApiUserAccessor>();
+            serviceCollection.AddScoped<INextApiRequest, NextApiRequest>();
+            serviceCollection.AddScoped<NextApiHttp>();
             NextApiServiceHelper
                 .FindAllServices()
                 .ForEach(type => { serviceCollection.AddTransient(type); });
@@ -65,7 +72,31 @@ namespace Abitech.NextApi.Server
         /// <param name="path"></param>
         public static void UseNextApiServices(this IApplicationBuilder builder, string path = "/nextApi")
         {
-            builder.UseSignalR(routes => { routes.MapHub<NextApiHub>(new PathString(path)); });
+            RegisterHttp(builder, path);
+            RegisterSignalR(builder, path);
+        }
+
+        private static void RegisterHttp(IApplicationBuilder builder, string path)
+        {
+            var applicationServices = builder.ApplicationServices;
+            // HTTP
+            builder.UseMvc(routes =>
+            {
+                routes.MapRoute($"{path}/http", async context =>
+                {
+                    using (var scope = applicationServices.CreateScope())
+                    {
+                        var nextApiHttp = scope.ServiceProvider.GetService<NextApiHttp>();
+                        await nextApiHttp.ProcessRequestAsync(context);
+                    }
+                });
+            });
+        }
+
+        private static void RegisterSignalR(IApplicationBuilder builder, string path)
+        {
+            // SignalR
+            builder.UseSignalR(routes => routes.MapHub<NextApiHub>(new PathString(path)));
         }
 
         /// <summary>
