@@ -80,6 +80,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             if (_isSoftDeleteSupported && SoftDeleteEnabled)
             {
                 ((ISoftDeletableEntity)entity).IsRemoved = true;
+                await UpdateAsync(entity);
             }
             else
             {
