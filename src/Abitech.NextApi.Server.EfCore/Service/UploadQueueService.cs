@@ -204,6 +204,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         }
                         catch (Exception e)
                         {
+                            _lock.Release();
                             Console.WriteLine(e);
                             entityInstance = null;
                             createResult.Error = UploadQueueError.Exception;
@@ -309,15 +310,23 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                     else
                                     {
                                         result.Error = UploadQueueError.NoError;
-                                        
-                                        // Set last change time to the one that came from the client
-                                        _lock.Wait();
-                                        await _columnChangesLogger.SetLastChange(
-                                            updateOperation.EntityName,
-                                            updateOperation.ColumnName,
-                                            updateOperation.EntityRowGuid,
-                                            updateOperation.OccuredAt);
-                                        _lock.Release();
+
+                                        try
+                                        {
+                                            // Set last change time to the one that came from the client
+                                            _lock.Wait();
+                                            await _columnChangesLogger.SetLastChange(
+                                                updateOperation.EntityName,
+                                                updateOperation.ColumnName,
+                                                updateOperation.EntityRowGuid,
+                                                updateOperation.OccuredAt);
+                                            _lock.Release();
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            _lock.Release();
+                                            Console.WriteLine(e);
+                                        }
                                     }
     
                                     resultDict.AddOrUpdate(updateOperation.Id, result, (guid, b) => result);
@@ -326,6 +335,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         }
                         catch (Exception e)
                         {
+                            _lock.Release();
                             Console.WriteLine(e);
                             var result = new UploadQueueResult
                             {
@@ -371,6 +381,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         }
                         catch (Exception e)
                         {
+                            _lock.Release();
                             Console.WriteLine(e);
                             result.Error = UploadQueueError.Exception;
                             result.Extra = e.Message;
