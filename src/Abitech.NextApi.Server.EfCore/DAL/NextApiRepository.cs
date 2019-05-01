@@ -94,7 +94,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <param name="where">delete condition</param>
         public virtual async Task DeleteAsync(Expression<Func<T, bool>> where)
         {
-            var objects = _dbset.Where(where).AsEnumerable();
+            var objects = GetAll().Where(where).AsEnumerable();
             foreach (var obj in objects)
                 await DeleteAsync(obj);
         }

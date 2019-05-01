@@ -191,7 +191,15 @@ namespace Abitech.NextApi.Client
             };
             var response = await client.PostAsync($"{Url}/http", form);
             var data = await response.Content.ReadAsStringAsync();
-            return ;
+            var result = JsonConvert.DeserializeObject<NextApiResponse<T>>(data);
+            if (!result.Success)
+            {
+                var message = result.Error.Parameters["message"];
+                throw new NextApiException($"{result.Error.Code} {message}", result.Error.Code,
+                    result.Error.Parameters);
+            }
+
+            return result.Data;
         }
 
         private async Task InvokeSignalR(NextApiCommand command)

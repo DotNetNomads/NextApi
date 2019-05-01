@@ -236,7 +236,7 @@ namespace Abitech.NextApi.Server.Service
         {
             response.StatusCode = 200;
             response.ContentType = "application/json";
-            var nextApiResponse = new NextApiResponse
+            var nextApiResponse = new NextApiResponse<object>
             {
                 Data = data,
                 Error = error,

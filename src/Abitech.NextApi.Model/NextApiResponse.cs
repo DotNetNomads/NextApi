@@ -5,7 +5,7 @@ namespace Abitech.NextApi.Model
     /// <summary>
     /// Default response wrapper from NextApi
     /// </summary>
-    public class NextApiResponse
+    public class NextApiResponse<TDataType>
     {
         /// <summary>
         /// Indicates that request is successful
@@ -15,7 +15,7 @@ namespace Abitech.NextApi.Model
         /// <summary>
         /// Contains data of response
         /// </summary>
-        public object Data { get; set; }
+        public TDataType Data { get; set; }
 
         /// <summary>
         /// Contains error if Success is false
