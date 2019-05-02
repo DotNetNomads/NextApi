@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.Attributes;
+using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.SignalR;
+
 #pragma warning disable 1998
 namespace Abitech.NextApi.Server.Tests.Service
 {
@@ -12,10 +16,12 @@ namespace Abitech.NextApi.Server.Tests.Service
     public class TestService : NextApiService
     {
         private INextApiUserAccessor _nextApiUserAccessor;
+        private INextApiRequest _nextApiRequest;
 
-        public TestService(INextApiUserAccessor nextApiUserAccessor)
+        public TestService(INextApiUserAccessor nextApiUserAccessor, INextApiRequest nextApiRequest)
         {
             _nextApiUserAccessor = nextApiUserAccessor;
+            _nextApiRequest = nextApiRequest;
         }
 
         // tested
@@ -96,6 +102,14 @@ namespace Abitech.NextApi.Server.Tests.Service
         public int? GetCurrentUser()
         {
             return _nextApiUserAccessor.SubjectId;
+        }
+
+        public async Task<string> UploadFile()
+        {
+            var file = _nextApiRequest.FilesFromClient.GetFile("bellonicat");
+            var tempPath = Path.GetTempFileName();
+            await file.CopyToAsync(new FileStream(tempPath, FileMode.Open));
+            return tempPath;
         }
     }
 #pragma warning restore 1998

@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace Abitech.NextApi.Model
 {
     /// <summary>
@@ -49,6 +51,25 @@ namespace Abitech.NextApi.Model
         /// <summary>
         /// Path to file
         /// </summary>
-        public string FilePath { get; set; }
+        public string FilePath { get; private set; }
+        /// <summary>
+        /// Alternate to FilePath, provide stream to File data
+        /// </summary>
+        public Stream FileDataStream { get; private set; }
+        public string FileName { get; private set; }
+        
+
+        /// <inheritdoc />
+        public NextApiFileArgument(string filePath)
+        {
+            FilePath = filePath;
+        }
+
+        /// <inheritdoc />
+        public NextApiFileArgument(Stream fileDataStream, string fileName)
+        {
+            FileDataStream = fileDataStream;
+            FileName = fileName;
+        }
     }
 }

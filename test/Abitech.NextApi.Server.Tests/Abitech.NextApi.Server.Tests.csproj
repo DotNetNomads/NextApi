@@ -42,4 +42,10 @@
       <Folder Include="Security" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="TestData\bellonicat.jpg">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -52,7 +53,10 @@ namespace Abitech.NextApi.Client
     /// </summary>
     public class NextApiClient : INextApiClient
     {
-        public NextApiTransport TransportType { get; }
+        /// <summary>
+        /// Transport for current client instance
+        /// </summary>
+        protected NextApiTransport TransportType { get; }
 
         #region SuportedPermissions
 
@@ -147,7 +151,10 @@ namespace Abitech.NextApi.Client
         /// <returns></returns>
         protected virtual async Task<HttpClient> GetHttpClient()
         {
-            var client = new HttpClient();
+            var client = new HttpClient
+            {
+                BaseAddress = new Uri(Url)
+            };
             if (TokenProvider == null)
             {
                 return client;
@@ -182,23 +189,45 @@ namespace Abitech.NextApi.Client
         private async Task<T> InvokeSignalR<T>(NextApiCommand command)
         {
             var connection = await GetConnection();
+            command.Args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
             return await connection.InvokeAsync<T>("ExecuteCommand", command);
         }
 
-        private async Task<T> InvokeHttp<T>(NextApiCommand command)
+        private MultipartFormDataContent PrepareRequestForm(NextApiCommand command)
         {
+            var args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
             var form = new MultipartFormDataContent
             {
                 {new StringContent(command.Service), "Service"},
                 {new StringContent(command.Method), "Method"},
-                {new StringContent(JsonConvert.SerializeObject(command.Args, GetJsonConfig())), "Args"}
+                {new StringContent(JsonConvert.SerializeObject(args, GetJsonConfig())), "Args"}
             };
+            // send files
+            var fileArgs = command.Args.Where(arg => arg is NextApiFileArgument).Cast<NextApiFileArgument>().ToArray();
+            var i = 0;
+            foreach (var nextApiFileArgument in fileArgs)
+            {
+                var stream = nextApiFileArgument.FileDataStream ??
+                             new FileStream(nextApiFileArgument.FilePath, FileMode.Open);
+                var fileName = nextApiFileArgument.FileName ??
+                               Path.GetFileName(nextApiFileArgument.FilePath) ?? "noname.bin";
+                var name = fileName.Split('.')[0];
+                form.Add(new StreamContent(stream), name, fileName);
+                i++;
+            }
+
+            return form;
+        }
+
+        private async Task<T> InvokeHttp<T>(NextApiCommand command)
+        {
+            var form = PrepareRequestForm(command);
             HttpResponseMessage response;
             try
             {
                 using (var client = await GetHttpClient())
                 {
-                    response = await client.PostAsync($"{Url}/http", form);
+                    response = await client.PostAsync("http", form);
                     response.EnsureSuccessStatusCode();
                 }
             }
@@ -239,6 +268,7 @@ namespace Abitech.NextApi.Client
         private async Task InvokeSignalR(NextApiCommand command)
         {
             var connection = await GetConnection();
+            command.Args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
             await connection.InvokeAsync("ExecuteCommand", command);
         }
 

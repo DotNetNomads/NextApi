@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
@@ -239,6 +240,19 @@ namespace Abitech.NextApi.Server.Tests
                 }
             );
             Assert.Equal(newArg, newResult);
+        }
+
+        [Fact]
+        public async Task UploadFileAndDownloadTest()
+        {
+            // upload only for http
+            var client = await GetClient(NextApiTransport.Http);
+
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var filePath = Path.Combine(baseDir, "TestData", "bellonicat.jpg");
+
+            var resultFilePath = await client.Invoke<string>("Test", "UploadFile",
+                new NextApiFileArgument(filePath));
         }
     }
 }
