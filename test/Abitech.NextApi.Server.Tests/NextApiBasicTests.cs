@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Model;
+using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.Service;
 using DeepEqual.Syntax;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -238,6 +239,10 @@ namespace Abitech.NextApi.Server.Tests
                 }
             );
             Assert.Equal(newArg, newResult);
+        }
+
+        public NextApiBasicTests(ServerFactory factory) : base(factory)
+        {
         }
     }
 }

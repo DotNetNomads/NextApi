@@ -9,28 +9,28 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiTest
+    public class NextApiTest : IClassFixture<ServerFactory>
     {
+        protected ServerFactory Factory;
 #pragma warning disable 1998
         protected async Task<NextApiClient> GetClient(NextApiTransport transport, string token = null)
 #pragma warning restore 1998
         {
-            var handler = _server.CreateHandler();
+            var handler = Factory.Server.CreateHandler();
             return new NextApiClientForTests(
                 "ws://localhost/nextapi",
                 token != null ? new TestTokenProvider(token) : null,
                 handler, transport);
         }
 
-        protected IServiceProvider ServiceProvider;
-        private readonly TestServer _server;
-
-        public NextApiTest()
+        public NextApiTest(ServerFactory factory)
         {
-            var factory = new ServerFactory();
-            factory.CreateClient();
-            _server = factory.Server;
-            ServiceProvider = _server.Host.Services;
+            Factory = factory;
+
+            if (Factory.Server == null)
+            {
+                Factory.CreateClient().Dispose();
+            }
         }
     }
 

@@ -3,10 +3,11 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.Filtering;
 using Xunit;
 
-namespace Abitech.NextApi.Server.Tests.System
+namespace Abitech.NextApi.Server.Tests
 {
     public class SystemTests : NextApiTest
     {
@@ -70,6 +71,10 @@ namespace Abitech.NextApi.Server.Tests.System
 
             Assert.True(filtered.Count == 3);
             Assert.True(filtered.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
+        }
+
+        public SystemTests(ServerFactory factory) : base(factory)
+        {
         }
     }
 }

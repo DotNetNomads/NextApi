@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
+using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.DTO;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
@@ -80,17 +81,28 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task Delete(NextApiTransport transport)
         {
-            using (var scope = ServiceProvider.CreateScope())
+            using (var scope = Factory.Server.Host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var repo = services.GetService<TestUserRepository>();
+                var unitOfWork = services.GetService<TestUnitOfWork>();
+                var createdUser = new TestUser()
+                {
+                    Name = "petyaTest",
+                    Email = "petya@mail.ru",
+                    Enabled = true,
+                    Surname = "Ivanov"
+                };
+                await repo.AddAsync(createdUser);
+                await unitOfWork.CommitAsync();
+                
                 var userExists = await repo.GetAll()
-                    .AnyAsync(u => u.Id == 15);
+                    .AnyAsync(u => u.Id == createdUser.Id);
                 Assert.True(userExists);
                 var client = await GetServiceClient(transport);
-                await client.Delete(15);
+                await client.Delete(createdUser.Id);
                 var userExistsAfterDelete = await repo.GetAll()
-                    .AnyAsync(u => u.Id == 15);
+                    .AnyAsync(u => u.Id == createdUser.Id);
                 Assert.False(userExistsAfterDelete);
             }
         }
@@ -102,7 +114,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(null, NextApiTransport.SignalR)]
         public async Task Update(string name, NextApiTransport transport)
         {
-            using (var scope = ServiceProvider.CreateScope())
+            using (var scope = Factory.Server.Host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var repo = services.GetService<TestUserRepository>();
@@ -294,6 +306,10 @@ namespace Abitech.NextApi.Server.Tests
             public TestEntityService(INextApiClient client, string serviceName) : base(client, serviceName)
             {
             }
+        }
+
+        public NextApiEntityServiceTests(ServerFactory factory) : base(factory)
+        {
         }
     }
 }
