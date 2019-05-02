@@ -307,9 +307,5 @@ namespace Abitech.NextApi.Server.Tests
             {
             }
         }
-
-        public NextApiEntityServiceTests(ServerFactory factory) : base(factory)
-        {
-        }
     }
 }

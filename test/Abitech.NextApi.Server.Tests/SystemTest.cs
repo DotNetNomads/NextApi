@@ -72,9 +72,5 @@ namespace Abitech.NextApi.Server.Tests
             Assert.True(filtered.Count == 3);
             Assert.True(filtered.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
         }
-
-        public SystemTests(ServerFactory factory) : base(factory)
-        {
-        }
     }
 }

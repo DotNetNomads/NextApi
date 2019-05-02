@@ -22,7 +22,7 @@ namespace Abitech.NextApi.Server.Tests
     {
         private readonly ITestOutputHelper _output;
 
-        public NextApiUploadQueueTests(ITestOutputHelper output, ServerFactory factory) : base(factory)
+        public NextApiUploadQueueTests(ITestOutputHelper output) : base()
         {
             _output = output;
         }

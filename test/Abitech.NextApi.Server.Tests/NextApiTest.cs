@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiTest : IClassFixture<ServerFactory>
+    public class NextApiTest : IDisposable
     {
         protected ServerFactory Factory;
 #pragma warning disable 1998
@@ -23,14 +23,15 @@ namespace Abitech.NextApi.Server.Tests
                 handler, transport);
         }
 
-        public NextApiTest(ServerFactory factory)
+        public NextApiTest()
         {
-            Factory = factory;
+            Factory = new ServerFactory();
+            Factory.CreateClient();
+        }
 
-            if (Factory.Server == null)
-            {
-                Factory.CreateClient().Dispose();
-            }
+        public void Dispose()
+        {
+            Factory?.Dispose();
         }
     }
 

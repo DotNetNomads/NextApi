@@ -240,9 +240,5 @@ namespace Abitech.NextApi.Server.Tests
             );
             Assert.Equal(newArg, newResult);
         }
-
-        public NextApiBasicTests(ServerFactory factory) : base(factory)
-        {
-        }
     }
 }
