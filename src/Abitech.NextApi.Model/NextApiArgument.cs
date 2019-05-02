@@ -3,6 +3,8 @@ namespace Abitech.NextApi.Model
     /// <summary>
     /// Basic interface for NextApi service method argument
     /// </summary>
+    [MessagePack.Union(1, typeof(NextApiArgument))]
+    [MessagePack.Union(2, typeof(NextApiFileArgument))]
     public interface INextApiArgument
     {
     }

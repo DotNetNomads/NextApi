@@ -12,14 +12,14 @@ namespace Abitech.NextApi.Server.Tests
     public class NextApiTest
     {
 #pragma warning disable 1998
-        protected async Task<NextApiClient> GetClient(string token = null)
+        protected async Task<NextApiClient> GetClient(NextApiTransport transport, string token = null)
 #pragma warning restore 1998
         {
             var handler = _server.CreateHandler();
             return new NextApiClientForTests(
                 "ws://localhost/nextapi",
                 token != null ? new TestTokenProvider(token) : null,
-                handler);
+                handler, transport);
         }
 
         protected IServiceProvider ServiceProvider;
@@ -56,9 +56,18 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
 
-        protected override HttpClient GetHttpClient()
+        protected override async Task<HttpClient> GetHttpClient()
         {
-            return _messageHandler != null ? new HttpClient(_messageHandler) : new HttpClient();
+            var client = _messageHandler != null ? new HttpClient(_messageHandler) : new HttpClient();
+            if (TokenProvider == null)
+            {
+                return client;
+            }
+
+            var token = await TokenProvider.ResolveToken();
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+            return client;
         }
     }
 

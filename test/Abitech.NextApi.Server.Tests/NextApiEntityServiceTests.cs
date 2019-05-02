@@ -10,6 +10,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
@@ -17,11 +18,15 @@ namespace Abitech.NextApi.Server.Tests
     public class NextApiEntityServiceTests : NextApiTest
     {
         [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, false)]
-        [InlineData(false, true)]
-        [InlineData(true, true)]
-        public async Task Create(bool createCity, bool createRole)
+        [InlineData(false, false, NextApiTransport.Http)]
+        [InlineData(true, false, NextApiTransport.Http)]
+        [InlineData(false, true, NextApiTransport.Http)]
+        [InlineData(true, true, NextApiTransport.Http)]
+        [InlineData(false, false, NextApiTransport.SignalR)]
+        [InlineData(true, false, NextApiTransport.SignalR)]
+        [InlineData(false, true, NextApiTransport.SignalR)]
+        [InlineData(true, true, NextApiTransport.SignalR)]
+        public async Task Create(bool createCity, bool createRole, NextApiTransport transport)
         {
             var userName = $"createUser_role_{createRole}_city_{createCity}";
             var user = new TestUserDTO
@@ -43,7 +48,7 @@ namespace Abitech.NextApi.Server.Tests
                 Enabled = true,
                 Email = "email@mail.com"
             };
-            var client = await GetServiceClient();
+            var client = await GetServiceClient(transport);
             var createdUser = await client.Create(user);
             Assert.True(createdUser.Id > 0);
             Assert.Equal(user.Name, createdUser.Name);
@@ -70,8 +75,10 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
 
-        [Fact]
-        public async Task Delete()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task Delete(NextApiTransport transport)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -80,7 +87,7 @@ namespace Abitech.NextApi.Server.Tests
                 var userExists = await repo.GetAll()
                     .AnyAsync(u => u.Id == 15);
                 Assert.True(userExists);
-                var client = await GetServiceClient();
+                var client = await GetServiceClient(transport);
                 await client.Delete(15);
                 var userExistsAfterDelete = await repo.GetAll()
                     .AnyAsync(u => u.Id == 15);
@@ -89,16 +96,18 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Theory]
-        [InlineData("updatedFromTests")]
-        [InlineData(null)]
-        public async Task Update(string name)
+        [InlineData("updatedFromTests", NextApiTransport.Http)]
+        [InlineData(null, NextApiTransport.Http)]
+        [InlineData("updatedFromTests", NextApiTransport.SignalR)]
+        [InlineData(null, NextApiTransport.SignalR)]
+        public async Task Update(string name, NextApiTransport transport)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var repo = services.GetService<TestUserRepository>();
                 var mapper = services.GetService<IMapper>();
-                var client = await GetServiceClient();
+                var client = await GetServiceClient(transport);
                 // data from db
                 var user = await repo.GetByIdAsync(14);
                 var userDTO = mapper.Map<TestUser, TestUserDTO>(user);
@@ -117,12 +126,17 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Theory]
-        [InlineData(null, null)]
-        [InlineData(0, 5)]
-        [InlineData(0, 5, "City", "Role")]
-        [InlineData(0, 5, "City")]
-        [InlineData(0, 5, "Role")]
-        public async Task GetPaged(int? skip, int? take, params string[] expand)
+        [InlineData(null, null, NextApiTransport.Http)]
+        [InlineData(0, 5, NextApiTransport.Http)]
+        [InlineData(0, 5, NextApiTransport.Http, "City", "Role")]
+        [InlineData(0, 5, NextApiTransport.Http, "City")]
+        [InlineData(0, 5, NextApiTransport.Http, "Role")]
+        [InlineData(null, null, NextApiTransport.SignalR)]
+        [InlineData(0, 5, NextApiTransport.SignalR)]
+        [InlineData(0, 5, NextApiTransport.SignalR, "City", "Role")]
+        [InlineData(0, 5, NextApiTransport.SignalR, "City")]
+        [InlineData(0, 5, NextApiTransport.SignalR, "Role")]
+        public async Task GetPaged(int? skip, int? take, NextApiTransport transport, params string[] expand)
         {
             var request = new PagedRequest
             {
@@ -130,7 +144,7 @@ namespace Abitech.NextApi.Server.Tests
                 Take = take,
                 Expand = expand
             };
-            var client = await GetServiceClient();
+            var client = await GetServiceClient(transport);
             var result = await client.GetPaged(request);
             Assert.Equal(15, result.TotalItems);
             if (take.HasValue)
@@ -161,13 +175,17 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Theory]
-        [InlineData("")]
-        [InlineData("City")]
-        [InlineData("Role")]
-        [InlineData("Role", "City")]
-        public async Task GetById(params string[] expand)
+        [InlineData(NextApiTransport.Http, "")]
+        [InlineData(NextApiTransport.Http, "City")]
+        [InlineData(NextApiTransport.Http, "Role")]
+        [InlineData(NextApiTransport.Http, "Role", "City")]
+        [InlineData(NextApiTransport.SignalR, "")]
+        [InlineData(NextApiTransport.SignalR, "City")]
+        [InlineData(NextApiTransport.SignalR, "Role")]
+        [InlineData(NextApiTransport.SignalR, "Role", "City")]
+        public async Task GetById(NextApiTransport transport, params string[] expand)
         {
-            var client = await GetServiceClient();
+            var client = await GetServiceClient(transport);
             var user = await client.GetById(14, expand.Contains("") ? null : expand);
             Assert.Equal(14, user.Id);
             if (expand.Contains("City"))
@@ -190,13 +208,17 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Theory]
-        [InlineData("")]
-        [InlineData("City")]
-        [InlineData("Role")]
-        [InlineData("Role", "City")]
-        public async Task GetByIds(params string[] expand)
+        [InlineData(NextApiTransport.Http, "")]
+        [InlineData(NextApiTransport.Http, "City")]
+        [InlineData(NextApiTransport.Http, "Role")]
+        [InlineData(NextApiTransport.Http, "Role", "City")]
+        [InlineData(NextApiTransport.SignalR, "")]
+        [InlineData(NextApiTransport.SignalR, "City")]
+        [InlineData(NextApiTransport.SignalR, "Role")]
+        [InlineData(NextApiTransport.SignalR, "Role", "City")]
+        public async Task GetByIds(NextApiTransport transport, params string[] expand)
         {
-            var client = await GetServiceClient();
+            var client = await GetServiceClient(transport);
 
             int[] idArray = new int[]
             {
@@ -231,10 +253,12 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
 
-        [Fact]
-        public async Task GetPagedFiltered()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task GetPagedFiltered(NextApiTransport transport)
         {
-            var client = await GetServiceClient();
+            var client = await GetServiceClient(transport);
             // filter:
             // entity => entity.Enabled == true &&
             //          (new [] {5,10,23}).Contains(entity.Id) &&
@@ -256,10 +280,10 @@ namespace Abitech.NextApi.Server.Tests
             Assert.True(data.Items.All(e => e.Id == 5 || e.Id == 10 || e.Id == 14));
         }
 
-        private async Task<TestEntityService> GetServiceClient()
+        private async Task<TestEntityService> GetServiceClient(NextApiTransport transport)
         {
             return _nextApiEntityService ??
-                   (_nextApiEntityService = new TestEntityService(await GetClient(), "TestUser"));
+                   (_nextApiEntityService = new TestEntityService(await GetClient(transport), "TestUser"));
         }
 
         private TestEntityService _nextApiEntityService;

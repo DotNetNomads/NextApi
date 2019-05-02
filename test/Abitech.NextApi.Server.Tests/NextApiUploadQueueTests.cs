@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Client;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.UploadQueue;
 using Abitech.NextApi.Server.EfCore.Service;
@@ -25,8 +26,10 @@ namespace Abitech.NextApi.Server.Tests
             _output = output;
         }
 
-        [Fact]
-        public async Task CreateTwiceInSameBatchTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task CreateTwiceInSameBatchTest(NextApiTransport transport)
         {
             var uploadQueue = new List<UploadQueueDto>();
 
@@ -62,7 +65,7 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(createOp1);
             uploadQueue.Add(createOp2);
             
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -76,8 +79,10 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Contains(resultDict, pair => pair.Value.Error == UploadQueueError.OnlyOneCreateOperationAllowed);
         }
         
-        [Fact]
-        public async Task CreateTwiceTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task CreateTwiceTest(NextApiTransport transport)
         {
             var uploadQueue = new List<UploadQueueDto>();
 
@@ -102,7 +107,7 @@ namespace Abitech.NextApi.Server.Tests
 
             uploadQueue.Add(createOp);
             
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -137,8 +142,10 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(UploadQueueError.EntityAlreadyExists, res.Error);
         }
         
-        [Fact]
-        public async Task CreateAndUpdateTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task CreateAndUpdateTest(NextApiTransport transport)
         {
             var uploadQueue = new List<UploadQueueDto>();
 
@@ -176,7 +183,7 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(createOp);
             uploadQueue.Add(updateOp);
             
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -203,9 +210,11 @@ namespace Abitech.NextApi.Server.Tests
         }
         
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task CreateAndUpdateStressTest(bool createAndUpdateInSameBatch)
+        [InlineData(true, NextApiTransport.Http)]
+        [InlineData(false, NextApiTransport.Http)]
+        [InlineData(true, NextApiTransport.SignalR)]
+        [InlineData(false, NextApiTransport.SignalR)]
+        public async Task CreateAndUpdateStressTest(bool createAndUpdateInSameBatch, NextApiTransport transport)
         {
             var createUploadQueue = new List<UploadQueueDto>();
             var updateUploadQueue = new List<UploadQueueDto>();
@@ -271,7 +280,7 @@ namespace Abitech.NextApi.Server.Tests
                 }
             }
             
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -340,8 +349,10 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
         
-        [Fact]
-        public async Task UpdateTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task UpdateTest(NextApiTransport transport)
         {
             var testCityRepo = (ITestCityRepository) ServiceProvider
                 .GetService(typeof(ITestCityRepository));
@@ -367,7 +378,7 @@ namespace Abitech.NextApi.Server.Tests
                 uploadQueue.Add(u);
             }
         
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -394,8 +405,10 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
         
-        [Fact]
-        public async Task OutdatedUpdateTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task OutdatedUpdateTest(NextApiTransport transport)
         {
             var testCityRepo = (ITestCityRepository) ServiceProvider
                 .GetService(typeof(ITestCityRepository));
@@ -426,7 +439,7 @@ namespace Abitech.NextApi.Server.Tests
             var uploadQueue = new List<UploadQueueDto>();
             uploadQueue.Add(update);
         
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -464,8 +477,10 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(UploadQueueError.OutdatedChange, resultDict[outdatedUpdate.Id].Error);
         }
 
-        [Fact]
-        public async Task UpdateWhichDoesNotExistTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task UpdateWhichDoesNotExistTest(NextApiTransport transport)
         {
             var now = DateTimeOffset.Now;
             var uploadQueue = new List<UploadQueueDto>();
@@ -482,7 +497,7 @@ namespace Abitech.NextApi.Server.Tests
             };
             uploadQueue.Add(update);
         
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -503,8 +518,10 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
         
-        [Fact]
-        public async Task CheckLastChangeTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task CheckLastChangeTest(NextApiTransport transport)
         {
             var testCityRepo = (ITestCityRepository) ServiceProvider
                 .GetService(typeof(ITestCityRepository));
@@ -531,7 +548,7 @@ namespace Abitech.NextApi.Server.Tests
                 uploadQueue.Add(u);
             }
         
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
@@ -561,8 +578,10 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
         
-        [Fact]
-        public async Task DeleteTest()
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task DeleteTest(NextApiTransport transport)
         {
             var testCityRepo = (ITestCityRepository) ServiceProvider
                 .GetService(typeof(ITestCityRepository));
@@ -619,7 +638,7 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(delete1);
             uploadQueue.Add(delete2);
         
-            var client = await GetClient();
+            var client = await GetClient(transport);
 
             var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument

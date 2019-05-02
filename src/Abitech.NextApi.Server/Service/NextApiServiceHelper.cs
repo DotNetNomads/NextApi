@@ -148,7 +148,8 @@ namespace Abitech.NextApi.Server.Service
                 }
 
                 var paramType = parameter.ParameterType;
-                var deserializedObject = JsonConvert.DeserializeObject(arg.Value.ToString(), paramType);
+                var deserializedObject = ((JToken)arg.Value).ToObject(paramType);
+                
                 paramValues.Add(deserializedObject);
             }
 
@@ -219,11 +220,7 @@ namespace Abitech.NextApi.Server.Service
             var paramsDict = parameters.ToDictionary(
                 parameter => parameter.Item1,
                 parameter => parameter.Item2);
-            var error = new NextApiError
-            {
-                Code = codeString,
-                Parameters = paramsDict
-            };
+            var error = new NextApiError(codeString, paramsDict);
             await response.SendNextApiResponse(null, false, error);
         }
 
@@ -236,12 +233,7 @@ namespace Abitech.NextApi.Server.Service
         {
             response.StatusCode = 200;
             response.ContentType = "application/json";
-            var nextApiResponse = new NextApiResponse<object>
-            {
-                Data = data,
-                Error = error,
-                Success = success
-            };
+            var nextApiResponse = new NextApiResponse<object>(data, error, success);
             var encoded = JsonConvert.SerializeObject(nextApiResponse);
             await response.WriteAsync(encoded);
         }

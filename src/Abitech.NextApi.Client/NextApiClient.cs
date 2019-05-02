@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Abitech.NextApi.Client
 {
@@ -91,7 +93,6 @@ namespace Abitech.NextApi.Client
         protected int ReconnectDelayMs;
 
         private HubConnection _connection;
-        private HttpClient _httpClient;
 
         /// <summary>
         /// Initializes NextApi client
@@ -144,11 +145,21 @@ namespace Abitech.NextApi.Client
         /// Gets HTTP client instance for current NextApi client
         /// </summary>
         /// <returns></returns>
-        protected virtual HttpClient GetHttpClient()
+        protected virtual async Task<HttpClient> GetHttpClient()
         {
-            return _httpClient ?? (_httpClient = new HttpClient());
+            var client = new HttpClient();
+            if (TokenProvider == null)
+            {
+                return client;
+            }
+
+            var token = await TokenProvider.ResolveToken();
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+            return client;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Invoke method of specific service and return result
         /// </summary>
@@ -176,40 +187,59 @@ namespace Abitech.NextApi.Client
 
         private async Task<T> InvokeHttp<T>(NextApiCommand command)
         {
-            var client = GetHttpClient();
-            if (TokenProvider != null)
-            {
-                var token = await TokenProvider.ResolveToken();
-                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-            }
-
             var form = new MultipartFormDataContent
             {
                 {new StringContent(command.Service), "Service"},
                 {new StringContent(command.Method), "Method"},
-                {new StringContent(JsonConvert.SerializeObject(command.Args)), "Args"}
+                {new StringContent(JsonConvert.SerializeObject(command.Args, GetJsonConfig())), "Args"}
             };
-            var response = await client.PostAsync($"{Url}/http", form);
+            HttpResponseMessage response;
+            try
+            {
+                using (var client = await GetHttpClient())
+                {
+                    response = await client.PostAsync($"{Url}/http", form);
+                    response.EnsureSuccessStatusCode();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw NextApiException(new NextApiError(NextApiErrorCode.HttpError.ToString(),
+                    new Dictionary<string, object>()
+                    {
+                        {"message", ex.Message}
+                    }));
+            }
+
             var data = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<NextApiResponse<T>>(data);
+            var result = JsonConvert.DeserializeObject<NextApiResponse<T>>(data, GetJsonConfig());
             if (!result.Success)
             {
-                var message = result.Error.Parameters["message"];
-                throw new NextApiException($"{result.Error.Code} {message}", result.Error.Code,
-                    result.Error.Parameters);
+                throw NextApiException(result.Error);
             }
 
             return result.Data;
+        }
+
+        private JsonSerializerSettings GetJsonConfig()
+        {
+            return new JsonSerializerSettings
+            {
+                Converters = new JsonConverter[] {new StringEnumConverter()}
+            };
+        }
+
+        private NextApiException NextApiException(NextApiError error)
+        {
+            var message = error.Parameters["message"];
+            return new NextApiException($"{error.Code} {message}", error.Code,
+                error.Parameters);
         }
 
         private async Task InvokeSignalR(NextApiCommand command)
         {
             var connection = await GetConnection();
             await connection.InvokeAsync("ExecuteCommand", command);
-        }
-
-        private async Task InvokeHttp(NextApiCommand command)
-        {
         }
 
         /// <summary>
@@ -224,7 +254,7 @@ namespace Abitech.NextApi.Client
             var command = PrepareCommand(serviceName, serviceMethod, arguments);
             if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
             {
-                await InvokeHttp(command);
+                await InvokeHttp<string>(command);
                 return;
             }
 

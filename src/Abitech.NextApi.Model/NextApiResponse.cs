@@ -10,17 +10,25 @@ namespace Abitech.NextApi.Model
         /// <summary>
         /// Indicates that request is successful
         /// </summary>
-        public bool Success { get; set; } = true;
+        public bool Success { get; } = true;
 
         /// <summary>
         /// Contains data of response
         /// </summary>
-        public TDataType Data { get; set; }
+        public TDataType Data { get; }
 
         /// <summary>
         /// Contains error if Success is false
         /// </summary>
-        public NextApiError Error { get; set; }
+        public NextApiError Error { get; }
+
+        /// <inheritdoc />
+        public NextApiResponse(TDataType data, NextApiError error = null, bool success = true)
+        {
+            Data = data;
+            Error = error;
+            Success = success;
+        }
     }
 
     /// <summary>
@@ -31,12 +39,19 @@ namespace Abitech.NextApi.Model
         /// <summary>
         /// Error code. For example: ServiceNotFound
         /// </summary>
-        public string Code { get; set; }
+        public string Code { get; private set; }
 
         /// <summary>
         /// Additional parameters for current error
         /// </summary>
-        public Dictionary<string, object> Parameters { get; set; }
+        public Dictionary<string, object> Parameters { get; private set; }
+
+        /// <inheritdoc />
+        public NextApiError(string code, Dictionary<string, object> parameters)
+        {
+            Code = code;
+            Parameters = parameters;
+        }
     }
 
     /// <summary>
@@ -51,7 +66,8 @@ namespace Abitech.NextApi.Model
         ServiceIsOnlyForAuthorized,
         OperationIsNotAllowed,
         Unknown,
-        IncorrectRequest
+        IncorrectRequest,
+        HttpError
 #pragma warning restore 1591
     }
 }
