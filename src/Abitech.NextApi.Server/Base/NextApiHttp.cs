@@ -8,6 +8,7 @@ using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Abitech.NextApi.Server.Base
 {
@@ -16,11 +17,11 @@ namespace Abitech.NextApi.Server.Base
     /// </summary>
     public class NextApiHttp
     {
-        private INextApiUserAccessor _userAccessor;
-        private INextApiRequest _request;
-        private NextApiServicesOptions _options;
-        private INextApiPermissionProvider _permissionProvider;
-        private IServiceProvider _serviceProvider;
+        private readonly INextApiUserAccessor _userAccessor;
+        private readonly INextApiRequest _request;
+        private readonly NextApiServicesOptions _options;
+        private readonly INextApiPermissionProvider _permissionProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         /// <inheritdoc />
         public NextApiHttp(INextApiUserAccessor userAccessor, INextApiRequest request, NextApiServicesOptions options,
