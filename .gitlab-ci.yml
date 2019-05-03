@@ -36,7 +36,7 @@
 
 # declaration
 variables:
-  VERSION: "1.3.3.$CI_PIPELINE_ID"
+  VERSION: "1.4.1.$CI_PIPELINE_ID"
 
 stages:
   - test
