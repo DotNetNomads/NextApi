@@ -58,17 +58,29 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <param name="entity">entity instance</param>
         public virtual async Task UpdateAsync(T entity)
         {
+            AttachIfDetached(entity);
+            _context.Entry(entity).State = EntityState.Modified;
+        }
+
+        private void AttachIfDetached(T entity)
+        {
             // find local copy if exists and detach it
             var entityId = GetEntityId(entity);
             var local = _dbset.Local.FirstOrDefault(KeyPredicate(entityId).Compile());
+            // return if instances is same (in local dbset)
+            if (local != null && ReferenceEquals(entity, local))
+            {
+                return;
+            }
+
+            // first detach old instance from local db set
             if (local != null)
             {
                 _context.Entry(local).State = EntityState.Detached;
             }
 
-            // attach updated entity
+            // attach provided instance
             _dbset.Attach(entity);
-            _context.Entry(entity).State = EntityState.Modified;
         }
 
         /// <summary>
@@ -84,6 +96,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             }
             else
             {
+                AttachIfDetached(entity);
                 _dbset.Remove(entity);
             }
         }
@@ -94,7 +107,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <param name="where">delete condition</param>
         public virtual async Task DeleteAsync(Expression<Func<T, bool>> where)
         {
-            var objects = _dbset.Where(where).AsEnumerable();
+            var objects = GetAll().Where(where).AsEnumerable();
             foreach (var obj in objects)
                 await DeleteAsync(obj);
         }

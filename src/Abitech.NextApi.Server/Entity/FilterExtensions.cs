@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Abitech.NextApi.Model.Filtering;
 using Microsoft.EntityFrameworkCore.Internal;
+using Newtonsoft.Json.Linq;
 
 namespace Abitech.NextApi.Server.Entity
 {
@@ -41,6 +42,31 @@ namespace Abitech.NextApi.Server.Entity
 
         private static Expression BuildExpression(ParameterExpression parameter, Filter filter)
         {
+            // json support
+            object FormatValue(object val, Type type)
+            {
+                return val is JToken token ? token.ToObject(type) : val;
+            }
+
+            object ValueForMember(object val, MemberExpression memberExpression)
+            {
+                var memberType = memberExpression.Type;
+                return FormatValue(val, memberType);
+            }
+
+            object FormatArray(object val, MemberExpression memberExpression)
+            {
+                if (!(val is JToken))
+                {
+                    return val;
+                }
+
+                var array = ((JToken)val).ToObject<object[]>();
+                var type = memberExpression.Type;
+                return (from object o in array select o.GetType() != type ? Convert.ChangeType(o, type) : type)
+                    .ToList();
+            }
+
             Expression allExpressions = null;
             foreach (var filterExpression in filter.Expressions)
             {
@@ -49,35 +75,37 @@ namespace Abitech.NextApi.Server.Entity
                 switch (filterExpression.ExpressionType)
                 {
                     case FilterExpressionTypes.Contains:
+                        var value = FormatValue(filterExpression.Value, typeof(string));
                         currentExpression = Expression.Call(property, StringContainsMethod,
-                            Expression.Constant((string)filterExpression.Value));
+                            Expression.Constant(value));
                         break;
                     case FilterExpressionTypes.Equal:
+
                         currentExpression = Expression.Equal(property,
-                            Expression.Constant(filterExpression.Value));
+                            Expression.Constant(ValueForMember(filterExpression.Value, property)));
                         break;
                     case FilterExpressionTypes.MoreThan:
                         currentExpression =
                             Expression.GreaterThan(property,
-                                Expression.Constant(filterExpression.Value));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
                         break;
                     case FilterExpressionTypes.LessThan:
                         currentExpression =
                             Expression.LessThan(property,
-                                Expression.Constant(filterExpression.Value));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
                         break;
                     case FilterExpressionTypes.MoreThanOrEqual:
                         currentExpression =
                             Expression.GreaterThanOrEqual(property,
-                                Expression.Constant(filterExpression.Value));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
                         break;
                     case FilterExpressionTypes.LessThanOrEqual:
                         currentExpression =
                             Expression.LessThanOrEqual(property,
-                                Expression.Constant(filterExpression.Value));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
                         break;
                     case FilterExpressionTypes.In:
-                        var inputArray = (ICollection)filterExpression.Value;
+                        var inputArray = (ICollection)FormatArray(filterExpression.Value, property);
                         var items = (from object item
                                     in inputArray
                                 select Expression
@@ -92,12 +120,13 @@ namespace Abitech.NextApi.Server.Entity
                                 , property);
                         break;
                     case FilterExpressionTypes.Filter:
-                        currentExpression = BuildExpression(parameter, (Filter)filterExpression.Value);
+                        currentExpression = BuildExpression(parameter,
+                            (Filter)FormatValue(filterExpression.Value, typeof(Filter)));
                         break;
                     case FilterExpressionTypes.NotEqual:
                         currentExpression =
                             Expression.NotEqual(property,
-                                Expression.Constant(filterExpression.Value));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

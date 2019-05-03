@@ -19,7 +19,7 @@ namespace Abitech.NextApi.Client.DI.Tests
             var container = builder.Build();
 
             var testService = container.Resolve<ITestService>();
-            
+
             Assert.Equal(testUrl, testService.GetUrl());
         }
 
@@ -34,7 +34,7 @@ namespace Abitech.NextApi.Client.DI.Tests
             var provider = collection.BuildServiceProvider();
 
             var testService = provider.GetService<ITestService>();
-            
+
             Assert.Equal(testUrl, testService.GetUrl());
         }
     }
@@ -72,8 +72,10 @@ namespace Abitech.NextApi.Client.DI.Tests
 
     class TestClient : NextApiClient, ITestClient
     {
-        public TestClient(string url, INextApiAccessTokenProvider tokenProvider, bool reconnectAutomatically = true,
-            int reconnectDelayMs = 5000) : base(url, tokenProvider, reconnectAutomatically, reconnectDelayMs)
+        public TestClient(string url, INextApiAccessTokenProvider tokenProvider, NextApiTransport transportType = NextApiTransport.SignalR,
+            bool reconnectAutomatically = true,
+            int reconnectDelayMs = 5000) : base(url, tokenProvider, transportType, reconnectAutomatically,
+            reconnectDelayMs)
         {
         }
 

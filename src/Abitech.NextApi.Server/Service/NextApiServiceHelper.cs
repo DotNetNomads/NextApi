@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Xml;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Attributes;
 using MessagePack;
@@ -12,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Abitech.NextApi.Server.Service
 {
@@ -54,13 +57,13 @@ namespace Abitech.NextApi.Server.Service
         /// Resolves service method for service type
         /// </summary>
         /// <param name="serviceType">Type of service</param>
-        /// <param name="command">NextApi command</param>
+        /// <param name="methodName">Method name</param>
         /// <returns>MethodInfo that represents requested method</returns>
-        public static MethodInfo GetServiceMethod(Type serviceType, NextApiCommand command)
+        public static MethodInfo GetServiceMethod(Type serviceType, string methodName)
         {
             var methods = serviceType.GetMethods();
             return methods.FirstOrDefault(m =>
-                m.Name.Equals(command.Method) &&
+                m.Name.Equals(methodName) &&
                 m.MemberType == MemberTypes.Method &&
                 m.IsPublic &&
                 !m.IsStatic);
@@ -90,7 +93,7 @@ namespace Abitech.NextApi.Server.Service
             {
                 var paramName = parameter.Name;
 
-                var arg = command.Args.FirstOrDefault(d => d.Name == paramName);
+                var arg = command.Args.Cast<NextApiArgument>().FirstOrDefault(d => d.Name == paramName);
 
                 if (arg == null)
                 {
@@ -103,10 +106,51 @@ namespace Abitech.NextApi.Server.Service
                     continue;
                 }
 
-                var paramType = parameter.ParameterType;
-                //var deserializedObject = JsonConvert.DeserializeObject((string) arg.Value.Value, paramType);
-                //var deserializedObject = MessagePackSerializer.Typeless.Deserialize(arg.Value);
                 paramValues.Add(arg.Value);
+            }
+
+            return paramValues.ToArray();
+        }
+
+        /// <summary>
+        /// Resolves parameters for method call (only http)
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <param name="jsonString"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static object[] ResolveMethodParametersJson(MethodInfo methodInfo, string jsonString)
+        {
+            if (string.IsNullOrWhiteSpace(jsonString) && methodInfo.GetParameters().Any(mp => !mp.IsOptional))
+            {
+                throw new Exception("Json string is empty, but method has one or more required parameters");
+            }
+
+            var fromClient = JsonConvert.DeserializeObject<JObject[]>(jsonString);
+            var mappedArgs = fromClient.Where(j => j.ContainsKey("Name") && j.ContainsKey("Value"))
+                .Select(obj => new NextApiArgument(obj["Name"].Value<string>(), obj["Value"])).ToArray();
+
+            var paramValues = new List<object>();
+            foreach (var parameter in methodInfo.GetParameters())
+            {
+                var paramName = parameter.Name;
+                var arg = mappedArgs.FirstOrDefault(d => d.Name == paramName);
+
+                if (arg == null)
+                {
+                    if (!parameter.IsOptional)
+                        throw new Exception($"Parameter with name: {paramName} is not exist in request");
+
+                    // adding placeholder for optional param.
+                    // See: https://stackoverflow.com/questions/9977719/invoke-a-method-with-optional-params-via-reflection
+                    paramValues.Add(Type.Missing);
+                    continue;
+                }
+
+                var paramType = parameter.ParameterType;
+                var deserializedObject = ((JToken)arg.Value).ToObject(paramType);
+
+                paramValues.Add(deserializedObject);
             }
 
             return paramValues.ToArray();
@@ -120,7 +164,7 @@ namespace Abitech.NextApi.Server.Service
         private static bool IsAsyncMethod(this MethodInfo methodInfo)
         {
             var asyncAttr = typeof(AsyncStateMachineAttribute);
-            var attribute = (AsyncStateMachineAttribute) methodInfo.GetCustomAttribute(asyncAttr);
+            var attribute = (AsyncStateMachineAttribute)methodInfo.GetCustomAttribute(asyncAttr);
             return (attribute != null);
         }
 
@@ -147,11 +191,11 @@ namespace Abitech.NextApi.Server.Service
             object result = null;
             if (returnType == taskType)
             {
-                await (Task) methodInfo.Invoke(serviceInstance, arguments);
+                await (Task)methodInfo.Invoke(serviceInstance, arguments);
             }
             else if (taskType.IsAssignableFrom(returnType))
             {
-                result = (object) await (dynamic) methodInfo.Invoke(serviceInstance, arguments);
+                result = (object)await (dynamic)methodInfo.Invoke(serviceInstance, arguments);
             }
             else if (returnType == voidType)
             {
@@ -163,6 +207,63 @@ namespace Abitech.NextApi.Server.Service
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Wrapper for sending errors to client
+        /// </summary>
+        /// <returns></returns>
+        public static async Task SendNextApiError(this HttpResponse response, NextApiErrorCode code,
+            params Tuple<string, object>[] parameters)
+        {
+            var codeString = code.ToString();
+            var paramsDict = parameters.ToDictionary(
+                parameter => parameter.Item1,
+                parameter => parameter.Item2);
+            var error = new NextApiError(codeString, paramsDict);
+            await response.SendNextApiResponse(null, false, error);
+        }
+
+        /// <summary>
+        /// Wrapper for sending response to client
+        /// </summary>
+        /// <returns></returns>
+        public static async Task SendNextApiResponse(this HttpResponse response, object data, bool success = true,
+            NextApiError error = null)
+        {
+            var nextApiResponse = new NextApiResponse<object>(data, error, success);
+            await response.SendJson(nextApiResponse);
+        }
+
+        /// <summary>
+        /// Wrapper for sending json to client
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static async Task SendJson(this HttpResponse response, object data)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "application/json";
+            var encoded = JsonConvert.SerializeObject(data);
+            await response.WriteAsync(encoded);
+        }
+
+        /// <summary>
+        /// Wrapper for sending file response to client
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="fileInfo"></param>
+        /// <returns></returns>
+        public static async Task SendNextApiFileResponse(this HttpResponse response, NextApiFileResponse fileInfo)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "application/octet-stream";
+            response.Headers.Add("content-disposition", $"attachment; filename={fileInfo.FileName}");
+            using (fileInfo)
+            {
+                await fileInfo.CopyToAsync(response.Body);
+            }
         }
     }
 }

@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Abitech.NextApi.Server.Base;
+using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Abitech.NextApi.Server
@@ -25,6 +28,9 @@ namespace Abitech.NextApi.Server
         {
             var nextApiOptions = new NextApiServicesOptions();
 
+            // mvc
+            serviceCollection.AddMvc();
+            // signalr
             serviceCollection
                 .AddSignalR(srOptions => { srOptions.EnableDetailedErrors = true; })
                 .AddMessagePackProtocol(mpOptions =>
@@ -41,6 +47,8 @@ namespace Abitech.NextApi.Server
 
             serviceCollection.AddSingleton(nextApiOptions);
             serviceCollection.AddScoped<INextApiUserAccessor, NextApiUserAccessor>();
+            serviceCollection.AddScoped<INextApiRequest, NextApiRequest>();
+            serviceCollection.AddScoped<NextApiHttp>();
             NextApiServiceHelper
                 .FindAllServices()
                 .ForEach(type => { serviceCollection.AddTransient(type); });
@@ -65,7 +73,40 @@ namespace Abitech.NextApi.Server
         /// <param name="path"></param>
         public static void UseNextApiServices(this IApplicationBuilder builder, string path = "/nextApi")
         {
-            builder.UseSignalR(routes => { routes.MapHub<NextApiHub>(new PathString(path)); });
+            RegisterHttp(builder, path);
+            RegisterSignalR(builder, path);
+        }
+
+        private static void RegisterHttp(IApplicationBuilder builder, string path)
+        {
+            // HTTP
+            builder.UseMvc(routes =>
+            {
+                routes.MapNextApiMethod($"{path}/http",
+                    (http, context) => http.ProcessRequestAsync(context));
+                routes.MapNextApiMethod($"{path}/http/permissions",
+                    (http, context) => http.GetSupportedPermissions(context));
+            });
+        }
+
+        private static void MapNextApiMethod(this IRouteBuilder routeBuilder, string path,
+            Func<NextApiHttp, HttpContext, Task> action)
+        {
+            var services = routeBuilder.ServiceProvider;
+            routeBuilder.MapRoute(path, async context =>
+            {
+                using (var scope = services.CreateScope())
+                {
+                    var nextApiHttp = scope.ServiceProvider.GetService<NextApiHttp>();
+                    await action.Invoke(nextApiHttp, context);
+                }
+            });
+        }
+
+        private static void RegisterSignalR(IApplicationBuilder builder, string path)
+        {
+            // SignalR
+            builder.UseSignalR(routes => routes.MapHub<NextApiHub>(new PathString(path)));
         }
 
         /// <summary>

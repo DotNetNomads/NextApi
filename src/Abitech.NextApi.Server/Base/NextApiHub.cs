@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Attributes;
+using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.SignalR;
@@ -21,6 +22,7 @@ namespace Abitech.NextApi.Server.Base
         private readonly IHubContext<NextApiHub> _hubContext;
         private readonly NextApiServicesOptions _options;
         private readonly INextApiUserAccessor _nextApiUserAccessor;
+        private readonly INextApiRequest _request;
 
         /// <summary>
         /// Initialize Hub
@@ -29,17 +31,19 @@ namespace Abitech.NextApi.Server.Base
         /// <param name="permissionProvider">Used for users validation by permissions</param>
         /// <param name="hubContext">Hub context</param>
         /// <param name="options">NextApi options</param>
-        /// <param name="nextApiUserAccessor"></param>
+        /// <param name="nextApiUserAccessor">Instance of INextApiUserAccessor</param>
+        /// <param name="request">Instance of INextApiRequest</param>
         public NextApiHub(IServiceProvider serviceProvider,
             INextApiPermissionProvider permissionProvider,
             IHubContext<NextApiHub> hubContext,
-            NextApiServicesOptions options, INextApiUserAccessor nextApiUserAccessor)
+            NextApiServicesOptions options, INextApiUserAccessor nextApiUserAccessor, INextApiRequest request)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _permissionProvider = permissionProvider ?? throw new ArgumentNullException(nameof(permissionProvider));
             _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _nextApiUserAccessor = nextApiUserAccessor ?? throw new ArgumentNullException(nameof(nextApiUserAccessor));
+            _request = request ?? throw new ArgumentNullException(nameof(request));
         }
 
         /// <summary>
@@ -52,7 +56,10 @@ namespace Abitech.NextApi.Server.Base
         {
             // set current nextapi user
             _nextApiUserAccessor.User = Context.User;
-            
+            // set current request info
+            _request.ClientContext = Context;
+            _request.HubContext = _hubContext;
+
             if (string.IsNullOrWhiteSpace(command.Service))
                 throw new Exception("Service name is not provided");
             if (string.IsNullOrWhiteSpace(command.Method))
@@ -69,7 +76,7 @@ namespace Abitech.NextApi.Server.Base
             if (!isAnonymousService && !userAuthorized)
                 throw new Exception("This service available only for authorized users");
 
-            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command)
+            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command.Method)
                              ?? throw new Exception(
                                  $"Method with name {command.Method} is not found in service {command.Service}");
 
@@ -84,8 +91,6 @@ namespace Abitech.NextApi.Server.Base
 
             var methodParameters = NextApiServiceHelper.ResolveMethodParameters(methodInfo, command);
             var serviceInstance = (NextApiService)_serviceProvider.GetService(serviceType);
-            serviceInstance.ClientContext = Context;
-            serviceInstance.HubContext = _hubContext;
             try
             {
                 return await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParameters);

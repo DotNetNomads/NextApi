@@ -5,32 +5,33 @@ using Abitech.NextApi.Client;
 using Abitech.NextApi.Server.Tests.Common;
 using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.TestHost;
+using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiTest
+    public class NextApiTest : IDisposable
     {
+        protected ServerFactory Factory;
 #pragma warning disable 1998
-        protected async Task<NextApiClient> GetClient(string token = null)
+        protected async Task<NextApiClient> GetClient(NextApiTransport transport, string token = null)
 #pragma warning restore 1998
         {
-
-            var handler = _server.CreateHandler();
+            var handler = Factory.Server.CreateHandler();
             return new NextApiClientForTests(
-                "ws://localhost/nextapi",
+                "http://localhost/nextapi",
                 token != null ? new TestTokenProvider(token) : null,
-                handler);
+                handler, transport);
         }
-        
-        protected IServiceProvider ServiceProvider;
-        private readonly TestServer _server;
 
         public NextApiTest()
         {
-            var factory = new ServerFactory();
-            factory.CreateClient();
-            _server = factory.Server;
-            ServiceProvider = _server.Host.Services;
+            Factory = new ServerFactory();
+            Factory.CreateClient();
+        }
+
+        public void Dispose()
+        {
+            Factory?.Dispose();
         }
     }
 
@@ -40,7 +41,8 @@ namespace Abitech.NextApi.Server.Tests
 
         public NextApiClientForTests(string url, INextApiAccessTokenProvider tokenProvider,
             HttpMessageHandler messageHandler,
-            bool reconnectAutomatically = true, int reconnectDelayMs = 5000) : base(url, tokenProvider,
+            NextApiTransport transport = NextApiTransport.Http,
+            bool reconnectAutomatically = true, int reconnectDelayMs = 5000) : base(url, tokenProvider, transport,
             reconnectAutomatically, reconnectDelayMs)
         {
             _messageHandler = messageHandler;
@@ -53,6 +55,18 @@ namespace Abitech.NextApi.Server.Tests
             {
                 options.HttpMessageHandlerFactory = _ => _messageHandler;
             }
+        }
+
+        protected override async Task<HttpClient> GetHttpClient()
+        {
+            var client = _messageHandler != null ? new HttpClient(_messageHandler) : new HttpClient();
+            if (TokenProvider != null)
+            {
+                var token = await TokenProvider.ResolveToken();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            }
+
+            return client;
         }
     }
 
