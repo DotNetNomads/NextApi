@@ -54,7 +54,7 @@ namespace Abitech.NextApi.Client
     public class NextApiClient : INextApiClient
     {
         /// <summary>
-        /// Transport for current client instance
+        /// Transport type for NextApi requests
         /// </summary>
         protected NextApiTransport TransportType { get; }
 
@@ -69,8 +69,19 @@ namespace Abitech.NextApi.Client
         {
             if (_supportedPermissions != null)
                 return _supportedPermissions;
-            var connection = await GetConnection();
-            _supportedPermissions = await connection.InvokeAsync<string[]>("GetSupportedPermissions");
+            switch (TransportType)
+            {
+                case NextApiTransport.SignalR:
+                    var connection = await GetConnection();
+                    _supportedPermissions = await connection.InvokeAsync<string[]>("GetSupportedPermissions");
+                    break;
+                case NextApiTransport.Http:
+                    _supportedPermissions = await GetPermissionsHttp();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             return _supportedPermissions;
         }
 
@@ -121,6 +132,8 @@ namespace Abitech.NextApi.Client
             ReconnectDelayMs = reconnectDelayMs;
         }
 
+        #region SignalR
+
         /// <summary>
         /// Initializes client (when first request)
         /// </summary>
@@ -145,47 +158,6 @@ namespace Abitech.NextApi.Client
             return connection;
         }
 
-        /// <summary>
-        /// Gets HTTP client instance for current NextApi client
-        /// </summary>
-        /// <returns></returns>
-        protected virtual async Task<HttpClient> GetHttpClient()
-        {
-            var client = new HttpClient
-            {
-                BaseAddress = new Uri(Url)
-            };
-            if (TokenProvider == null)
-            {
-                return client;
-            }
-
-            var token = await TokenProvider.ResolveToken();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-            return client;
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Invoke method of specific service and return result
-        /// </summary>
-        /// <param name="serviceName">Name of NextApi service</param>
-        /// <param name="serviceMethod">Method of service</param>
-        /// <param name="arguments">Arguments for method</param>
-        /// <typeparam name="T">Execution result</typeparam>
-        /// <returns></returns>
-        public async Task<T> Invoke<T>(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
-        {
-            var command = PrepareCommand(serviceName, serviceMethod, arguments);
-            if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
-            {
-                return await InvokeHttp<T>(command);
-            }
-
-            return await InvokeSignalR<T>(command);
-        }
-
         private async Task<T> InvokeSignalR<T>(NextApiCommand command)
         {
             var connection = await GetConnection();
@@ -193,112 +165,11 @@ namespace Abitech.NextApi.Client
             return await connection.InvokeAsync<T>("ExecuteCommand", command);
         }
 
-        private MultipartFormDataContent PrepareRequestForm(NextApiCommand command)
-        {
-            var args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
-            var form = new MultipartFormDataContent
-            {
-                {new StringContent(command.Service), "Service"},
-                {new StringContent(command.Method), "Method"},
-                {new StringContent(JsonConvert.SerializeObject(args, GetJsonConfig())), "Args"}
-            };
-            // send files
-            var fileArgs = command.Args.Where(arg => arg is NextApiFileArgument).Cast<NextApiFileArgument>().ToArray();
-            var i = 0;
-            foreach (var nextApiFileArgument in fileArgs)
-            {
-                var stream = nextApiFileArgument.FileDataStream ??
-                             new FileStream(nextApiFileArgument.FilePath, FileMode.Open);
-                var fileName = nextApiFileArgument.FileName ??
-                               Path.GetFileName(nextApiFileArgument.FilePath) ?? "noname.bin";
-                var name = fileName.Split('.')[0];
-                form.Add(new StreamContent(stream), name, fileName);
-                i++;
-            }
-
-            return form;
-        }
-
-        private async Task<T> InvokeHttp<T>(NextApiCommand command)
-        {
-            var form = PrepareRequestForm(command);
-            HttpResponseMessage response;
-            try
-            {
-                using (var client = await GetHttpClient())
-                {
-                    response = await client.PostAsync("http", form);
-                    response.EnsureSuccessStatusCode();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw NextApiException(new NextApiError(NextApiErrorCode.HttpError.ToString(),
-                    new Dictionary<string, object>()
-                    {
-                        {"message", ex.Message}
-                    }));
-            }
-
-            var data = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<NextApiResponse<T>>(data, GetJsonConfig());
-            if (!result.Success)
-            {
-                throw NextApiException(result.Error);
-            }
-
-            return result.Data;
-        }
-
-        private JsonSerializerSettings GetJsonConfig()
-        {
-            return new JsonSerializerSettings
-            {
-                Converters = new JsonConverter[] {new StringEnumConverter()}
-            };
-        }
-
-        private NextApiException NextApiException(NextApiError error)
-        {
-            var message = error.Parameters["message"];
-            return new NextApiException($"{error.Code} {message}", error.Code,
-                error.Parameters);
-        }
-
         private async Task InvokeSignalR(NextApiCommand command)
         {
             var connection = await GetConnection();
             command.Args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
             await connection.InvokeAsync("ExecuteCommand", command);
-        }
-
-        /// <summary>
-        /// Invoke method of specific service
-        /// </summary>
-        /// <param name="serviceName"></param>
-        /// <param name="serviceMethod"></param>
-        /// <param name="arguments"></param>
-        /// <returns>nothing</returns>
-        public async Task Invoke(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
-        {
-            var command = PrepareCommand(serviceName, serviceMethod, arguments);
-            if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
-            {
-                await InvokeHttp<string>(command);
-                return;
-            }
-
-            await InvokeSignalR(command);
-        }
-
-        private NextApiCommand PrepareCommand(string serviceName, string serviceMethod, INextApiArgument[] arguments)
-        {
-            return new NextApiCommand
-            {
-                Args = arguments,
-                Method = serviceMethod,
-                Service = serviceName
-            };
         }
 
         /// <summary>
@@ -340,6 +211,191 @@ namespace Abitech.NextApi.Client
             }
 
             return _connection;
+        }
+
+        #endregion
+
+        #region HTTP
+
+        private async Task<string[]> GetPermissionsHttp()
+        {
+            HttpResponseMessage response;
+            using (var client = await GetHttpClient())
+            {
+                response = await client.GetAsync($"{Url}/http/permissions");
+                response.EnsureSuccessStatusCode();
+            }
+
+            var stringResp = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<string[]>(stringResp, GetJsonConfig());
+        }
+
+        /// <summary>
+        /// Gets HTTP client instance for current NextApi client
+        /// </summary>
+        /// <returns></returns>
+        protected virtual async Task<HttpClient> GetHttpClient()
+        {
+            var client = new HttpClient();
+            if (TokenProvider == null)
+            {
+                return client;
+            }
+
+            var token = await TokenProvider.ResolveToken();
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+            return client;
+        }
+
+        private MultipartFormDataContent PrepareRequestForm(NextApiCommand command)
+        {
+            var args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
+            var form = new MultipartFormDataContent
+            {
+                {new StringContent(command.Service), "Service"},
+                {new StringContent(command.Method), "Method"},
+                {new StringContent(JsonConvert.SerializeObject(args, GetJsonConfig())), "Args"}
+            };
+            // send files
+            var fileArgs = command.Args.Where(arg => arg is NextApiFileArgument).Cast<NextApiFileArgument>().ToArray();
+            var i = 0;
+            foreach (var nextApiFileArgument in fileArgs)
+            {
+                var stream = nextApiFileArgument.FileDataStream ??
+                             new FileStream(nextApiFileArgument.FilePath, FileMode.Open);
+                var fileName = nextApiFileArgument.FileName ??
+                               Path.GetFileName(nextApiFileArgument.FilePath) ?? "noname.bin";
+                var name = nextApiFileArgument.FileId;
+                form.Add(new StreamContent(stream), name, fileName);
+                i++;
+            }
+
+            return form;
+        }
+
+        private async Task<T> InvokeHttp<T>(NextApiCommand command)
+        {
+            var form = PrepareRequestForm(command);
+            HttpResponseMessage response;
+            try
+            {
+                using (var client = await GetHttpClient())
+                {
+                    response = await client.PostAsync($"{Url}/http", form);
+                    response.EnsureSuccessStatusCode();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new NextApiException(ex.Message, NextApiErrorCode.HttpError.ToString());
+            }
+
+            // trying to detect file response
+            if (response.Content.Headers.ContentType.MediaType == "application/octet-stream")
+            {
+                if (typeof(T) != typeof(NextApiFileResponse))
+                {
+                    throw new NextApiException(
+                        "Please specify correct return type for this request. Use NextApiFileResponse.",
+                        NextApiErrorCode.IncorrectRequest.ToString());
+                }
+
+                try
+                {
+                    return await ProcessNextApiFileResponse(response) as dynamic;
+                }
+                catch (Exception ex)
+                {
+                    throw new NextApiException(ex.Message, NextApiErrorCode.HttpError.ToString());
+                }
+            }
+
+            // process as normal nextapi response
+            var data = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<NextApiResponse<T>>(data, GetJsonConfig());
+            if (!result.Success)
+            {
+                throw NextApiException(result.Error);
+            }
+
+            return result.Data;
+        }
+
+        private async Task<NextApiFileResponse> ProcessNextApiFileResponse(HttpResponseMessage response)
+        {
+            var content = response.Content;
+            var fileName = content.Headers.ContentDisposition.FileName;
+            var stream = await content.ReadAsStreamAsync();
+            return new NextApiFileResponse(fileName, stream);
+        }
+
+        private JsonSerializerSettings GetJsonConfig()
+        {
+            return new JsonSerializerSettings
+            {
+                Converters = new JsonConverter[] {new StringEnumConverter()}
+            };
+        }
+
+        #endregion
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Invoke method of specific service and return result
+        /// </summary>
+        /// <param name="serviceName">Name of NextApi service</param>
+        /// <param name="serviceMethod">Method of service</param>
+        /// <param name="arguments">Arguments for method</param>
+        /// <typeparam name="T">Execution result</typeparam>
+        /// <returns></returns>
+        public async Task<T> Invoke<T>(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
+        {
+            var command = PrepareCommand(serviceName, serviceMethod, arguments);
+            if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument) ||
+                typeof(T) == typeof(NextApiFileResponse))
+            {
+                return await InvokeHttp<T>(command);
+            }
+
+            return await InvokeSignalR<T>(command);
+        }
+
+        private NextApiException NextApiException(NextApiError error)
+        {
+            var message = error.Parameters["message"];
+            return new NextApiException($"{error.Code} {message}", error.Code,
+                error.Parameters);
+        }
+
+
+        /// <summary>
+        /// Invoke method of specific service
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <param name="serviceMethod"></param>
+        /// <param name="arguments"></param>
+        /// <returns>nothing</returns>
+        public async Task Invoke(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
+        {
+            var command = PrepareCommand(serviceName, serviceMethod, arguments);
+            if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
+            {
+                await InvokeHttp<object>(command);
+                return;
+            }
+
+            await InvokeSignalR(command);
+        }
+
+        private NextApiCommand PrepareCommand(string serviceName, string serviceMethod, INextApiArgument[] arguments)
+        {
+            return new NextApiCommand
+            {
+                Args = arguments,
+                Method = serviceMethod,
+                Service = serviceName
+            };
         }
     }
 

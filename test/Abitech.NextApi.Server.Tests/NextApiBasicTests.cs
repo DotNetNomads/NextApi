@@ -250,9 +250,19 @@ namespace Abitech.NextApi.Server.Tests
 
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var filePath = Path.Combine(baseDir, "TestData", "bellonicat.jpg");
+            var originalBytes = File.ReadAllBytes(filePath);
 
             var resultFilePath = await client.Invoke<string>("Test", "UploadFile",
-                new NextApiFileArgument(filePath));
+                new NextApiFileArgument("belloni", filePath));
+
+            // download and check
+            var fileResponse =
+                await client.Invoke<NextApiFileResponse>("Test", "GetFile",
+                    new NextApiArgument("path", resultFilePath));
+
+            var bytes = await fileResponse.GetBytes();
+
+            Assert.Equal(originalBytes, bytes);
         }
     }
 }

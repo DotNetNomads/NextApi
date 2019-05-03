@@ -16,7 +16,7 @@ namespace Abitech.NextApi.Model
         public Dictionary<string, object> Parameters { get; }
 
         /// <inheritdoc />
-        public NextApiException(string message, string code, Dictionary<string, object> parameters) : base(message)
+        public NextApiException(string message, string code, Dictionary<string, object> parameters = null) : base(message)
         {
             Code = code;
             Parameters = parameters;

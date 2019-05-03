@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
@@ -106,10 +107,18 @@ namespace Abitech.NextApi.Server.Tests.Service
 
         public async Task<string> UploadFile()
         {
-            var file = _nextApiRequest.FilesFromClient.GetFile("bellonicat");
+            var file = _nextApiRequest.FilesFromClient.GetFile("belloni");
             var tempPath = Path.GetTempFileName();
-            await file.CopyToAsync(new FileStream(tempPath, FileMode.Open));
+            using (var fs = new FileStream(tempPath, FileMode.Open))
+                await file.CopyToAsync(fs);
             return tempPath;
+        }
+
+        public async Task<NextApiFileResponse> GetFile(string path)
+        {
+            var fileName = "bellonicat.jpg";
+            var fileStream = new FileStream(path, FileMode.Open);
+            return new NextApiFileResponse(fileName, fileStream);
         }
     }
 #pragma warning restore 1998

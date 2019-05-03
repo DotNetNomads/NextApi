@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Abitech.NextApi.Server.Base;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
@@ -78,18 +79,27 @@ namespace Abitech.NextApi.Server
 
         private static void RegisterHttp(IApplicationBuilder builder, string path)
         {
-            var applicationServices = builder.ApplicationServices;
             // HTTP
             builder.UseMvc(routes =>
             {
-                routes.MapRoute($"{path}/http", async context =>
+                routes.MapNextApiMethod($"{path}/http",
+                    (http, context) => http.ProcessRequestAsync(context));
+                routes.MapNextApiMethod($"{path}/http/permissions",
+                    (http, context) => http.GetSupportedPermissions(context));
+            });
+        }
+
+        private static void MapNextApiMethod(this IRouteBuilder routeBuilder, string path,
+            Func<NextApiHttp, HttpContext, Task> action)
+        {
+            var services = routeBuilder.ServiceProvider;
+            routeBuilder.MapRoute(path, async context =>
+            {
+                using (var scope = services.CreateScope())
                 {
-                    using (var scope = applicationServices.CreateScope())
-                    {
-                        var nextApiHttp = scope.ServiceProvider.GetService<NextApiHttp>();
-                        await nextApiHttp.ProcessRequestAsync(context);
-                    }
-                });
+                    var nextApiHttp = scope.ServiceProvider.GetService<NextApiHttp>();
+                    await action.Invoke(nextApiHttp, context);
+                }
             });
         }
 

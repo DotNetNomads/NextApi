@@ -18,7 +18,7 @@ namespace Abitech.NextApi.Server.Tests
         {
             var handler = Factory.Server.CreateHandler();
             return new NextApiClientForTests(
-                "ws://localhost/nextapi",
+                "http://localhost/nextapi",
                 token != null ? new TestTokenProvider(token) : null,
                 handler, transport);
         }
@@ -60,13 +60,11 @@ namespace Abitech.NextApi.Server.Tests
         protected override async Task<HttpClient> GetHttpClient()
         {
             var client = _messageHandler != null ? new HttpClient(_messageHandler) : new HttpClient();
-            if (TokenProvider == null)
+            if (TokenProvider != null)
             {
-                return client;
+                var token = await TokenProvider.ResolveToken();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
             }
-
-            var token = await TokenProvider.ResolveToken();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
             return client;
         }

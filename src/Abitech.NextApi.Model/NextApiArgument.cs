@@ -49,25 +49,37 @@ namespace Abitech.NextApi.Model
     public class NextApiFileArgument : INextApiArgument
     {
         /// <summary>
+        /// File identifier (used to match this file when request is processing)
+        /// </summary>
+        public string FileId { get; private set; }
+
+        /// <summary>
         /// Path to file
         /// </summary>
         public string FilePath { get; private set; }
+
         /// <summary>
         /// Alternate to FilePath, provide stream to File data
         /// </summary>
         public Stream FileDataStream { get; private set; }
+
+        /// <summary>
+        /// File name with extension
+        /// </summary>
         public string FileName { get; private set; }
-        
+
 
         /// <inheritdoc />
-        public NextApiFileArgument(string filePath)
+        public NextApiFileArgument(string fileId, string filePath)
         {
+            FileId = fileId;
             FilePath = filePath;
         }
 
         /// <inheritdoc />
-        public NextApiFileArgument(Stream fileDataStream, string fileName)
+        public NextApiFileArgument(string fileId, string fileName, Stream fileDataStream)
         {
+            FileId = fileId;
             FileDataStream = fileDataStream;
             FileName = fileName;
         }

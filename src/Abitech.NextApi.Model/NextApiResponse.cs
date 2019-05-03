@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Abitech.NextApi.Model
 {
@@ -28,6 +31,90 @@ namespace Abitech.NextApi.Model
             Data = data;
             Error = error;
             Success = success;
+        }
+    }
+
+    /// <summary>
+    /// Default response wrapper for file response
+    /// </summary>
+    public class NextApiFileResponse : IDisposable
+    {
+        /// <summary>
+        /// Stream with file content
+        /// </summary>
+        public Stream FileStream { get; }
+
+        /// <summary>
+        /// Name of file
+        /// </summary>
+        public string FileName { get; }
+
+        /// <summary>
+        /// Initialize instance of NextApiFileResponse
+        /// </summary>
+        /// <param name="fileName">Name of file</param>
+        /// <param name="fileStream">Stream with file data</param>
+        public NextApiFileResponse(string fileName, Stream fileStream)
+        {
+            FileStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
+            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
+        }
+
+        /// <summary>
+        /// Saves file to specific folder
+        /// </summary>
+        /// <param name="folderPath">Path to folder</param>
+        /// <returns></returns>
+        public async Task SaveToFolder(string folderPath)
+        {
+            var filePath = Path.Combine(folderPath, FileName);
+            await SaveAsFile(filePath);
+        }
+
+        /// <summary>
+        /// Saves file to specific path
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public async Task SaveAsFile(string filePath)
+        {
+            var fileStream = new FileStream(filePath, FileMode.OpenOrCreate);
+            using (fileStream)
+            {
+                await CopyToAsync(fileStream);
+            }
+        }
+
+        /// <summary>
+        /// Copy content from original content stream to another
+        /// </summary>
+        /// <param name="stream">Another stream</param>
+        /// <returns></returns>
+        public async Task CopyToAsync(Stream stream)
+        {
+            await FileStream.CopyToAsync(stream);
+        }
+
+        /// <summary>
+        /// Get all bytes from content stream
+        /// </summary>
+        /// <returns></returns>
+        public async Task<byte[]> GetBytes()
+        {
+            byte[] bytes;
+            using (var memStream = new MemoryStream())
+            {
+                await CopyToAsync(memStream);
+                bytes = memStream.ToArray();
+            }
+
+            return bytes;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            FileStream?.Dispose();
         }
     }
 

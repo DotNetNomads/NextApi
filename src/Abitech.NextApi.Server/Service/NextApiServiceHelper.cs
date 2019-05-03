@@ -149,7 +149,7 @@ namespace Abitech.NextApi.Server.Service
 
                 var paramType = parameter.ParameterType;
                 var deserializedObject = ((JToken)arg.Value).ToObject(paramType);
-                
+
                 paramValues.Add(deserializedObject);
             }
 
@@ -231,11 +231,39 @@ namespace Abitech.NextApi.Server.Service
         public static async Task SendNextApiResponse(this HttpResponse response, object data, bool success = true,
             NextApiError error = null)
         {
+            var nextApiResponse = new NextApiResponse<object>(data, error, success);
+            await response.SendJson(nextApiResponse);
+        }
+
+        /// <summary>
+        /// Wrapper for sending json to client
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static async Task SendJson(this HttpResponse response, object data)
+        {
             response.StatusCode = 200;
             response.ContentType = "application/json";
-            var nextApiResponse = new NextApiResponse<object>(data, error, success);
-            var encoded = JsonConvert.SerializeObject(nextApiResponse);
+            var encoded = JsonConvert.SerializeObject(data);
             await response.WriteAsync(encoded);
+        }
+
+        /// <summary>
+        /// Wrapper for sending file response to client
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="fileInfo"></param>
+        /// <returns></returns>
+        public static async Task SendNextApiFileResponse(this HttpResponse response, NextApiFileResponse fileInfo)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "application/octet-stream";
+            response.Headers.Add("content-disposition", $"attachment; filename={fileInfo.FileName}");
+            using (fileInfo)
+            {
+                await fileInfo.CopyToAsync(response.Body);
+            }
         }
     }
 }

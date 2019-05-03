@@ -121,6 +121,12 @@ namespace Abitech.NextApi.Server.Base
             try
             {
                 var response = await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParams);
+                if (response is NextApiFileResponse fileResponse)
+                {
+                    await context.Response.SendNextApiFileResponse(fileResponse);
+                    return;
+                }
+
                 await context.Response.SendNextApiResponse(response);
             }
             catch (Exception ex)
@@ -129,6 +135,17 @@ namespace Abitech.NextApi.Server.Base
                 await context.Response.SendNextApiError(NextApiErrorCode.Unknown,
                     new Tuple<string, object>("message", message));
             }
+        }
+
+        /// <summary>
+        /// Returns list of supported permissions
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task GetSupportedPermissions(HttpContext context)
+        {
+            var permissions = _permissionProvider.SupportedPermissions;
+            await context.Response.SendJson(permissions);
         }
     }
 }
