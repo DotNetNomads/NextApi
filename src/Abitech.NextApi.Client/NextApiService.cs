@@ -33,7 +33,7 @@ namespace Abitech.NextApi.Client
         /// <param name="arguments">Method arguments</param>
         /// <typeparam name="T">Execution result type</typeparam>
         /// <returns>Execution result</returns>
-        protected async Task<T> InvokeService<T>(string method, params NextApiArgument[] arguments)
+        protected async Task<T> InvokeService<T>(string method, params INextApiArgument[] arguments)
         {
             return await Client.Invoke<T>(ServiceName, method, arguments);
         }
@@ -43,7 +43,7 @@ namespace Abitech.NextApi.Client
         /// </summary>
         /// <param name="method">Method name</param>
         /// <param name="arguments">Method arguments</param>
-        protected async Task InvokeService(string method, params NextApiArgument[] arguments)
+        protected async Task InvokeService(string method, params INextApiArgument[] arguments)
         {
             await Client.Invoke(ServiceName, method, arguments);
         }
