@@ -82,34 +82,34 @@ namespace Abitech.NextApi.Server.Entity
                     case FilterExpressionTypes.Equal:
 
                         currentExpression = Expression.Equal(property,
-                            Expression.Constant(ValueForMember(filterExpression.Value, property)));
+                            Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     case FilterExpressionTypes.MoreThan:
                         currentExpression =
                             Expression.GreaterThan(property,
-                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     case FilterExpressionTypes.LessThan:
                         currentExpression =
                             Expression.LessThan(property,
-                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     case FilterExpressionTypes.MoreThanOrEqual:
                         currentExpression =
                             Expression.GreaterThanOrEqual(property,
-                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     case FilterExpressionTypes.LessThanOrEqual:
                         currentExpression =
                             Expression.LessThanOrEqual(property,
-                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     case FilterExpressionTypes.In:
                         var inputArray = (ICollection)FormatArray(filterExpression.Value, property);
                         var items = (from object item
                                     in inputArray
                                 select Expression
-                                    .Constant(item))
+                                    .Constant(item, property.Type))
                             .Cast<Expression>()
                             .ToList();
                         var itemType = items.First().Type;
@@ -126,7 +126,7 @@ namespace Abitech.NextApi.Server.Entity
                     case FilterExpressionTypes.NotEqual:
                         currentExpression =
                             Expression.NotEqual(property,
-                                Expression.Constant(ValueForMember(filterExpression.Value, property)));
+                                Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
