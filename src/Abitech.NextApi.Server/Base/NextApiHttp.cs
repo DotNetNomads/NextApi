@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Attributes;
@@ -8,7 +8,6 @@ using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Abitech.NextApi.Server.Base
 {
@@ -41,56 +40,10 @@ namespace Abitech.NextApi.Server.Base
         /// <returns></returns>
         public async Task ProcessRequestAsync(HttpContext context)
         {
-            var form = context.Request.Form;
-            if (form == null || form.Count < 0)
+            var errorResponse = ValidateRequest(context, out var methodInfo, out var form, out var serviceType);
+            if (errorResponse != null)
             {
-                await context.Response.SendNextApiError(NextApiErrorCode.IncorrectRequest,
-                    new Tuple<string, object>("message", "Incorrect request fields"));
-                return;
-            }
-
-            _userAccessor.User = context.User;
-            _request.FilesFromClient = form.Files;
-
-            var serviceName = form["Service"].FirstOrDefault();
-            if (serviceName == null)
-            {
-                await context.Response.SendNextApiError(NextApiErrorCode.ServiceIsNotFound,
-                    new Tuple<string, object>("message", "Service name is not provided"));
-                return;
-            }
-
-            var methodName = form["Method"].FirstOrDefault();
-            if (methodName == null)
-            {
-                await context.Response.SendNextApiError(NextApiErrorCode.OperationIsNotFound,
-                    new Tuple<string, object>("message", "Operation is not provided"));
-                return;
-            }
-
-            var serviceType = NextApiServiceHelper.GetServiceType(serviceName);
-            if (serviceType == null)
-            {
-                await context.Response.SendNextApiError(NextApiErrorCode.ServiceIsNotFound,
-                    new Tuple<string, object>("message", "Service is not found in service collection"));
-                return;
-            }
-
-            // service access validation
-            var isAnonymousService = _options.AnonymousByDefault ||
-                                     NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
-            var userAuthorized = context.User.Identity.IsAuthenticated;
-            if (!isAnonymousService && !userAuthorized)
-            {
-                await context.Response.SendNextApiError(NextApiErrorCode.ServiceIsOnlyForAuthorized);
-                return;
-            }
-
-            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, methodName);
-            if (methodInfo == null)
-            {
-                await context.Response.SendNextApiError(NextApiErrorCode.OperationIsNotFound,
-                    new Tuple<string, object>("message", "Operation not found in requested service"));
+                await context.Response.SendJson(errorResponse);
                 return;
             }
 
@@ -101,7 +54,10 @@ namespace Abitech.NextApi.Server.Base
             {
                 if (!await _permissionProvider.HasPermission(context.User, permissionAuthorizeAttribute.Permission))
                 {
-                    await context.Response.SendNextApiError(NextApiErrorCode.OperationIsNotAllowed);
+                    var response = NextApiServiceHelper.CreateNextApiErrorResponse(
+                        NextApiErrorCode.OperationIsNotAllowed,
+                        "Operation is not allowed for current user");
+                    await context.Response.SendJson(response);
                     return;
                 }
             }
@@ -113,8 +69,9 @@ namespace Abitech.NextApi.Server.Base
             }
             catch (Exception ex)
             {
-                await context.Response.SendNextApiError(NextApiErrorCode.IncorrectRequest,
-                    new Tuple<string, object>("message", ex.Message));
+                await context.Response.SendJson(
+                    NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.IncorrectRequest, ex.Message)
+                );
                 return;
             }
 
@@ -128,14 +85,72 @@ namespace Abitech.NextApi.Server.Base
                     return;
                 }
 
-                await context.Response.SendNextApiResponse(response);
+                var jsonResponse = new NextApiResponse(response);
+                await context.Response.SendJson(jsonResponse);
             }
             catch (Exception ex)
             {
-                var message = ex.Message;
-                await context.Response.SendNextApiError(NextApiErrorCode.Unknown,
-                    new Tuple<string, object>("message", message));
+                await context.Response.SendJson(
+                    NextApiServiceHelper.CreateNextApiExceptionResponse(ex)
+                );
             }
+        }
+
+        private NextApiResponse ValidateRequest(HttpContext context, out MethodInfo methodInfo,
+            out IFormCollection form, out Type serviceType)
+        {
+            methodInfo = null;
+            serviceType = null;
+            form = context.Request.Form;
+
+            if (form == null || form.Count < 0)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.IncorrectRequest,
+                    "Incorrect request fields");
+            }
+
+            _userAccessor.User = context.User;
+            _request.FilesFromClient = form.Files;
+
+            var serviceName = form["Service"].FirstOrDefault();
+            if (serviceName == null)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsNotFound,
+                    "Service name is not provided");
+            }
+
+            var methodName = form["Method"].FirstOrDefault();
+            if (methodName == null)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotFound,
+                    "Operation is not provided");
+            }
+
+            serviceType = NextApiServiceHelper.GetServiceType(serviceName);
+            if (serviceType == null)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsNotFound,
+                    "Service is not found in service collection");
+            }
+
+            // service access validation
+            var isAnonymousService = _options.AnonymousByDefault ||
+                                     NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
+            var userAuthorized = context.User.Identity.IsAuthenticated;
+            if (!isAnonymousService && !userAuthorized)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsOnlyForAuthorized,
+                    null);
+            }
+
+            methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, methodName);
+            if (methodInfo == null)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotFound,
+                    "Operation not found in requested service");
+            }
+
+            return null;
         }
 
         /// <summary>
