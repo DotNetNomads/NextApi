@@ -210,29 +210,46 @@ namespace Abitech.NextApi.Server.Service
         }
 
         /// <summary>
-        /// Wrapper for sending errors to client
+        /// Create and return error response for client
         /// </summary>
+        /// <param name="code"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
-        public static async Task SendNextApiError(this HttpResponse response, NextApiErrorCode code,
-            params Tuple<string, object>[] parameters)
+        public static NextApiResponse CreateNextApiErrorResponse(
+            NextApiErrorCode code, string message)
         {
-            var codeString = code.ToString();
-            var paramsDict = parameters.ToDictionary(
-                parameter => parameter.Item1,
-                parameter => parameter.Item2);
-            var error = new NextApiError(codeString, paramsDict);
-            await response.SendNextApiResponse(null, false, error);
+            var error =
+                new NextApiError(code.ToString(), new Dictionary<string, object> {{"message", message}});
+            return new NextApiResponse(null, error, false);
         }
 
         /// <summary>
-        /// Wrapper for sending response to client
+        /// Create and return exception response for client
         /// </summary>
+        /// <param name="exception">Any exception</param>
         /// <returns></returns>
-        public static async Task SendNextApiResponse(this HttpResponse response, object data, bool success = true,
-            NextApiError error = null)
+        public static NextApiResponse CreateNextApiExceptionResponse(Exception exception)
         {
-            var nextApiResponse = new NextApiResponse<object>(data, error, success);
-            await response.SendJson(nextApiResponse);
+            var message = exception.Message;
+            string code;
+            var parameters = new Dictionary<string, object>();
+            if (exception is NextApiException nextApiException)
+            {
+                code = nextApiException.Code;
+                if (nextApiException.Parameters != null)
+                {
+                    parameters = nextApiException.Parameters;
+                }
+            }
+            else
+            {
+                code = NextApiErrorCode.Unknown.ToString();
+            }
+
+            parameters.Add(
+                "message", message);
+            var error = new NextApiError(code, parameters);
+            return new NextApiResponse(null, error, false);
         }
 
         /// <summary>

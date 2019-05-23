@@ -111,7 +111,7 @@ namespace Abitech.NextApi.Server.Tests
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
-        public async Task AsynVoidDenied(NextApiTransport transport)
+        public async Task AsyncVoidDenied(NextApiTransport transport)
         {
             var client = await GetClient(transport);
             try

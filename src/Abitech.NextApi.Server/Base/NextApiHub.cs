@@ -61,24 +61,33 @@ namespace Abitech.NextApi.Server.Base
             _request.HubContext = _hubContext;
 
             if (string.IsNullOrWhiteSpace(command.Service))
-                throw new Exception("Service name is not provided");
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsNotFound,
+                    "Service name is not provided");
             if (string.IsNullOrWhiteSpace(command.Method))
-                throw new Exception("Method name is not provided");
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotFound,
+                    "Operation name is not provided");
 
-            var serviceType = NextApiServiceHelper.GetServiceType(command.Service)
-                              ?? throw new Exception(
-                                  $"Service with name {command.Service} is not found");
+            var serviceType = NextApiServiceHelper.GetServiceType(command.Service);
+            if (serviceType == null)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsNotFound,
+                    $"Service with name {command.Service} is not found");
+            }
 
             // service access validation
             var isAnonymousService = _options.AnonymousByDefault ||
                                      NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
             var userAuthorized = Context.User.Identity.IsAuthenticated;
             if (!isAnonymousService && !userAuthorized)
-                throw new Exception("This service available only for authorized users");
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsOnlyForAuthorized,
+                    "This service available only for authorized users");
 
-            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command.Method)
-                             ?? throw new Exception(
-                                 $"Method with name {command.Method} is not found in service {command.Service}");
+            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command.Method);
+            if (methodInfo == null)
+            {
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotFound,
+                    $"Method with name {command.Method} is not found in service {command.Service}");
+            }
 
             // method access validation
             var attribute = methodInfo.GetCustomAttributes(typeof(NextApiAuthorizeAttribute), false)
@@ -86,18 +95,20 @@ namespace Abitech.NextApi.Server.Base
             if (attribute is NextApiAuthorizeAttribute permissionAuthorizeAttribute)
             {
                 if (!await _permissionProvider.HasPermission(Context.User, permissionAuthorizeAttribute.Permission))
-                    throw new Exception("This method disabled for current user");
+                    return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotAllowed,
+                        "This operation is not allowed for current user");
             }
 
             var methodParameters = NextApiServiceHelper.ResolveMethodParameters(methodInfo, command);
             var serviceInstance = (NextApiService)_serviceProvider.GetService(serviceType);
             try
             {
-                return await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParameters);
+                var response = await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParameters);
+                return new NextApiResponse(response);
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                return NextApiServiceHelper.CreateNextApiExceptionResponse(ex);
             }
         }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.Paged;
 using Abitech.NextApi.Server.Base;
@@ -71,7 +72,11 @@ namespace Abitech.NextApi.Server.Entity
             var entity = await _repository.GetByIdAsync(key);
             if (entity == null)
             {
-                throw new InvalidOperationException($"Entity with id {key.ToString()} is not found!");
+                throw new NextApiException(NextApiErrorCode.EntityIsNotExist,
+                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object>
+                    {
+                        {"id", key}
+                    });
             }
 
             await BeforeDelete(entity);
@@ -86,7 +91,11 @@ namespace Abitech.NextApi.Server.Entity
         {
             var entity = await _repository.GetByIdAsync(key);
             if (entity == null)
-                throw new Exception($"Entity with id {key} is not exists");
+                throw new NextApiException(NextApiErrorCode.EntityIsNotExist,
+                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object>
+                    {
+                        {"id", key}
+                    });
             await BeforeUpdate(entity, patch);
             NextApiUtils.PatchEntity(patch, entity);
             await _repository.UpdateAsync(entity);
@@ -133,7 +142,11 @@ namespace Abitech.NextApi.Server.Entity
             entityQuery = await BeforeGet(entityQuery);
             var entity = await entityQuery.FirstOrDefaultAsync();
             if (entity == null)
-                throw new Exception("Entity is not exists");
+                throw new NextApiException(NextApiErrorCode.EntityIsNotExist,
+                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object>
+                    {
+                        {"id", key}
+                    });
             return _mapper.Map<TEntity, TDto>(entity);
         }
 
@@ -153,7 +166,11 @@ namespace Abitech.NextApi.Server.Entity
             entitiesQuery = await BeforeGet(entitiesQuery);
             var entities = await entitiesQuery.ToArrayAsync();
             if (entities == null)
-                throw new Exception("Entity is not exists");
+                throw new NextApiException(NextApiErrorCode.EntitiesIsNotExist,
+                    $"Entities with keys {string.Join(",", keys)} is not found!", new Dictionary<string, object>
+                    {
+                        {"keys", keys}
+                    });
 
             return _mapper.Map<TEntity[], TDto[]>(entities);
         }

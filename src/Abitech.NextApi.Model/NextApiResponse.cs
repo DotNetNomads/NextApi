@@ -8,7 +8,7 @@ namespace Abitech.NextApi.Model
     /// <summary>
     /// Default response wrapper from NextApi
     /// </summary>
-    public class NextApiResponse<TDataType>
+    public class NextApiResponse
     {
         /// <summary>
         /// Indicates that request is successful
@@ -18,7 +18,7 @@ namespace Abitech.NextApi.Model
         /// <summary>
         /// Contains data of response
         /// </summary>
-        public TDataType Data { get; }
+        public object Data { get; }
 
         /// <summary>
         /// Contains error if Success is false
@@ -26,7 +26,7 @@ namespace Abitech.NextApi.Model
         public NextApiError Error { get; }
 
         /// <inheritdoc />
-        public NextApiResponse(TDataType data, NextApiError error = null, bool success = true)
+        public NextApiResponse(object data, NextApiError error = null, bool success = true)
         {
             Data = data;
             Error = error;
@@ -154,7 +154,10 @@ namespace Abitech.NextApi.Model
         OperationIsNotAllowed,
         Unknown,
         IncorrectRequest,
-        HttpError
+        HttpError,
+        SignalRError,
+        EntityIsNotExist,
+        EntitiesIsNotExist,
 #pragma warning restore 1591
     }
 }

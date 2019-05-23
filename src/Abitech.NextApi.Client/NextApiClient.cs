@@ -162,14 +162,20 @@ namespace Abitech.NextApi.Client
         {
             var connection = await GetConnection();
             command.Args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
-            return await connection.InvokeAsync<T>("ExecuteCommand", command);
-        }
+            try
+            {
+                var response = await connection.InvokeAsync<NextApiResponse>("ExecuteCommand", command);
+                if (response.Error != null)
+                {
+                    throw NextApiException(response.Error);
+                }
 
-        private async Task InvokeSignalR(NextApiCommand command)
-        {
-            var connection = await GetConnection();
-            command.Args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
-            await connection.InvokeAsync("ExecuteCommand", command);
+                return (T)response.Data;
+            }
+            catch (Exception e)
+            {
+                throw new NextApiException(NextApiErrorCode.SignalRError, e.Message);
+            }
         }
 
         /// <summary>
@@ -274,6 +280,13 @@ namespace Abitech.NextApi.Client
             return form;
         }
 
+        class NextApiResponseJsonWrapper<TDataType>
+        {
+            public bool Success { get; set; }
+            public TDataType Data { get; set; }
+            public NextApiError Error { get; set; }
+        }
+
         private async Task<T> InvokeHttp<T>(NextApiCommand command)
         {
             var form = PrepareRequestForm(command);
@@ -288,7 +301,7 @@ namespace Abitech.NextApi.Client
             }
             catch (Exception ex)
             {
-                throw new NextApiException(ex.Message, NextApiErrorCode.HttpError.ToString());
+                throw new NextApiException(NextApiErrorCode.HttpError, ex.Message);
             }
 
             // trying to detect file response
@@ -297,8 +310,9 @@ namespace Abitech.NextApi.Client
                 if (typeof(T) != typeof(NextApiFileResponse))
                 {
                     throw new NextApiException(
-                        "Please specify correct return type for this request. Use NextApiFileResponse.",
-                        NextApiErrorCode.IncorrectRequest.ToString());
+                        NextApiErrorCode.IncorrectRequest,
+                        "Please specify correct return type for this request. Use NextApiFileResponse."
+                    );
                 }
 
                 try
@@ -307,13 +321,13 @@ namespace Abitech.NextApi.Client
                 }
                 catch (Exception ex)
                 {
-                    throw new NextApiException(ex.Message, NextApiErrorCode.HttpError.ToString());
+                    throw new NextApiException(NextApiErrorCode.HttpError, ex.Message);
                 }
             }
 
             // process as normal nextapi response
             var data = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<NextApiResponse<T>>(data, GetJsonConfig());
+            var result = JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, GetJsonConfig());
             if (!result.Success)
             {
                 throw NextApiException(result.Error);
@@ -364,8 +378,7 @@ namespace Abitech.NextApi.Client
         private NextApiException NextApiException(NextApiError error)
         {
             var message = error.Parameters["message"];
-            return new NextApiException($"{error.Code} {message}", error.Code,
-                error.Parameters);
+            return new NextApiException(error.Code, $"{error.Code} {message}", error.Parameters);
         }
 
 
@@ -385,7 +398,7 @@ namespace Abitech.NextApi.Client
                 return;
             }
 
-            await InvokeSignalR(command);
+            await InvokeSignalR<object>(command);
         }
 
         private NextApiCommand PrepareCommand(string serviceName, string serviceMethod, INextApiArgument[] arguments)
