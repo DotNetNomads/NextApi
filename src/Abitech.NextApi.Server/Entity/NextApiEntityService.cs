@@ -118,12 +118,12 @@ namespace Abitech.NextApi.Server.Entity
                 entitiesQuery = entitiesQuery.Where(filterExpression);
             }
 
+            entitiesQuery = await BeforeGet(entitiesQuery);
             var totalCount = entitiesQuery.Count();
             if (request.Skip != null)
                 entitiesQuery = entitiesQuery.Skip(request.Skip.Value);
             if (request.Take != null)
                 entitiesQuery = entitiesQuery.Take(request.Take.Value);
-            entitiesQuery = await BeforeGet(entitiesQuery);
             var entities = await entitiesQuery.ToListAsync();
             return new PagedList<TDto>
             {
