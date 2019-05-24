@@ -162,20 +162,22 @@ namespace Abitech.NextApi.Client
         {
             var connection = await GetConnection();
             command.Args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
+            NextApiResponse response;
             try
             {
-                var response = await connection.InvokeAsync<NextApiResponse>("ExecuteCommand", command);
-                if (response.Error != null)
-                {
-                    throw NextApiException(response.Error);
-                }
-
-                return (T)response.Data;
+                response = await connection.InvokeAsync<NextApiResponse>("ExecuteCommand", command);
             }
             catch (Exception e)
             {
                 throw new NextApiException(NextApiErrorCode.SignalRError, e.Message);
             }
+
+            if (response.Error != null)
+            {
+                throw NextApiException(response.Error);
+            }
+
+            return (T)response.Data;
         }
 
         /// <summary>
