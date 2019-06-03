@@ -263,6 +263,12 @@ namespace Abitech.NextApi.Server.Tests
             var bytes = await fileResponse.GetBytes();
 
             Assert.Equal(originalBytes, bytes);
+            Assert.Equal("application/octet-stream", fileResponse.MimeType);
+
+            // download mime typed
+            var typed = await client.Invoke<NextApiFileResponse>("Test", "GetFileMimeTyped",
+                new NextApiArgument("path", resultFilePath));
+            Assert.Equal("image/jpeg", typed.MimeType);
         }
     }
 }

@@ -50,13 +50,20 @@ namespace Abitech.NextApi.Model
         public string FileName { get; }
 
         /// <summary>
+        /// Mime type for file
+        /// </summary>
+        public string MimeType { get; }
+
+        /// <summary>
         /// Initialize instance of NextApiFileResponse
         /// </summary>
         /// <param name="fileName">Name of file</param>
         /// <param name="fileStream">Stream with file data</param>
-        public NextApiFileResponse(string fileName, Stream fileStream)
+        /// <param name="mimeType">Mime type for file</param>
+        public NextApiFileResponse(string fileName, Stream fileStream, string mimeType = "application/octet-stream")
         {
             FileStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
+            MimeType = mimeType;
             FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
         }
 
