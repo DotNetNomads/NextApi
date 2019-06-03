@@ -120,6 +120,13 @@ namespace Abitech.NextApi.Server.Tests.Service
             var fileStream = new FileStream(path, FileMode.Open);
             return new NextApiFileResponse(fileName, fileStream);
         }
+
+        public async Task<NextApiFileResponse> GetFileMimeTyped(string path)
+        {
+            var fileName = "bellonicat.jpg";
+            var fileStream = new FileStream(path, FileMode.Open);
+            return new NextApiFileResponse(fileName, fileStream, "image/jpeg");
+        }
     }
 #pragma warning restore 1998
 }

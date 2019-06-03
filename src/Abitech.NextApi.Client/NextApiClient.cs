@@ -306,8 +306,8 @@ namespace Abitech.NextApi.Client
                 throw new NextApiException(NextApiErrorCode.HttpError, ex.Message);
             }
 
-            // trying to detect file response
-            if (response.Content.Headers.ContentType.MediaType == "application/octet-stream")
+            // check that response can processed as json
+            if (!response.Content.Headers.ContentType.MediaType.Contains("application/json"))
             {
                 if (typeof(T) != typeof(NextApiFileResponse))
                 {
@@ -342,8 +342,9 @@ namespace Abitech.NextApi.Client
         {
             var content = response.Content;
             var fileName = content.Headers.ContentDisposition.FileName;
+            var mimeType = content.Headers.ContentType.MediaType;
             var stream = await content.ReadAsStreamAsync();
-            return new NextApiFileResponse(fileName, stream);
+            return new NextApiFileResponse(fileName, stream, mimeType);
         }
 
         private JsonSerializerSettings GetJsonConfig()

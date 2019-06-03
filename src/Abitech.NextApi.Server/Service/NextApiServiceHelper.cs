@@ -275,7 +275,7 @@ namespace Abitech.NextApi.Server.Service
         public static async Task SendNextApiFileResponse(this HttpResponse response, NextApiFileResponse fileInfo)
         {
             response.StatusCode = 200;
-            response.ContentType = "application/octet-stream";
+            response.ContentType = fileInfo.MimeType;
             response.Headers.Add("content-disposition", $"attachment; filename={fileInfo.FileName}");
             using (fileInfo)
             {
