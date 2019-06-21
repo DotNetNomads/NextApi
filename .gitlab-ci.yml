@@ -19,6 +19,8 @@
 .dotnet-test: &dotnet-test
   stage: test
   <<: *dotnet-job
+  only:
+    - merge_requests
   script:
     - cd $project
     - *dotnet-restore
