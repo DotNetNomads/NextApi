@@ -48,6 +48,9 @@ namespace Abitech.NextApi.Server
             serviceCollection.AddSingleton(nextApiOptions);
             serviceCollection.AddScoped<INextApiUserAccessor, NextApiUserAccessor>();
             serviceCollection.AddScoped<INextApiRequest, NextApiRequest>();
+            // handles all requests redirected from HTTP and SignalR
+            serviceCollection.AddScoped<NextApiHandler>();
+            // handles all request from clients over HTTP
             serviceCollection.AddScoped<NextApiHttp>();
             NextApiServiceHelper
                 .FindAllServices()

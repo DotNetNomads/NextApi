@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Abitech.NextApi.Server.Request
 {
+    /// <summary>
+    /// Provides all information about current NextApi request
+    /// </summary>
     public interface INextApiRequest
     {
         /// <summary>
