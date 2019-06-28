@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
 
 namespace Abitech.NextApi.Model.Abstractions
@@ -54,5 +55,13 @@ namespace Abitech.NextApi.Model.Abstractions
         /// <param name="expand">expand references aka Include</param>
         /// <returns>array of entities</returns>
         Task<TDto[]> GetByIds(TKey[] keys, string[] expand = null);
+
+        /// <summary>
+        /// Get count of items by filter
+        /// </summary>
+        /// <param name="filter">Filter object</param>
+        /// <returns>Count of items</returns>
+        /// <remarks>When filter is null, all items count returned</remarks>
+        Task<int> Count(Filter filter = null);
     }
 }
