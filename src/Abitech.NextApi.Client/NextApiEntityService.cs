@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Abstractions;
+using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
 
 namespace Abitech.NextApi.Client
@@ -105,6 +106,12 @@ namespace Abitech.NextApi.Client
                     Name = "expand",
                     Value = expand
                 });
+        }
+
+        /// <inheritdoc />
+        public async Task<int> Count(Filter filter = null)
+        {
+            return await InvokeService<int>(nameof(Count), new NextApiArgument(nameof(filter), filter));
         }
     }
 }

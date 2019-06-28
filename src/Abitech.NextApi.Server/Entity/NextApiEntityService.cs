@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Abstractions;
+using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
 using Abitech.NextApi.Server.Base;
 using Abitech.NextApi.Server.Service;
@@ -173,6 +174,20 @@ namespace Abitech.NextApi.Server.Entity
                     });
 
             return _mapper.Map<TEntity[], TDto[]>(entities);
+        }
+
+        /// <inheritdoc />
+        public async Task<int> Count(Filter filter = null)
+        {
+            var entitiesQuery = _repository.GetAll();
+            // apply filter
+            var filterExpression = filter?.ToLambdaFilter<TEntity>();
+            if (filterExpression != null)
+            {
+                entitiesQuery = entitiesQuery.Where(filterExpression);
+            }
+
+            return await entitiesQuery.CountAsync();
         }
 
         /// <summary>

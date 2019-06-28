@@ -95,7 +95,7 @@ namespace Abitech.NextApi.Server.Tests
                 };
                 await repo.AddAsync(createdUser);
                 await unitOfWork.CommitAsync();
-                
+
                 var userExists = await repo.GetAll()
                     .AnyAsync(u => u.Id == createdUser.Id);
                 Assert.True(userExists);
@@ -290,6 +290,27 @@ namespace Abitech.NextApi.Server.Tests
 
             Assert.True(data.TotalItems == 3);
             Assert.True(data.Items.All(e => e.Id == 5 || e.Id == 10 || e.Id == 14));
+        }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http, false, null, 15)]
+        [InlineData(NextApiTransport.SignalR, false, null, 15)]
+        [InlineData(NextApiTransport.Http, true, "name15", 1)]
+        [InlineData(NextApiTransport.SignalR, true, "name15", 1)]
+        [InlineData(NextApiTransport.Http, true, "5", 2)]
+        [InlineData(NextApiTransport.SignalR, true, "5", 2)]
+        public async Task Count(NextApiTransport transport, bool enableFilter, string filterValue,
+            int shouldReturnCount)
+        {
+            var client = await GetServiceClient(transport);
+            Filter filter = null;
+            if (enableFilter)
+            {
+                filter = new FilterBuilder().Contains("Name", filterValue).Build();
+            }
+
+            var resultCount = await client.Count(filter);
+            Assert.Equal(shouldReturnCount, resultCount);
         }
 
         private async Task<TestEntityService> GetServiceClient(NextApiTransport transport)
