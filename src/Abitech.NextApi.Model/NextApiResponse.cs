@@ -6,9 +6,16 @@ using System.Threading.Tasks;
 namespace Abitech.NextApi.Model
 {
     /// <summary>
+    /// Default wrapper to NextApi result
+    /// </summary>
+    public interface INextApiResponse
+    {
+    }
+
+    /// <summary>
     /// Default response wrapper from NextApi
     /// </summary>
-    public class NextApiResponse
+    public class NextApiResponse : INextApiResponse
     {
         /// <summary>
         /// Indicates that request is successful
@@ -37,7 +44,7 @@ namespace Abitech.NextApi.Model
     /// <summary>
     /// Default response wrapper for file response
     /// </summary>
-    public class NextApiFileResponse : IDisposable
+    public class NextApiFileResponse : IDisposable, INextApiResponse
     {
         /// <summary>
         /// Stream with file content
@@ -165,6 +172,7 @@ namespace Abitech.NextApi.Model
         SignalRError,
         EntityIsNotExist,
         EntitiesIsNotExist,
+        OperationIsNotSupported
 #pragma warning restore 1591
     }
 }

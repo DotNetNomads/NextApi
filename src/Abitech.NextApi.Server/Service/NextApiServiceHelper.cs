@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 using System.Xml;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Attributes;
+using Abitech.NextApi.Server.Base;
 using MessagePack;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Abitech.NextApi.Server.Service
 {
@@ -93,64 +93,26 @@ namespace Abitech.NextApi.Server.Service
             {
                 var paramName = parameter.Name;
 
-                var arg = command.Args.Cast<NextApiArgument>().FirstOrDefault(d => d.Name == paramName);
+                var arg = command.Args.Cast<INamedNextApiArgument>().FirstOrDefault(d => d.Name == paramName);
 
-                if (arg == null)
+                switch (arg)
                 {
-                    if (!parameter.IsOptional)
+                    case null when !parameter.IsOptional:
                         throw new Exception($"Parameter with {paramName} is not exist in request");
-
                     // adding placeholder for optional param.
                     // See: https://stackoverflow.com/questions/9977719/invoke-a-method-with-optional-params-via-reflection
-                    paramValues.Add(Type.Missing);
-                    continue;
+                    case null:
+                        paramValues.Add(Type.Missing);
+                        continue;
+                    case NextApiJsonArgument nextApiJsonArgument:
+                        var argType = parameter.ParameterType;
+                        var deserializedValue = nextApiJsonArgument.Value?.ToObject(argType);
+                        paramValues.Add(deserializedValue);
+                        break;
+                    case NextApiArgument nextApiArgument:
+                        paramValues.Add(nextApiArgument.Value);
+                        break;
                 }
-
-                paramValues.Add(arg.Value);
-            }
-
-            return paramValues.ToArray();
-        }
-
-        /// <summary>
-        /// Resolves parameters for method call (only http)
-        /// </summary>
-        /// <param name="methodInfo"></param>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static object[] ResolveMethodParametersJson(MethodInfo methodInfo, string jsonString)
-        {
-            if (string.IsNullOrWhiteSpace(jsonString) && methodInfo.GetParameters().Any(mp => !mp.IsOptional))
-            {
-                throw new Exception("Json string is empty, but method has one or more required parameters");
-            }
-
-            var fromClient = JsonConvert.DeserializeObject<JObject[]>(jsonString);
-            var mappedArgs = fromClient.Where(j => j.ContainsKey("Name") && j.ContainsKey("Value"))
-                .Select(obj => new NextApiArgument(obj["Name"].Value<string>(), obj["Value"])).ToArray();
-
-            var paramValues = new List<object>();
-            foreach (var parameter in methodInfo.GetParameters())
-            {
-                var paramName = parameter.Name;
-                var arg = mappedArgs.FirstOrDefault(d => d.Name == paramName);
-
-                if (arg == null)
-                {
-                    if (!parameter.IsOptional)
-                        throw new Exception($"Parameter with name: {paramName} is not exist in request");
-
-                    // adding placeholder for optional param.
-                    // See: https://stackoverflow.com/questions/9977719/invoke-a-method-with-optional-params-via-reflection
-                    paramValues.Add(Type.Missing);
-                    continue;
-                }
-
-                var paramType = parameter.ParameterType;
-                var deserializedObject = ((JToken)arg.Value).ToObject(paramType);
-
-                paramValues.Add(deserializedObject);
             }
 
             return paramValues.ToArray();

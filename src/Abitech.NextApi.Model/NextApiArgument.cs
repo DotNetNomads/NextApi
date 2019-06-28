@@ -12,19 +12,28 @@ namespace Abitech.NextApi.Model
     }
 
     /// <summary>
-    /// NextApi service method argument
+    /// Basic interface for NextApi service named method arguments
     /// </summary>
-    public class NextApiArgument : INextApiArgument
+    public interface INamedNextApiArgument : INextApiArgument
     {
         /// <summary>
         /// Argument name
         /// </summary>
-        public string Name { get; set; }
+        string Name { get; set; }
+    }
 
+    /// <summary>
+    /// NextApi service method argument
+    /// </summary>
+    public class NextApiArgument : INamedNextApiArgument
+    {
         /// <summary>
         /// Argument value
         /// </summary>
         public object Value { get; set; }
+
+        /// <inheritdoc />
+        public string Name { get; set; }
 
         /// <summary>
         /// NextApi service method argument
