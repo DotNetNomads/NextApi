@@ -28,6 +28,7 @@ namespace Abitech.NextApi.Model.Filtering
         /// <param name="property">Name of property</param>
         /// <param name="value"></param>
         /// <returns>Current filter builder instance (for chaining)</returns>
+        /// <remarks>Supported for all types convertible to string</remarks>
         public FilterBuilder Contains(string property, string value)
         {
             AddExpression(property, FilterExpressionTypes.Contains, value);
