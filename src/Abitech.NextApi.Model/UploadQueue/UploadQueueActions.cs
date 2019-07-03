@@ -38,7 +38,8 @@ namespace Abitech.NextApi.Model.UploadQueue
                     if (prop == null)
                         continue;
             
-                    prop.SetValue(entity, modification.NewValue);
+                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    prop.SetValue(entity, Convert.ChangeType(modification.NewValue, targetType));
                 }
                 catch (Exception e)
                 {
