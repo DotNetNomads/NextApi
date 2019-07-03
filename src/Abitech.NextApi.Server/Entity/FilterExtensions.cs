@@ -17,6 +17,8 @@ namespace Abitech.NextApi.Server.Entity
     {
         private static readonly MethodInfo StringContainsMethod =
             typeof(string).GetMethod("Contains", new[] {typeof(string)});
+        private static readonly MethodInfo ToStringMethod =
+            typeof(object).GetMethod("ToString", Type.EmptyTypes);
 
         // thx to: https://www.codeproject.com/Articles/1079028/Build-Lambda-Expressions-Dynamically
 
@@ -76,7 +78,8 @@ namespace Abitech.NextApi.Server.Entity
                 {
                     case FilterExpressionTypes.Contains:
                         var value = FormatValue(filterExpression.Value, typeof(string));
-                        currentExpression = Expression.Call(property, StringContainsMethod,
+                        var convertedProperty = Expression.Call(property, ToStringMethod);
+                        currentExpression = Expression.Call(convertedProperty, StringContainsMethod,
                             Expression.Constant(value));
                         break;
                     case FilterExpressionTypes.Equal:

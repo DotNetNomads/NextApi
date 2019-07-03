@@ -53,7 +53,7 @@ namespace Abitech.NextApi.Server.Tests
         {
             var data = TestSource.GetData();
 
-            // filter: entity => entity.ReferenceModel.Name.Contains("Model") &&
+            // filter: entity => entity.ReferenceModel.Name.ToString().Contains("Model") &&
             //                   (entity.Number == 1 || entity.Number == 2) &&
             //                   (new [] {5,6,10}).Contains("Number")
             var filter = new FilterBuilder()
@@ -61,6 +61,7 @@ namespace Abitech.NextApi.Server.Tests
                 .Or(f => f
                     .MoreThan<int>("Number", 1)
                     .LessThan<int>("Number", 2)
+                    .Contains("Number", "4")
                 )
                 .In<int>("Number", new[] {5, 6, 10})
                 .Build();
@@ -72,5 +73,22 @@ namespace Abitech.NextApi.Server.Tests
             Assert.True(filtered.Count == 3);
             Assert.True(filtered.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
         }
+
+        [Fact]
+        public async Task FilterIntContainsTest()
+        {
+            var data = TestSource.GetData();
+            var filter = new FilterBuilder()
+                .Contains("Number", "423")
+                .Build();
+            
+            var expression = filter.ToLambdaFilter<TestModel>();
+
+            var filtered = data.Where(expression).ToList();
+
+            Assert.True(filtered.Count == 1);
+            Assert.Equal(423, filtered.FirstOrDefault()?.Number);
+        }
+        
     }
 }
