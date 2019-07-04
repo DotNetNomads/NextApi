@@ -167,7 +167,7 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <inheritdoc />
-        public async Task<int> Count(Filter filter = null)
+        public async virtual Task<int> Count(Filter filter = null)
         {
             var entitiesQuery = _repository.GetAll();
             // apply filter
@@ -181,7 +181,7 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <inheritdoc />
-        public async Task<TreeItem<TDto>[]> GetTree(TreeRequest request)
+        public async virtual Task<TreeItem<TDto>[]> GetTree(TreeRequest request)
         {
             var parentPredicate = await ParentPredicate(request.ParentId);
             if (parentPredicate == null)
