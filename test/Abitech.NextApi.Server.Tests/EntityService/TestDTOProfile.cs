@@ -12,6 +12,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService
             this.CreateTwoWayMap<TestUser, TestUserDTO>();
             this.CreateTwoWayMap<TestRole, TestRoleDTO>();
             this.CreateTwoWayMap<TestCity, TestCityDTO>();
+            this.CreateTwoWayMap<TestTreeItem, TestTreeItemDto>();
         }
     }
 }

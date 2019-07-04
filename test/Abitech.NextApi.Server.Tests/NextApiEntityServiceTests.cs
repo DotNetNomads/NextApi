@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
+using Abitech.NextApi.Model.Tree;
 using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.DTO;
@@ -33,16 +34,10 @@ namespace Abitech.NextApi.Server.Tests
             var user = new TestUserDTO
             {
                 City = createCity
-                    ? new TestCityDTO()
-                    {
-                        Name = "cityCreatedWithUser"
-                    }
+                    ? new TestCityDTO() {Name = "cityCreatedWithUser"}
                     : null,
                 Role = createRole
-                    ? new TestRoleDTO()
-                    {
-                        Name = "roleCreatedWithUser"
-                    }
+                    ? new TestRoleDTO() {Name = "roleCreatedWithUser"}
                     : null,
                 Name = userName,
                 Surname = "surname!",
@@ -88,10 +83,7 @@ namespace Abitech.NextApi.Server.Tests
                 var unitOfWork = services.GetService<TestUnitOfWork>();
                 var createdUser = new TestUser()
                 {
-                    Name = "petyaTest",
-                    Email = "petya@mail.ru",
-                    Enabled = true,
-                    Surname = "Ivanov"
+                    Name = "petyaTest", Email = "petya@mail.ru", Enabled = true, Surname = "Ivanov"
                 };
                 await repo.AddAsync(createdUser);
                 await unitOfWork.CommitAsync();
@@ -150,12 +142,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(0, 5, NextApiTransport.SignalR, "Role")]
         public async Task GetPaged(int? skip, int? take, NextApiTransport transport, params string[] expand)
         {
-            var request = new PagedRequest
-            {
-                Skip = skip,
-                Take = take,
-                Expand = expand
-            };
+            var request = new PagedRequest {Skip = skip, Take = take, Expand = expand};
             var client = await GetServiceClient(transport);
             var result = await client.GetPaged(request);
             Assert.Equal(15, result.TotalItems);
@@ -232,10 +219,7 @@ namespace Abitech.NextApi.Server.Tests
         {
             var client = await GetServiceClient(transport);
 
-            int[] idArray = new int[]
-            {
-                14, 12, 13
-            };
+            int[] idArray = new int[] {14, 12, 13};
 
             idArray = idArray.OrderBy(i => i).ToArray();
 
@@ -313,6 +297,24 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(shouldReturnCount, resultCount);
         }
 
+        [Theory]
+        [InlineData(NextApiTransport.SignalR, null, 3)]
+        [InlineData(NextApiTransport.Http, null, 3)]
+        [InlineData(NextApiTransport.SignalR, 1, 1)]
+        [InlineData(NextApiTransport.Http, 1, 1)]
+        public async Task TestTree(NextApiTransport transport, int? parentId, int shouldReturnCount)
+        {
+            var client = await GetClient(transport);
+            var service = new TreeEntityService(client);
+
+            var request = new TreeRequest() {ParentId = parentId};
+            //Expand = new[] {"Children"}};
+
+            var response = await service.GetTree(request);
+
+            Assert.Equal(shouldReturnCount, response.FirstOrDefault()?.ChildrenCount);
+        }
+
         private async Task<TestEntityService> GetServiceClient(NextApiTransport transport)
         {
             return _nextApiEntityService ??
@@ -325,6 +327,13 @@ namespace Abitech.NextApi.Server.Tests
         class TestEntityService : NextApiEntityService<TestUserDTO, int, INextApiClient>
         {
             public TestEntityService(INextApiClient client, string serviceName) : base(client, serviceName)
+            {
+            }
+        }
+
+        class TreeEntityService : NextApiEntityService<TestTreeItemDto, int, INextApiClient>
+        {
+            public TreeEntityService(INextApiClient client) : base(client, "TestTreeItem")
             {
             }
         }

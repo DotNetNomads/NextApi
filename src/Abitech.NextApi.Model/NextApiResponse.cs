@@ -172,7 +172,7 @@ namespace Abitech.NextApi.Model
         SignalRError,
         EntityIsNotExist,
         EntitiesIsNotExist,
-        OperationIsNotSupported
+        OperationIsNotSupported,
 #pragma warning restore 1591
     }
 }

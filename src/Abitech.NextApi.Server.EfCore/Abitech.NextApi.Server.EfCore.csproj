@@ -41,8 +41,4 @@
     </ItemGroup>
   </Target>
 
-  <ItemGroup>
-    <Folder Include="Repository" />
-  </ItemGroup>
-
 </Project>

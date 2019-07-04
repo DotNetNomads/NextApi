@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
+using Abitech.NextApi.Model.Tree;
 
 namespace Abitech.NextApi.Model.Abstractions
 {
@@ -63,5 +65,12 @@ namespace Abitech.NextApi.Model.Abstractions
         /// <returns>Count of items</returns>
         /// <remarks>When filter is null, all items count returned</remarks>
         Task<int> Count(Filter filter = null);
+
+        /// <summary>
+        /// Get entity tree by specific request
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        Task<TreeItem<TDto>[]> GetTree(TreeRequest request);
     }
 }
