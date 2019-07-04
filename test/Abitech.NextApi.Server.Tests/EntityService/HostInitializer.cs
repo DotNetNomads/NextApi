@@ -1,9 +1,9 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Abitech.NextApi.Server.Tests.EntityService
@@ -21,17 +21,14 @@ namespace Abitech.NextApi.Server.Tests.EntityService
                 await context.AddUser(i, i, i);
             }
 
+            await context.CreateTestTreeItems();
+
             await context.SaveChangesAsync();
         }
 
         public static async Task AddUser(this TestDbContext context, int id, int? roleId, int? cityId)
         {
-            var user = new TestUser
-            {
-                Name = $"name{id}",
-                Surname = $"Surname{id}",
-                Enabled = true
-            };
+            var user = new TestUser {Name = $"name{id}", Surname = $"Surname{id}", Enabled = true};
 
             if (roleId != null)
             {
@@ -62,22 +59,58 @@ namespace Abitech.NextApi.Server.Tests.EntityService
 
         private static TestRole CreateRole(int roleId)
         {
-            return new TestRole
-            {
-                Name = $"roleName{roleId}"
-            };
+            return new TestRole {Name = $"roleName{roleId}"};
         }
 
         private static TestCity CreateCity(int cityId)
         {
             var rand = new Random();
             var name = $"cityName{cityId}";
-            return new TestCity
+            return new TestCity {Name = name, Population = rand.Next(), Demonym = name + "er"};
+        }
+
+        public static async Task CreateTestTreeItems(this TestDbContext context)
+        {
+            var mainTree = new TestTreeItem
             {
-                Name = name,
-                Population = rand.Next(),
-                Demonym = name + "er"
+                Id = 1,
+                Name = "Node1",
+                ParentId = null,
+                Children = new Collection<TestTreeItem>
+                {
+                    new TestTreeItem
+                    {
+                        Id = 2,
+                        Name = "Node1_1",
+                        ParentId = 1,
+                        Children = new Collection<TestTreeItem>
+                        {
+                            new TestTreeItem {Id = 3, Name = "Node1_1_1", ParentId = 2}
+                        }
+                    },
+                    new TestTreeItem
+                    {
+                        Id = 4,
+                        Name = "Node1_2",
+                        ParentId = 1,
+                        Children = new Collection<TestTreeItem>
+                        {
+                            new TestTreeItem {Id = 5, Name = "Node1_2_1", ParentId = 4}
+                        }
+                    },
+                    new TestTreeItem
+                    {
+                        Id = 6,
+                        Name = "Node1_3",
+                        ParentId = 1,
+                        Children = new Collection<TestTreeItem>
+                        {
+                            new TestTreeItem {Id = 7, Name = "Node1_3_1", ParentId = 6}
+                        }
+                    }
+                }
             };
+            await context.TestTreeItems.AddAsync(mainTree);
         }
     }
 }
