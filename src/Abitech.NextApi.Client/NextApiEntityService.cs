@@ -15,7 +15,6 @@ namespace Abitech.NextApi.Client
     /// <typeparam name="TClient"></typeparam>
     public abstract class NextApiEntityService<TEntity, TKey, TClient> : NextApiService<TClient>,
         INextApiEntityService<TEntity, TKey>
-        where TKey : struct
         where TEntity : class
         where TClient : class, INextApiClient
     {
