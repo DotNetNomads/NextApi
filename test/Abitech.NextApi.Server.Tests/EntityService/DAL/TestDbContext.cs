@@ -10,6 +10,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
         public DbSet<TestCity> Cities { get; set; }
         public DbSet<TestRole> Roles { get; set; }
         public DbSet<TestUser> Users { get; set; }
+        public DbSet<TestTreeItem> TestTreeItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -22,10 +23,18 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
                     .WithMany()
                     .HasForeignKey(u => u.CityId);
             });
+            builder.Entity<TestTreeItem>(e =>
+            {
+                e.HasOne(t => t.Parent)
+                    .WithMany(tp => tp.Children)
+                    .HasForeignKey(t => t.ParentId)
+                    .IsRequired(false);
+            });
             base.OnModelCreating(builder);
         }
 
-        public TestDbContext(DbContextOptions options, INextApiUserAccessor nextApiUserAccessor) : base(options, nextApiUserAccessor)
+        public TestDbContext(DbContextOptions options, INextApiUserAccessor nextApiUserAccessor) : base(options,
+            nextApiUserAccessor)
         {
         }
     }

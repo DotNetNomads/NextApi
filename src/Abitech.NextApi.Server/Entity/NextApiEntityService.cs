@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
+using Abitech.NextApi.Model.Tree;
 using Abitech.NextApi.Server.Base;
 using Abitech.NextApi.Server.Service;
 using AutoMapper;
@@ -74,10 +76,7 @@ namespace Abitech.NextApi.Server.Entity
             if (entity == null)
             {
                 throw new NextApiException(NextApiErrorCode.EntityIsNotExist,
-                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object>
-                    {
-                        {"id", key}
-                    });
+                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object> {{"id", key}});
             }
 
             await BeforeDelete(entity);
@@ -93,10 +92,7 @@ namespace Abitech.NextApi.Server.Entity
             var entity = await _repository.GetByIdAsync(key);
             if (entity == null)
                 throw new NextApiException(NextApiErrorCode.EntityIsNotExist,
-                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object>
-                    {
-                        {"id", key}
-                    });
+                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object> {{"id", key}});
             await BeforeUpdate(entity, patch);
             NextApiUtils.PatchEntity(patch, entity);
             await _repository.UpdateAsync(entity);
@@ -128,8 +124,7 @@ namespace Abitech.NextApi.Server.Entity
             var entities = await entitiesQuery.ToListAsync();
             return new PagedList<TDto>
             {
-                Items = _mapper.Map<List<TEntity>, List<TDto>>(entities),
-                TotalItems = totalCount
+                Items = _mapper.Map<List<TEntity>, List<TDto>>(entities), TotalItems = totalCount
             };
         }
 
@@ -144,10 +139,7 @@ namespace Abitech.NextApi.Server.Entity
             var entity = await entityQuery.FirstOrDefaultAsync();
             if (entity == null)
                 throw new NextApiException(NextApiErrorCode.EntityIsNotExist,
-                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object>
-                    {
-                        {"id", key}
-                    });
+                    $"Entity with id {key.ToString()} is not found!", new Dictionary<string, object> {{"id", key}});
             return _mapper.Map<TEntity, TDto>(entity);
         }
 
@@ -168,16 +160,14 @@ namespace Abitech.NextApi.Server.Entity
             var entities = await entitiesQuery.ToArrayAsync();
             if (entities == null)
                 throw new NextApiException(NextApiErrorCode.EntitiesIsNotExist,
-                    $"Entities with keys {string.Join(",", keys)} is not found!", new Dictionary<string, object>
-                    {
-                        {"keys", keys}
-                    });
+                    $"Entities with keys {string.Join(",", keys)} is not found!",
+                    new Dictionary<string, object> {{"keys", keys}});
 
             return _mapper.Map<TEntity[], TDto[]>(entities);
         }
 
         /// <inheritdoc />
-        public async Task<int> Count(Filter filter = null)
+        public async virtual Task<int> Count(Filter filter = null)
         {
             var entitiesQuery = _repository.GetAll();
             // apply filter
@@ -188,6 +178,42 @@ namespace Abitech.NextApi.Server.Entity
             }
 
             return await entitiesQuery.CountAsync();
+        }
+
+        /// <inheritdoc />
+        public async virtual Task<TreeItem<TDto>[]> GetTree(TreeRequest request)
+        {
+            var parentPredicate = await ParentPredicate(request.ParentId);
+            if (parentPredicate == null)
+            {
+                // in case entity doesn't support tree operations
+                throw new NextApiException(NextApiErrorCode.OperationIsNotSupported,
+                    "Please provide ParentPredicate and SelectTreeChunk implementations");
+            }
+
+            var entitiesQuery = _repository.GetAll();
+            entitiesQuery = await BeforeGet(entitiesQuery);
+            var rootQuery = entitiesQuery.Where(parentPredicate)
+                .Expand(request.Expand);
+            var treeChunk = await rootQuery.Select(SelectTreeChunk(entitiesQuery)).ToArrayAsync();
+
+            return treeChunk.Select(chunkItem =>
+                new TreeItem<TDto>
+                {
+                    ChildrenCount = chunkItem.ChildrenCount, Entity = _mapper.Map<TEntity, TDto>(chunkItem.Entity)
+                }).ToArray();
+        }
+
+        /// <summary>
+        /// Used in select operation for GetTree method
+        /// </summary>
+        /// <param name="query">Query for additional calculations</param>
+        /// <returns>Select lambda</returns>
+        protected virtual Expression<Func<TEntity, TreeItem<TEntity>>> SelectTreeChunk(IQueryable<TEntity> query)
+        {
+            // in case entity doesn't support tree operations
+            throw new NextApiException(NextApiErrorCode.OperationIsNotSupported,
+                "Please provide SelectTreeChunk implementation");
         }
 
         /// <summary>
@@ -273,6 +299,16 @@ namespace Abitech.NextApi.Server.Entity
         protected virtual async Task<IQueryable<TEntity>> BeforeGet(IQueryable<TEntity> query)
         {
             return query;
+        }
+
+        /// <summary>
+        /// Returns parent predicate usable in GetTree method
+        /// </summary>
+        /// <returns>Predicate for matching parent id for the entity</returns>
+        protected virtual async Task<Expression<Func<TEntity, bool>>> ParentPredicate(object parentId)
+        {
+            // GetTree disabled by default
+            return null;
         }
 
         #endregion
