@@ -169,6 +169,52 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     
                     #endregion
                     
+                    #region Process delete operations
+
+                    var deleteList = groupByRowGuidList.Where(dto => dto.OperationType == OperationType.Delete
+                                                                     && dto.EntityRowGuid == rowGuid).ToList();
+                    
+                    if (entityInstance != null && deleteList.Count > 0)
+                    {
+                        var result = new UploadQueueResult();
+                        try
+                        {
+                            // Delete entity
+                            _lock.Wait();
+                            await repoInstance.DeleteAsync(entityInstance);
+                            _lock.Release();
+                            
+                            result.Error = UploadQueueError.NoError;
+                        }
+                        catch (Exception e)
+                        {
+                            _lock.Release();
+                            Console.WriteLine(e);
+                            result.Error = UploadQueueError.Exception;
+                            result.Extra = e.Message;
+                        }
+                        finally
+                        {
+                            foreach (var deleteOperation in deleteList)
+                            {
+                                resultDict.AddOrUpdate(deleteOperation.Id, result, (guid, b) => result);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var result = new UploadQueueResult
+                        {
+                            Error = UploadQueueError.EntityDoesNotExist
+                        };
+                        foreach (var deleteOperation in deleteList)
+                        {
+                            resultDict.AddOrUpdate(deleteOperation.Id, result, (guid, b) => result);
+                        }
+                    }
+
+                    #endregion
+                    
                     #region Process create operations
                     
                     // should only be one create operation for this rowguid
@@ -360,52 +406,6 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         }
                     }
                     
-                    #endregion
-                    
-                    #region Process delete operations
-
-                    var deleteList = groupByRowGuidList.Where(dto => dto.OperationType == OperationType.Delete
-                                                                     && dto.EntityRowGuid == rowGuid).ToList();
-                    
-                    if (entityInstance != null && deleteList.Count > 0)
-                    {
-                        var result = new UploadQueueResult();
-                        try
-                        {
-                            // Delete entity
-                            _lock.Wait();
-                            await repoInstance.DeleteAsync(entityInstance);
-                            _lock.Release();
-                            
-                            result.Error = UploadQueueError.NoError;
-                        }
-                        catch (Exception e)
-                        {
-                            _lock.Release();
-                            Console.WriteLine(e);
-                            result.Error = UploadQueueError.Exception;
-                            result.Extra = e.Message;
-                        }
-                        finally
-                        {
-                            foreach (var deleteOperation in deleteList)
-                            {
-                                resultDict.AddOrUpdate(deleteOperation.Id, result, (guid, b) => result);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var result = new UploadQueueResult
-                        {
-                            Error = UploadQueueError.EntityDoesNotExist
-                        };
-                        foreach (var deleteOperation in deleteList)
-                        {
-                            resultDict.AddOrUpdate(deleteOperation.Id, result, (guid, b) => result);
-                        }
-                    }
-
                     #endregion
                 }
                 
