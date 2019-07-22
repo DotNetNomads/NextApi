@@ -343,7 +343,10 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                 }
     
                                 // Put result into result dict
-                                Parallel.ForEach(updateList, async updateOperation =>
+                                var updateTasks = updateList.Select(ProcessUpdate);
+                                await Task.WhenAll(updateTasks);
+                                
+                                async Task ProcessUpdate(UploadQueueDto updateOperation)
                                 {
                                     if (rejected == null) return;
                                     
@@ -377,7 +380,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                     }
     
                                     resultDict.AddOrUpdate(updateOperation.Id, result, (guid, b) => result);
-                                });
+                                }
                             }
                         }
                         catch (Exception e)
