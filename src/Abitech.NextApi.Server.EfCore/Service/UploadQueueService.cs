@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.UploadQueue;
 using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.Entity;
@@ -20,7 +21,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
     /// <para>Derive from this class and register repositories in the constructor</para>
     /// <para>You must call <see cref="NextApiEfCoreExtensions.AddColumnChangesLogger{TDbContext}"/></para>
     /// </summary>
-    public abstract class UploadQueueService<TUnitOfWork> : NextApiService
+    public abstract class UploadQueueService<TUnitOfWork> : NextApiService, IUploadQueueService
         where TUnitOfWork : class, INextApiUnitOfWork
     {
         private static readonly List<(Type modelType, Type repoType)> _repositoryList = new List<(Type modelType, Type repoType)>();
@@ -69,7 +70,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
             _repositoryList.Add((modelType, repoType));
         }
 
-        public virtual async Task<ConcurrentDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
+        public virtual async Task<IDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
         {
             _columnChangesLogger.LoggingEnabled = false;
             
