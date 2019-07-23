@@ -70,7 +70,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
             _repositoryList.Add((modelType, repoType));
         }
 
-        public virtual async Task<IDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
+        public virtual async Task<Dictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
         {
             _columnChangesLogger.LoggingEnabled = false;
             
@@ -95,7 +95,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
             }
             
             _columnChangesLogger.LoggingEnabled = true;
-            return resultDict;
+            return resultDict.ToDictionary(k=> k.Key, v=> v.Value);
         }
         
         private async Task ProcessByEntityName(ConcurrentDictionary<Guid, UploadQueueResult> resultDict, IGrouping<string, UploadQueueDto> groupByEntityName)

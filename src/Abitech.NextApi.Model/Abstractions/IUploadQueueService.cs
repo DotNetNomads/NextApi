@@ -16,6 +16,6 @@ namespace Abitech.NextApi.Model.Abstractions
         /// </summary>
         /// <param name="uploadQueue">List of upload queue items</param>
         /// <returns>Dictionary of upload queue results</returns>
-        Task<IDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue);
+        Task<Dictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue);
     }
 }
