@@ -159,11 +159,14 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     try
                     {
                         // result of get method - entity instance
+                        await _lock.WaitAsync();
                         var result = await repoInstance.GetByRowGuid(rowGuid);
+                        _lock.Release();
                         entityInstance = Convert.ChangeType(result, modelType);
                     }
                     catch (Exception e)
                     {
+                        _lock.Release();
                         Console.WriteLine(e);
                         entityInstance = null;
                     }
@@ -181,7 +184,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         try
                         {
                             // Delete entity
-                            _lock.Wait();
+                            await _lock.WaitAsync();
                             await repoInstance.DeleteAsync(entityInstance);
                             _lock.Release();
                             
@@ -237,7 +240,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                 // Add entity, if only create operation is in the batch
                                 if (!createAndUpdateInSameBatch)
                                 {
-                                    _lock.Wait();
+                                    await _lock.WaitAsync();
                                     await repoInstance.AddAsync(entityInstance);
                                     _lock.Release();
                                 }
@@ -289,23 +292,25 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     if (entityInstance != null && updateList.Count > 0)
                     {
                         // if update operation occured before the last change, then reject it
-                        var lastChangeTaskArray = new Task<DateTimeOffset?>[updateList.Count];
-                        for (int i = 0; i < updateList.Count; i++)
-                        {
-                            var updateOperation = updateList[i];
-                            
-                            lastChangeTaskArray[i] = _columnChangesLogger.GetLastChange(updateOperation.EntityName,
-                                updateOperation.ColumnName, updateOperation.EntityRowGuid);
-                        }
-
-                        await Task.WhenAll(lastChangeTaskArray);
-
                         // to remove from list inside the loop, iterate backwards
                         for (int i = updateList.Count - 1; i >= 0; i--)
                         {
                             var updateOperation = updateList[i];
-                            
-                            var lastChange = await lastChangeTaskArray[i];
+
+                            DateTimeOffset? lastChange = null;
+
+                            try
+                            {
+                                await _lock.WaitAsync();
+                                lastChange = await _columnChangesLogger.GetLastChange(updateOperation.EntityName,
+                                    updateOperation.ColumnName, updateOperation.EntityRowGuid);
+                                _lock.Release();
+                            }
+                            catch (Exception e)
+                            {
+                                _lock.Release();
+                                Console.WriteLine(e);
+                            }
                             
                             if (!lastChange.HasValue) continue;
 
@@ -330,14 +335,14 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                 // Add entity, if create and update ops are in the same batch
                                 if (createAndUpdateInSameBatch)
                                 {
-                                    _lock.Wait();
+                                    await _lock.WaitAsync();
                                     await repoInstance.AddAsync(entityInstance);
                                     _lock.Release();
                                 }
                                 // Else just update existing entity
                                 else
                                 {
-                                    _lock.Wait();
+                                    await _lock.WaitAsync();
                                     await repoInstance.UpdateAsync(entityInstance);
                                     _lock.Release();
                                 }
