@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,7 +7,6 @@ using Abitech.NextApi.Client;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.UploadQueue;
 using Abitech.NextApi.Server.EfCore.Service;
-using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,7 +66,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -110,7 +108,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -132,7 +130,7 @@ namespace Abitech.NextApi.Server.Tests
                 Assert.NotNull(newTestCityFromServer);
             }
 
-            resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -186,7 +184,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -285,7 +283,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var sw = new Stopwatch();
             sw.Start();
-            var resultDict1 = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict1 = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -321,7 +319,7 @@ namespace Abitech.NextApi.Server.Tests
                 return;
 
             sw.Restart();
-            var resultDict2 = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict2 = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -383,7 +381,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -444,7 +442,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -470,7 +468,7 @@ namespace Abitech.NextApi.Server.Tests
             };
             uploadQueue.Add(outdatedUpdate);
 
-            resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -502,7 +500,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -553,7 +551,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
@@ -644,7 +642,7 @@ namespace Abitech.NextApi.Server.Tests
 
             var client = await GetClient(transport);
 
-            var resultDict = await client.Invoke<ConcurrentDictionary<Guid, UploadQueueResult>>
+            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
             ("TestUploadQueue", "ProcessAsync", new NextApiArgument
             {
                 Name = "uploadQueue",
