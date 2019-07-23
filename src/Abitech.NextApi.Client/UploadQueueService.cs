@@ -15,9 +15,9 @@ namespace Abitech.NextApi.Client
         where TClient : class, INextApiClient
     {
         /// <inheritdoc />
-        public Task<IDictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
+        public Task<Dictionary<Guid, UploadQueueResult>> ProcessAsync(IList<UploadQueueDto> uploadQueue)
         {
-            return InvokeService<IDictionary<Guid, UploadQueueResult>>(nameof(ProcessAsync),
+            return InvokeService<Dictionary<Guid, UploadQueueResult>>(nameof(ProcessAsync),
                 new NextApiArgument(nameof(uploadQueue), uploadQueue));
         }
 

@@ -14,7 +14,7 @@ namespace Abitech.NextApi.Client
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TClient"></typeparam>
     public abstract class NextApiEntityService<TEntity, TKey, TClient> : NextApiService<TClient>,
-        INextApiEntityService<TEntity, TKey>
+        INextApiEntityService<TEntity, TKey>, INextApiEntityService
         where TEntity : class
         where TClient : class, INextApiClient
     {
@@ -60,6 +60,24 @@ namespace Abitech.NextApi.Client
         }
 
         /// <inheritdoc />
+        public async Task<object> Create(object entity)
+        {
+            return await Create((TEntity)entity);
+        }
+
+        /// <inheritdoc />
+        public async Task Delete(object key)
+        {
+            await Delete((TKey)key);
+        }
+
+        /// <inheritdoc />
+        public async Task<object> Update(object key, object patch)
+        {
+            return await Update((TKey)key, (TEntity)patch);
+        }
+
+        /// <inheritdoc />
         public async Task<PagedList<TEntity>> GetPaged(PagedRequest request)
         {
             return await InvokeService<PagedList<TEntity>>("GetPaged",
@@ -94,5 +112,37 @@ namespace Abitech.NextApi.Client
             return await InvokeService<TreeItem<TEntity>[]>(nameof(GetTree),
                 new NextApiArgument(nameof(request), request));
         }
+    }
+
+    /// <summary>
+    /// Non-generic variant for entity service
+    /// </summary>
+    public interface INextApiEntityService
+    {
+        /// <summary>
+        /// Creates an entity from dto and saves it
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        Task<object> Create(object entity);
+
+        /// <summary>
+        /// Deletes entity by key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task Delete(object key);
+
+        /// <summary>
+        /// Patches an entity and returns instance mapped to DTO
+        /// </summary>
+        /// <param name="key">entity id</param>
+        /// <param name="patch">patch entity</param>
+        /// <returns></returns>
+        Task<object> Update(object key, object patch);
+        
+#pragma warning disable 1591
+        Task<int> Count(Filter filter = null);
+#pragma warning restore 1591
     }
 }
