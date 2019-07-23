@@ -56,7 +56,8 @@ namespace Abitech.NextApi.Server.EfCore.Service
         {
             var modelType = typeof(TModel);
 
-            var alreadyAdded = _repositoryList.FirstOrDefault(tuple => tuple.modelType.IsAssignableFrom(modelType)) != (null, null);
+            var alreadyAdded = _repositoryList
+                                   .FirstOrDefault(tuple => tuple.modelType.FullName == modelType.FullName) != (null, null);
             if (alreadyAdded)
                 return;
             
