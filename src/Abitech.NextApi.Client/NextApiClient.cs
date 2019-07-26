@@ -341,7 +341,7 @@ namespace Abitech.NextApi.Client
         private async Task<NextApiFileResponse> ProcessNextApiFileResponse(HttpResponseMessage response)
         {
             var content = response.Content;
-            var fileName = content.Headers.ContentDisposition.FileName;
+            var fileName = WebUtility.UrlDecode(content.Headers.ContentDisposition.FileName);
             var mimeType = content.Headers.ContentType.MediaType;
             var stream = await content.ReadAsStreamAsync();
             return new NextApiFileResponse(fileName, stream, mimeType);

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Abitech.NextApi.Model;
@@ -238,7 +240,7 @@ namespace Abitech.NextApi.Server.Service
         {
             response.StatusCode = 200;
             response.ContentType = fileInfo.MimeType;
-            response.Headers.Add("content-disposition", $"attachment; filename={fileInfo.FileName}");
+            response.Headers.Add("content-disposition", $"attachment; filename={WebUtility.UrlEncode(fileInfo.FileName)}");
             using (fileInfo)
             {
                 await fileInfo.CopyToAsync(response.Body);
