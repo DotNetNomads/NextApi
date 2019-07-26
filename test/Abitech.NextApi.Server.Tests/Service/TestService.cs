@@ -116,14 +116,14 @@ namespace Abitech.NextApi.Server.Tests.Service
 
         public async Task<NextApiFileResponse> GetFile(string path)
         {
-            var fileName = "bellonicat.jpg";
+            var fileName = "белонька.jpg";
             var fileStream = new FileStream(path, FileMode.Open);
             return new NextApiFileResponse(fileName, fileStream);
         }
 
         public async Task<NextApiFileResponse> GetFileMimeTyped(string path)
         {
-            var fileName = "bellonicat.jpg";
+            var fileName = "белонька.jpg";
             var fileStream = new FileStream(path, FileMode.Open);
             return new NextApiFileResponse(fileName, fileStream, "image/jpeg");
         }

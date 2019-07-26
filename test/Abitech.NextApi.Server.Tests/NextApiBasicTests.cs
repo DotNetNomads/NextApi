@@ -249,7 +249,7 @@ namespace Abitech.NextApi.Server.Tests
             var client = await GetClient(NextApiTransport.Http);
 
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var filePath = Path.Combine(baseDir, "TestData", "bellonicat.jpg");
+            var filePath = Path.Combine(baseDir, "TestData", "белонька.jpg");
             var originalBytes = File.ReadAllBytes(filePath);
 
             var resultFilePath = await client.Invoke<string>("Test", "UploadFile",
@@ -264,6 +264,7 @@ namespace Abitech.NextApi.Server.Tests
 
             Assert.Equal(originalBytes, bytes);
             Assert.Equal("application/octet-stream", fileResponse.MimeType);
+            Assert.Equal("белонька.jpg", fileResponse.FileName);
 
             // download mime typed
             var typed = await client.Invoke<NextApiFileResponse>("Test", "GetFileMimeTyped",
