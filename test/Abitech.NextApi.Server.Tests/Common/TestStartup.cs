@@ -1,7 +1,10 @@
 using System.Collections.Generic;
+using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Server.Service;
 using Abitech.NextApi.Server.Tests.EntityService;
+using Abitech.NextApi.Server.Tests.EntityService.Model;
 using Abitech.NextApi.Server.Tests.Security.Auth;
+using Abitech.NextApi.Server.Tests.Service;
 using Abitech.NextApi.Server.Tests.System;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -20,6 +23,7 @@ namespace Abitech.NextApi.Server.Tests.Common
             services.AddNextApiServices(options => { options.AnonymousByDefault = true; })
                 .AddPermissionProvider<TestPermissionProvider>();
             services.AddEntityServiceTestsInfrastructure();
+            services.AddTransient<IUploadQueueChangesHandler<TestCity>, TestUploadQueueChangesHandler>();
         }
 
         public void Configure(IApplicationBuilder app)
