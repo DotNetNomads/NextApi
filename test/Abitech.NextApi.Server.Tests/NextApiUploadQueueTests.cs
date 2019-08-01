@@ -9,6 +9,7 @@ using Abitech.NextApi.Model.UploadQueue;
 using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
+using Abitech.NextApi.Server.Tests.Service;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Xunit;
@@ -468,12 +469,12 @@ namespace Abitech.NextApi.Server.Tests
             };
             uploadQueue.Add(outdatedUpdate);
 
-            resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-            ("TestUploadQueue", "ProcessAsync", new NextApiArgument
-            {
-                Name = "uploadQueue",
-                Value = uploadQueue
-            });
+            resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>("TestUploadQueue",
+                "ProcessAsync", new NextApiArgument
+                {
+                    Name = "uploadQueue",
+                    Value = uploadQueue
+                });
 
             Assert.Equal(UploadQueueError.OutdatedChange, resultDict[outdatedUpdate.Id].Error);
         }
@@ -664,6 +665,135 @@ namespace Abitech.NextApi.Server.Tests
 
                 var testCity2FromServer = await testCityRepo.GetAsync(city => city.RowGuid == testCity2.RowGuid);
                 Assert.Null(testCity2FromServer);
+            }
+        }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task ChangesHandlerTest(NextApiTransport transport)
+        {
+            var uploadQueue = new List<UploadQueueDto>();
+
+            var newTestCity = new TestCity
+            {
+                Name = "MyNewTestCity",
+                Population = 123456,
+                Demonym = "MyTestCityDemonym",
+                RowGuid = TestUploadQueueChangesHandler.RejectCreateGuid
+            };
+
+            var createOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Create,
+                EntityName = nameof(TestCity),
+                NewValue = JsonConvert.SerializeObject(newTestCity),
+                EntityRowGuid = TestUploadQueueChangesHandler.RejectCreateGuid
+            };
+            
+            var updateOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.Demonym),
+                NewValue = "SomeNewDemonym",
+                EntityRowGuid = TestUploadQueueChangesHandler.RejectCreateGuid
+            };
+
+            await Task.Delay(1000);
+
+            uploadQueue.Add(createOp);
+            uploadQueue.Add(updateOp);
+
+            var client = await GetClient(transport);
+
+            {
+                var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
+                ("TestUploadQueue", "ProcessAsync", new NextApiArgument
+                {
+                    Name = "uploadQueue",
+                    Value = uploadQueue
+                });
+
+                Assert.Equal(uploadQueue.Count, resultDict.Count);
+                var createOpResult = resultDict[createOp.Id];
+                var updateOpResult = resultDict[updateOp.Id];
+            
+                Assert.Equal(UploadQueueError.Exception, createOpResult.Error);
+                Assert.Contains(TestUploadQueueChangesHandler.RejectCreateGuidMessage, createOpResult.Extra.ToString());
+                Assert.Equal(UploadQueueError.Exception, updateOpResult.Error);
+                Assert.Contains(TestUploadQueueChangesHandler.RejectCreateGuidMessage, updateOpResult.Extra.ToString());
+            }
+
+            {
+                newTestCity.RowGuid = TestUploadQueueChangesHandler.RejectUpdateGuid;
+                createOp.NewValue = JsonConvert.SerializeObject(newTestCity);
+                createOp.EntityRowGuid = newTestCity.RowGuid;
+                updateOp.EntityRowGuid = newTestCity.RowGuid;
+                
+                var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
+                ("TestUploadQueue", "ProcessAsync", new NextApiArgument
+                {
+                    Name = "uploadQueue",
+                    Value = uploadQueue
+                });
+
+                Assert.Equal(uploadQueue.Count, resultDict.Count);
+                var createOpResult = resultDict[createOp.Id];
+                var updateOpResult = resultDict[updateOp.Id];
+                
+                Assert.Equal(UploadQueueError.NoError, createOpResult.Error);
+                Assert.Null(createOpResult.Extra);
+                Assert.Equal(UploadQueueError.Exception, updateOpResult.Error);
+                Assert.Contains(TestUploadQueueChangesHandler.RejectUpdateGuidMessage, updateOpResult.Extra.ToString());
+            }
+            
+            {
+                newTestCity.RowGuid = TestUploadQueueChangesHandler.RejectDeleteGuid;
+                createOp.NewValue = JsonConvert.SerializeObject(newTestCity);
+                createOp.EntityRowGuid = newTestCity.RowGuid;
+                
+                uploadQueue.Clear();
+                uploadQueue.Add(createOp);
+                
+                var resultDictCreate = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
+                ("TestUploadQueue", "ProcessAsync", new NextApiArgument
+                {
+                    Name = "uploadQueue",
+                    Value = uploadQueue
+                });
+
+                Assert.Equal(uploadQueue.Count, resultDictCreate.Count);
+                var createOpResult = resultDictCreate[createOp.Id];
+                Assert.Equal(UploadQueueError.NoError, createOpResult.Error);
+                
+                var deleteOp = new UploadQueueDto
+                {
+                    Id = Guid.NewGuid(),
+                    OccuredAt = DateTimeOffset.Now,
+                    OperationType = OperationType.Delete,
+                    EntityName = nameof(TestCity),
+                    EntityRowGuid = createOp.EntityRowGuid
+                };
+                uploadQueue.Clear();
+                uploadQueue.Add(deleteOp);
+                
+                var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
+                ("TestUploadQueue", "ProcessAsync", new NextApiArgument
+                {
+                    Name = "uploadQueue",
+                    Value = uploadQueue
+                });
+
+                Assert.Equal(uploadQueue.Count, resultDict.Count);
+                var deleteOpResult = resultDict[deleteOp.Id];
+                
+                Assert.Equal(UploadQueueError.Exception, deleteOpResult.Error);
+                Assert.Contains(TestUploadQueueChangesHandler.RejectDeleteGuidMessage, deleteOpResult.Extra.ToString());
             }
         }
     }
