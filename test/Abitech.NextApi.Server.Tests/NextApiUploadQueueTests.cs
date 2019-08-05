@@ -796,5 +796,95 @@ namespace Abitech.NextApi.Server.Tests
                 Assert.Contains(TestUploadQueueChangesHandler.RejectDeleteGuidMessage, deleteOpResult.Extra.ToString());
             }
         }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task UploadNullValues(NextApiTransport transport)
+        {
+            var uploadQueue = new List<UploadQueueDto>();
+
+            var newTestCity = new TestCity
+            {
+                Name = "MyNewTestCity",
+                Population = 123456,
+                Demonym = "MyTestCityDemonym",
+                SomeNullableInt = 100
+            };
+
+            var createOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Create,
+                EntityName = nameof(TestCity),
+                NewValue = JsonConvert.SerializeObject(newTestCity),
+                EntityRowGuid = newTestCity.RowGuid
+            };
+            
+            uploadQueue.Add(createOp);
+            
+            var client = await GetClient(transport);
+
+            var resultDictCreate = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
+            ("TestUploadQueue", "ProcessAsync", new NextApiArgument
+            {
+                Name = "uploadQueue",
+                Value = uploadQueue
+            });
+            
+            foreach (var keyValuePair in resultDictCreate)
+            {
+                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
+            }
+            
+            using (var scope = Factory.Server.Host.Services.CreateScope())
+            {
+                var serviceProvider = scope.ServiceProvider;
+
+                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+
+                Assert.NotNull(newTestCityFromServer);
+                Assert.Equal(100, newTestCityFromServer.SomeNullableInt);
+            }
+
+            var updateOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.SomeNullableInt),
+                NewValue = null,
+                EntityRowGuid = newTestCity.RowGuid
+            };
+
+            uploadQueue.Clear();
+            uploadQueue.Add(updateOp);
+
+            var resultDictUpdate = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
+            ("TestUploadQueue", "ProcessAsync", new NextApiArgument
+            {
+                Name = "uploadQueue",
+                Value = uploadQueue
+            });
+
+            foreach (var keyValuePair in resultDictUpdate)
+            {
+                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
+            }
+
+            using (var scope = Factory.Server.Host.Services.CreateScope())
+            {
+                var serviceProvider = scope.ServiceProvider;
+
+                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+
+                Assert.NotNull(newTestCityFromServer);
+                Assert.Null(newTestCityFromServer.SomeNullableInt);
+            }
+        }
     }
 }

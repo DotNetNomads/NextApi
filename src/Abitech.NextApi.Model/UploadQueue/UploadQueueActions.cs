@@ -37,9 +37,22 @@ namespace Abitech.NextApi.Model.UploadQueue
                     var prop = entityType.GetProperty(modification.ColumnName);
                     if (prop == null)
                         continue;
-            
-                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-                    prop.SetValue(entity, Convert.ChangeType(modification.NewValue, targetType));
+
+                    var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType);
+                    if (underlyingType == null)
+                    {
+                        // underlying type is null, which means it is not a nullable type
+                        prop.SetValue(entity, Convert.ChangeType(modification.NewValue, prop.PropertyType));
+                    }
+                    else
+                    {
+                        // it is a nullable type
+                        if (modification.NewValue == null)
+                            prop.SetValue(entity, null);
+                        else
+                            prop.SetValue(entity, Convert.ChangeType(modification.NewValue, underlyingType));
+                    }
+                    
                 }
                 catch (Exception e)
                 {

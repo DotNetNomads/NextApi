@@ -9,6 +9,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService.Model
         [Key]
         public int CityId { get; set; }
         public string Name { get; set; }
+        public int? SomeNullableInt { get; set; }
         public int Population { get; set; }
         public string Demonym { get; set; }
         public Guid RowGuid { get; set; } = Guid.NewGuid();
