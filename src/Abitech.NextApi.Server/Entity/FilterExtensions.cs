@@ -79,11 +79,12 @@ namespace Abitech.NextApi.Server.Entity
                     case FilterExpressionTypes.Contains:
                         var value = FormatValue(filterExpression.Value, typeof(string));
                         var convertedProperty = Expression.Call(property, ToStringMethod);
-                        currentExpression = Expression.Call(convertedProperty, StringContainsMethod,
-                            Expression.Constant(value));
+                        currentExpression = Expression.AndAlso(
+                            Expression.NotEqual(property, Expression.Constant(null, property.Type)), 
+                            Expression.Call(convertedProperty, StringContainsMethod,
+                            Expression.Constant(value)));
                         break;
                     case FilterExpressionTypes.Equal:
-
                         currentExpression = Expression.Equal(property,
                             Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
