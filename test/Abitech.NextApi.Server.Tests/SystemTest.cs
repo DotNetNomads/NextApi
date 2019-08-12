@@ -65,10 +65,40 @@ namespace Abitech.NextApi.Server.Tests
                 )
                 .In<int>("Number", new[] {5, 6, 10})
                 .Build();
+            
+            var filter2_0 = new FilterBuilder()
+                .Contains("Name", "testModel")
+                .Build();
+            
+            var filter2_1 = new FilterBuilder()
+                .Contains("Name", "testmodel")
+                .Build();
+            
+            var filter2_2 = new FilterBuilder()
+                .Contains("Name", "Testmodel")
+                .Build();
+            
+            var filter2_3 = new FilterBuilder()
+                .Contains("Name", "TESTMODEL")
+                .Build();
 
             var expression = filter.ToLambdaFilter<TestModel>();
+            var expression2_0 = filter2_0.ToLambdaFilter<TestModel>();
+            var expression2_1 = filter2_1.ToLambdaFilter<TestModel>();
+            var expression2_2 = filter2_2.ToLambdaFilter<TestModel>();
+            var expression2_3 = filter2_3.ToLambdaFilter<TestModel>();
 
             var filtered = data.Where(expression).ToList();
+
+            var filtered2_0 = data.Where(expression2_0).ToList();
+            var filtered2_1 = data.Where(expression2_1).ToList();
+            var filtered2_2 = data.Where(expression2_2).ToList();
+            var filtered2_3 = data.Where(expression2_3).ToList();
+            
+            Assert.True(filtered2_0.Count==500);
+            Assert.True(filtered2_1.Count==500);
+            Assert.True(filtered2_2.Count==500);
+            Assert.True(filtered2_3.Count==500);
 
             Assert.True(filtered.Count == 3);
             Assert.True(filtered.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));

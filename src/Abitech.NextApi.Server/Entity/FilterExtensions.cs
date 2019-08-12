@@ -19,7 +19,8 @@ namespace Abitech.NextApi.Server.Entity
             typeof(string).GetMethod("Contains", new[] {typeof(string)});
         private static readonly MethodInfo ToStringMethod =
             typeof(object).GetMethod("ToString", Type.EmptyTypes);
-
+        private static readonly MethodInfo ToLowerMethod =
+            typeof(string).GetMethod("ToLower", Type.EmptyTypes);
         // thx to: https://www.codeproject.com/Articles/1079028/Build-Lambda-Expressions-Dynamically
 
         /// <summary>
@@ -73,16 +74,17 @@ namespace Abitech.NextApi.Server.Entity
             foreach (var filterExpression in filter.Expressions)
             {
                 var property = GetMemberExpression(parameter, filterExpression.Property);
-                Expression currentExpression;
+                Expression currentExpression = null;
                 switch (filterExpression.ExpressionType)
                 {
                     case FilterExpressionTypes.Contains:
-                        var value = FormatValue(filterExpression.Value, typeof(string));
-                        var convertedProperty = Expression.Call(property, ToStringMethod);
+                        var value = FormatValue(filterExpression.Value, typeof(string)) as string;
+                        if (value == null) break;
+                        var convertedProperty = Expression.Call(Expression.Call(property, ToStringMethod), ToLowerMethod);
                         currentExpression = Expression.AndAlso(
                             Expression.NotEqual(property, Expression.Constant(null, property.Type)), 
                             Expression.Call(convertedProperty, StringContainsMethod,
-                            Expression.Constant(value)));
+                            Expression.Constant(value.ToLower())));
                         break;
                     case FilterExpressionTypes.Equal:
                         currentExpression = Expression.Equal(property,
