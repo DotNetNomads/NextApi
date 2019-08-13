@@ -5,9 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Attributes;
+using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
+using Abitech.NextApi.Server.Tests.Event;
 using Microsoft.AspNetCore.SignalR;
 
 #pragma warning disable 1998
@@ -18,11 +20,13 @@ namespace Abitech.NextApi.Server.Tests.Service
     {
         private INextApiUserAccessor _nextApiUserAccessor;
         private INextApiRequest _nextApiRequest;
+        private INextApiEventManager _eventManager;
 
-        public TestService(INextApiUserAccessor nextApiUserAccessor, INextApiRequest nextApiRequest)
+        public TestService(INextApiUserAccessor nextApiUserAccessor, INextApiRequest nextApiRequest, INextApiEventManager eventManager)
         {
             _nextApiUserAccessor = nextApiUserAccessor;
             _nextApiRequest = nextApiRequest;
+            _eventManager = eventManager;
         }
 
         // tested
@@ -126,6 +130,13 @@ namespace Abitech.NextApi.Server.Tests.Service
             var fileName = "белонька.jpg";
             var fileStream = new FileStream(path, FileMode.Open);
             return new NextApiFileResponse(fileName, fileStream, "image/jpeg");
+        }
+
+        public async Task RaiseEvents()
+        {
+            await _eventManager.Publish<TextEvent, string>("Hello World!");
+            await _eventManager.Publish<ReferenceEvent, User>(new User {Name = "Pedro!"});
+            await _eventManager.Publish<WithoutPayloadEvent>();
         }
     }
 #pragma warning restore 1998

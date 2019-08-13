@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.Base;
+using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
@@ -48,6 +49,7 @@ namespace Abitech.NextApi.Server
             serviceCollection.AddSingleton(nextApiOptions);
             serviceCollection.AddScoped<INextApiUserAccessor, NextApiUserAccessor>();
             serviceCollection.AddScoped<INextApiRequest, NextApiRequest>();
+            serviceCollection.AddScoped<INextApiEventManager, NextApiEventManager>();
             // handles all requests redirected from HTTP and SignalR
             serviceCollection.AddScoped<NextApiHandler>();
             // handles all request from clients over HTTP

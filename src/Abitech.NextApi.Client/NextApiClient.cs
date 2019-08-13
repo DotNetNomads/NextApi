@@ -6,7 +6,9 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Abitech.NextApi.Client.Base;
 using Abitech.NextApi.Model;
+using Abitech.NextApi.Model.Event;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Http.Connections.Client;
@@ -18,36 +20,6 @@ using Newtonsoft.Json.Converters;
 
 namespace Abitech.NextApi.Client
 {
-    /// <summary>
-    /// NextApi client
-    /// </summary>
-    public interface INextApiClient
-    {
-        /// <summary>
-        /// Invoke method of specific service and return result
-        /// </summary>
-        /// <param name="serviceName">Name of NextApi service</param>
-        /// <param name="serviceMethod">Method of service</param>
-        /// <param name="arguments">Arguments for method</param>
-        /// <typeparam name="T">Execution result</typeparam>
-        /// <returns></returns>
-        Task<T> Invoke<T>(string serviceName, string serviceMethod, params INextApiArgument[] arguments);
-
-        /// <summary>
-        /// Invoke method of specific service
-        /// </summary>
-        /// <param name="serviceName"></param>
-        /// <param name="serviceMethod"></param>
-        /// <param name="arguments"></param>
-        /// <returns>nothing</returns>
-        Task Invoke(string serviceName, string serviceMethod, params INextApiArgument[] arguments);
-
-        /// <summary>
-        /// List of supported permissions
-        /// </summary>
-        Task<string[]> SupportedPermissions();
-    }
-
     /// <summary>
     /// NextApi client
     /// </summary>
@@ -132,6 +104,50 @@ namespace Abitech.NextApi.Client
             ReconnectDelayMs = reconnectDelayMs;
         }
 
+        #region Events
+
+        private Dictionary<string, INextApiEvent> _eventRegistry = new Dictionary<string, INextApiEvent>();
+
+        private TEvent GetEventInternal<TEvent>() where TEvent : INextApiEvent, new()
+        {
+            var eventName = typeof(TEvent).Name;
+            lock (_eventRegistry)
+            {
+                TEvent eventHandler;
+                if (_eventRegistry.ContainsKey(eventName))
+                {
+                    eventHandler = (TEvent)_eventRegistry[eventName];
+                }
+                else
+                {
+                    eventHandler = new TEvent();
+                    _eventRegistry.Add(eventName, eventHandler);
+                }
+
+                return eventHandler;
+            }
+        }
+
+        private async Task ProcessNextApiEvent(object[] arg)
+        {
+            if (arg == null || arg.Length < 1)
+                return;
+            var message = (NextApiEventMessage)arg[0];
+
+            INextApiEvent handler;
+            lock (_eventRegistry)
+            {
+                if (!_eventRegistry.ContainsKey(message.EventName))
+                    return;
+
+                handler = _eventRegistry[message.EventName];
+            }
+
+            handler.Publish(message.Data);
+        }
+
+        #endregion
+
         #region SignalR
 
         /// <summary>
@@ -145,7 +161,9 @@ namespace Abitech.NextApi.Client
                 .AddMessagePackProtocol(options =>
                 {
                     options.FormatterResolvers = new List<IFormatterResolver>
-                        {TypelessContractlessStandardResolver.Instance};
+                    {
+                        TypelessContractlessStandardResolver.Instance
+                    };
                 })
                 .Build();
 
@@ -155,6 +173,7 @@ namespace Abitech.NextApi.Client
                     await Task.Delay(ReconnectDelayMs);
                     await connection.StartAsync();
                 };
+            connection.On("NextApiEvent", new[] {typeof(NextApiEventMessage)}, ProcessNextApiEvent);
             return connection;
         }
 
@@ -174,7 +193,7 @@ namespace Abitech.NextApi.Client
 
             if (response.Error != null)
             {
-                throw NextApiException(response.Error);
+                throw NextApiClientUtils.NextApiException(response.Error);
             }
 
             return (T)response.Data;
@@ -235,7 +254,7 @@ namespace Abitech.NextApi.Client
             }
 
             var stringResp = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<string[]>(stringResp, GetJsonConfig());
+            return JsonConvert.DeserializeObject<string[]>(stringResp, NextApiClientUtils.GetJsonConfig());
         }
 
         /// <summary>
@@ -256,42 +275,9 @@ namespace Abitech.NextApi.Client
             return client;
         }
 
-        private MultipartFormDataContent PrepareRequestForm(NextApiCommand command)
-        {
-            var args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
-            var form = new MultipartFormDataContent
-            {
-                {new StringContent(command.Service), "Service"},
-                {new StringContent(command.Method), "Method"},
-                {new StringContent(JsonConvert.SerializeObject(args, GetJsonConfig())), "Args"}
-            };
-            // send files
-            var fileArgs = command.Args.Where(arg => arg is NextApiFileArgument).Cast<NextApiFileArgument>().ToArray();
-            var i = 0;
-            foreach (var nextApiFileArgument in fileArgs)
-            {
-                var stream = nextApiFileArgument.FileDataStream ??
-                             new FileStream(nextApiFileArgument.FilePath, FileMode.Open);
-                var fileName = nextApiFileArgument.FileName ??
-                               Path.GetFileName(nextApiFileArgument.FilePath) ?? "noname.bin";
-                var name = nextApiFileArgument.FileId;
-                form.Add(new StreamContent(stream), name, fileName);
-                i++;
-            }
-
-            return form;
-        }
-
-        class NextApiResponseJsonWrapper<TDataType>
-        {
-            public bool Success { get; set; }
-            public TDataType Data { get; set; }
-            public NextApiError Error { get; set; }
-        }
-
         private async Task<T> InvokeHttp<T>(NextApiCommand command)
         {
-            var form = PrepareRequestForm(command);
+            var form = NextApiClientUtils.PrepareRequestForm(command);
             HttpResponseMessage response;
             try
             {
@@ -319,7 +305,7 @@ namespace Abitech.NextApi.Client
 
                 try
                 {
-                    return await ProcessNextApiFileResponse(response) as dynamic;
+                    return await NextApiClientUtils.ProcessNextApiFileResponse(response) as dynamic;
                 }
                 catch (Exception ex)
                 {
@@ -329,10 +315,11 @@ namespace Abitech.NextApi.Client
 
             // process as normal nextapi response
             var data = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, GetJsonConfig());
+            var result =
+                JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, NextApiClientUtils.GetJsonConfig());
             if (!result.Success)
             {
-                throw NextApiException(result.Error);
+                throw NextApiClientUtils.NextApiException(result.Error);
             }
 
             return result.Data;
@@ -357,18 +344,11 @@ namespace Abitech.NextApi.Client
 
         #endregion
 
+
         /// <inheritdoc />
-        /// <summary>
-        /// Invoke method of specific service and return result
-        /// </summary>
-        /// <param name="serviceName">Name of NextApi service</param>
-        /// <param name="serviceMethod">Method of service</param>
-        /// <param name="arguments">Arguments for method</param>
-        /// <typeparam name="T">Execution result</typeparam>
-        /// <returns></returns>
         public async Task<T> Invoke<T>(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
         {
-            var command = PrepareCommand(serviceName, serviceMethod, arguments);
+            var command = NextApiClientUtils.PrepareCommand(serviceName, serviceMethod, arguments);
             if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument) ||
                 typeof(T) == typeof(NextApiFileResponse))
             {
@@ -378,23 +358,11 @@ namespace Abitech.NextApi.Client
             return await InvokeSignalR<T>(command);
         }
 
-        private NextApiException NextApiException(NextApiError error)
-        {
-            var message = error.Parameters["message"];
-            return new NextApiException(error.Code, $"{error.Code} {message}", error.Parameters);
-        }
 
-
-        /// <summary>
-        /// Invoke method of specific service
-        /// </summary>
-        /// <param name="serviceName"></param>
-        /// <param name="serviceMethod"></param>
-        /// <param name="arguments"></param>
-        /// <returns>nothing</returns>
+        /// <inheritdoc />
         public async Task Invoke(string serviceName, string serviceMethod, params INextApiArgument[] arguments)
         {
-            var command = PrepareCommand(serviceName, serviceMethod, arguments);
+            var command = NextApiClientUtils.PrepareCommand(serviceName, serviceMethod, arguments);
             if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument))
             {
                 await InvokeHttp<object>(command);
@@ -404,30 +372,10 @@ namespace Abitech.NextApi.Client
             await InvokeSignalR<object>(command);
         }
 
-        private NextApiCommand PrepareCommand(string serviceName, string serviceMethod, INextApiArgument[] arguments)
+        /// <inheritdoc />
+        public TEvent GetEvent<TEvent>() where TEvent : INextApiEvent, new()
         {
-            return new NextApiCommand
-            {
-                Args = arguments,
-                Method = serviceMethod,
-                Service = serviceName
-            };
+            return GetEventInternal<TEvent>();
         }
-    }
-
-    /// <summary>
-    /// Supported transport types for NextApi
-    /// </summary>
-    public enum NextApiTransport
-    {
-        /// <summary>
-        /// SignalR
-        /// </summary>
-        SignalR,
-
-        /// <summary>
-        /// HTTP
-        /// </summary>
-        Http
     }
 }
