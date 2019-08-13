@@ -325,6 +325,23 @@ namespace Abitech.NextApi.Client
             return result.Data;
         }
 
+        private async Task<NextApiFileResponse> ProcessNextApiFileResponse(HttpResponseMessage response)
+        {
+            var content = response.Content;
+            var fileName = WebUtility.UrlDecode(content.Headers.ContentDisposition.FileName);
+            var mimeType = content.Headers.ContentType.MediaType;
+            var stream = await content.ReadAsStreamAsync();
+            return new NextApiFileResponse(fileName, stream, mimeType);
+        }
+
+        private JsonSerializerSettings GetJsonConfig()
+        {
+            return new JsonSerializerSettings
+            {
+                Converters = new JsonConverter[] {new StringEnumConverter()}
+            };
+        }
+
         #endregion
 
 

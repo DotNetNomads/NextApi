@@ -23,6 +23,18 @@ namespace Abitech.NextApi.Server.Tests.Filtering
                     }
                 });
             }
+            
+            list.Add(new TestModel()
+            {
+                Id = 500.ToString(),
+                Name = null,
+                Number = 500,
+                ReferenceModel = new ReferenceModel()
+                {
+                    Id = 500.ToString(),
+                    Name = null
+                }
+            });
 
             return list.AsQueryable();
         }

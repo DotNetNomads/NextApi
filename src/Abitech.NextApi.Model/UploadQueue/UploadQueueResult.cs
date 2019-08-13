@@ -6,9 +6,25 @@ namespace Abitech.NextApi.Model.UploadQueue
     public class UploadQueueResult
     {
         /// <summary>
+        /// Constructor
+        /// </summary>
+        public UploadQueueResult()
+        {
+        }
+        
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public UploadQueueResult(UploadQueueError error, object extra = null)
+        {
+            Error = error;
+            Extra = extra;
+        }
+
+        /// <summary>
         /// Error description, if any
         /// </summary>
-        public UploadQueueError Error { get; set; }
+        public UploadQueueError Error { get; set; } = UploadQueueError.NoError;
         /// <summary>
         /// Extra (i.e. Exception message)
         /// </summary>
