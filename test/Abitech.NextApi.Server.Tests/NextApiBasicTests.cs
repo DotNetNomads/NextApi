@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Server.Tests.Common;
+using Abitech.NextApi.Server.Tests.Event;
 using Abitech.NextApi.Server.Tests.Service;
 using DeepEqual.Syntax;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -33,21 +34,15 @@ namespace Abitech.NextApi.Server.Tests
                 NullableBoolProperty = null
             };
 
-            var resultDto = await client.Invoke<TestDTO>("Test", "DtoTest", new NextApiArgument
-            {
-                Name = "model",
-                Value = dtoModel
-            });
+            var resultDto = await client.Invoke<TestDTO>("Test", "DtoTest",
+                new NextApiArgument {Name = "model", Value = dtoModel});
             resultDto.IsDeepEqual(dtoModel);
 
             // incorrect call
             try
             {
-                await client.Invoke<TestDTO>("Test", "DtoTest", new NextApiArgument
-                {
-                    Name = "model",
-                    Value = 4545433453453
-                });
+                await client.Invoke<TestDTO>("Test", "DtoTest",
+                    new NextApiArgument {Name = "model", Value = 4545433453453});
                 Assert.False(true);
             }
             catch
@@ -134,15 +129,8 @@ namespace Abitech.NextApi.Server.Tests
         {
             var client = await GetClient(transport);
             var result = await client.Invoke<Dictionary<string, bool?>>("Test", "BoolTest",
-                new NextApiArgument
-                {
-                    Name = "boolArg1",
-                    Value = bool1
-                }, new NextApiArgument
-                {
-                    Name = "nullableBoolArg2",
-                    Value = bool2
-                });
+                new NextApiArgument {Name = "boolArg1", Value = bool1},
+                new NextApiArgument {Name = "nullableBoolArg2", Value = bool2});
             Assert.Equal(result["boolArg1"], bool1);
             Assert.Equal(result["nullableBoolArg2"], bool2);
         }
@@ -154,11 +142,8 @@ namespace Abitech.NextApi.Server.Tests
         {
             var clinet = await GetClient(transport);
             var str = "Hello World";
-            var resultStr = await clinet.Invoke<string>("Test", "StringTest", new NextApiArgument
-            {
-                Name = "stringArg",
-                Value = str
-            });
+            var resultStr = await clinet.Invoke<string>("Test", "StringTest",
+                new NextApiArgument {Name = "stringArg", Value = str});
             Assert.Equal(str, resultStr);
         }
 
@@ -169,11 +154,8 @@ namespace Abitech.NextApi.Server.Tests
         {
             var client = await GetClient(transport);
             var dcm = 23m;
-            var resultDcm = await client.Invoke<decimal>("Test", "DecimalTest", new NextApiArgument
-            {
-                Name = "decimalArg1",
-                Value = dcm
-            });
+            var resultDcm = await client.Invoke<decimal>("Test", "DecimalTest",
+                new NextApiArgument {Name = "decimalArg1", Value = dcm});
             Assert.Equal(dcm, resultDcm);
         }
 
@@ -186,15 +168,8 @@ namespace Abitech.NextApi.Server.Tests
         {
             var client = await GetClient(transport);
             var result = await client.Invoke<Dictionary<string, int?>>("Test", "IntegersTest",
-                new NextApiArgument
-                {
-                    Name = "intArg1",
-                    Value = int1
-                }, new NextApiArgument
-                {
-                    Name = "nullableIntArg2",
-                    Value = int2
-                });
+                new NextApiArgument {Name = "intArg1", Value = int1},
+                new NextApiArgument {Name = "nullableIntArg2", Value = int2});
             Assert.Equal(result["intArg1"], int1);
             Assert.Equal(result["nullableIntArg2"], int2);
         }
@@ -217,27 +192,15 @@ namespace Abitech.NextApi.Server.Tests
             var defaultStringValue = "optionalString";
             // optional string
             var resultString = await client.Invoke<string>("Test", "DtoAndOptionalArgTest",
-                new NextApiArgument
-                {
-                    Name = "model",
-                    Value = dtoModel
-                }
+                new NextApiArgument {Name = "model", Value = dtoModel}
             );
             Assert.Equal(defaultStringValue, resultString);
 
             // override default string arg
             var newArg = "newString";
             var newResult = await client.Invoke<string>("Test", "DtoAndOptionalArgTest",
-                new NextApiArgument
-                {
-                    Name = "model",
-                    Value = dtoModel
-                },
-                new NextApiArgument()
-                {
-                    Name = "optionalString",
-                    Value = newArg
-                }
+                new NextApiArgument {Name = "model", Value = dtoModel},
+                new NextApiArgument() {Name = "optionalString", Value = newArg}
             );
             Assert.Equal(newArg, newResult);
         }
@@ -269,6 +232,49 @@ namespace Abitech.NextApi.Server.Tests
             var typed = await client.Invoke<NextApiFileResponse>("Test", "GetFileMimeTyped",
                 new NextApiArgument("path", resultFilePath));
             Assert.Equal("image/jpeg", typed.MimeType);
+        }
+
+        [Fact]
+        public async Task EventsTest()
+        {
+            var client = await GetClient(NextApiTransport.SignalR);
+
+            var textEventReceived = false;
+            var referenceEventReceived = false;
+            var withoutPayloadEventReceived = false;
+
+            client.GetEvent<TextEvent>().Subscribe(s =>
+            {
+                Assert.Equal("Hello World!", s);
+                textEventReceived = true;
+            });
+            client.GetEvent<ReferenceEvent>().Subscribe(user =>
+            {
+                Assert.Equal("Pedro!", user.Name);
+                referenceEventReceived = true;
+            });
+            client.GetEvent<WithoutPayloadEvent>().Subscribe(() =>
+            {
+                withoutPayloadEventReceived = true;
+            });
+
+            // we should ask server to raise events to client :)
+            await client.Invoke("Test", "RaiseEvents");
+
+            Func<bool> allEventsIsNotReceived =
+                () => !textEventReceived || !referenceEventReceived || !withoutPayloadEventReceived;
+
+            var maxTries = 10;
+            while (allEventsIsNotReceived())
+            {
+                if (maxTries == 0)
+                {
+                    throw new Exception("Events is not working!");
+                }
+
+                await Task.Delay(1000);
+                maxTries--;
+            }
         }
     }
 }
