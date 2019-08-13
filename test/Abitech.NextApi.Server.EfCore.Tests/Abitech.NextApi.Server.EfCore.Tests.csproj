@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
       <ProjectReference Include="..\..\src\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
     </ItemGroup>
 

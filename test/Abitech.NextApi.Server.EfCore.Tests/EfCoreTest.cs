@@ -1,9 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Model.Event.System;
 using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
+using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Security;
 using DeepEqual.Syntax;
 using Microsoft.EntityFrameworkCore;
@@ -28,10 +31,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 // check adding 
                 {
-                    var entityToAdd = new TestEntity()
-                    {
-                        Name = "TestEntityToAdd"
-                    };
+                    var entityToAdd = new TestEntity() {Name = "TestEntityToAdd"};
 
                     await repo.AddAsync(entityToAdd);
                     await unitOfWork.CommitAsync();
@@ -73,18 +73,14 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 // create entity 
                 var id = "id1";
-                await repo.AddAsync(new TestEntityKeyPredicate
-                {
-                    Id = id,
-                    Description = "testException"
-                });
+                await repo.AddAsync(new TestEntityKeyPredicate {Id = id, Description = "testException"});
                 await unitOfWork.CommitAsync();
 
                 // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
                 await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdAsync(id));
             }
         }
-        
+
         [Fact]
         public async Task CheckKeyPredicateArrayNotSupportedException()
         {
@@ -96,19 +92,11 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 // create entity 
                 string[] ids = {"id1", "id2"};
-                
-                await repo.AddAsync(new TestEntityKeyPredicate
-                {
-                    Id = ids[0],
-                    Description = "testException"
-                });
-                
-                await repo.AddAsync(new TestEntityKeyPredicate
-                {
-                    Id = ids[1],
-                    Description = "testException"
-                });
-                
+
+                await repo.AddAsync(new TestEntityKeyPredicate {Id = ids[0], Description = "testException"});
+
+                await repo.AddAsync(new TestEntityKeyPredicate {Id = ids[1], Description = "testException"});
+
                 await unitOfWork.CommitAsync();
 
                 // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
@@ -125,14 +113,8 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 var repo = provider.GetService<TestSoftDeletableRepository>();
                 var unitOfWork = provider.GetService<TestUnitOfWork>();
 
-                var createdEntity1 = new TestSoftDeletableEntity()
-                {
-                    Name = "name1"
-                };
-                var createdEntity2 = new TestSoftDeletableEntity()
-                {
-                    Name = "name2"
-                };
+                var createdEntity1 = new TestSoftDeletableEntity() {Name = "name1"};
+                var createdEntity2 = new TestSoftDeletableEntity() {Name = "name2"};
 
                 await repo.AddAsync(createdEntity1);
                 await repo.AddAsync(createdEntity2);
@@ -167,10 +149,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 var repo = provider.GetService<TestAuditEntityRepository>();
                 var unitOfWork = provider.GetService<TestUnitOfWork>();
 
-                var entity1 = new TestAuditEntity()
-                {
-                    Name = "name1"
-                };
+                var entity1 = new TestAuditEntity() {Name = "name1"};
 
                 await repo.AddAsync(entity1);
                 await unitOfWork.CommitAsync();
@@ -206,10 +185,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 // enable-or-disable logging
                 columnChangesLogger.LoggingEnabled = loggingEnabled;
 
-                var entity = new TestColumnChangesEnabledEntity
-                {
-                    Name = $"testColumnLog{loggingEnabled}"
-                };
+                var entity = new TestColumnChangesEnabledEntity {Name = $"testColumnLog{loggingEnabled}"};
 
                 await repo.AddAsync(entity);
                 await unitOfWork.CommitAsync();
@@ -235,10 +211,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 var unitOfWork = provider.GetService<TestUnitOfWork>();
                 var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
-                var entity = new TestEntity
-                {
-                    Name = "lolkek2222"
-                };
+                var entity = new TestEntity {Name = "lolkek2222"};
 
                 await repo.AddAsync(entity);
                 await unitOfWork.CommitAsync();
@@ -249,6 +222,34 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 await unitOfWork.CommitAsync();
 
                 Assert.Null(await columnChangesLogger.GetLastChange("TestEntity", "Name", entity.RowGuid));
+            }
+        }
+
+        [Fact]
+        public async Task CheckTablesUpdatedEvent()
+        {
+            using (var scope = Services)
+            {
+                var provider = scope.ServiceProvider;
+                var repoTestEntity = provider.GetService<TestEntityRepository>();
+                var repoSoftRemoveEntity = provider.GetService<TestSoftDeletableRepository>();
+                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var eventManager = (TestEventManager)provider.GetService<INextApiEventManager>();
+                var eventOccured = false;
+                eventManager.EventOccured += (type, o) =>
+                {
+                    if (type == typeof(DbTablesUpdatedEvent))
+                    {
+                        eventOccured = o is string[] arr && arr.Length == 2 && arr.Contains("TestEntity") &&
+                                       arr.Contains("TestSoftDeletableEntity");
+                    }
+                };
+
+                var testEntity = new TestEntity() {Name = "Keks lol 44"};
+                await repoTestEntity.AddAsync(testEntity);
+                await repoSoftRemoveEntity.AddAsync(new TestSoftDeletableEntity() {Name = "blah"});
+                await unitOfWork.CommitAsync();
+                Assert.True(eventOccured);
             }
         }
 
@@ -267,6 +268,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             builder.AddTransient<TestAuditEntityRepository>();
             builder.AddTransient<TestColumnChangesRepo>();
             builder.AddTransient<TestUnitOfWork>();
+            builder.AddScoped<INextApiEventManager, TestEventManager>();
             _services = builder.BuildServiceProvider();
 
             // ensure db created

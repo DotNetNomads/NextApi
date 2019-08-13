@@ -1,6 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Model.Event.System;
 using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Event;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Abitech.NextApi.Server.EfCore.DAL
 {
@@ -8,17 +14,26 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// Unit for work implementation
     /// </summary>
     public abstract class NextApiUnitOfWork<TDbContext> : INextApiUnitOfWork
-    where TDbContext: class, INextApiDbContext
+        where TDbContext : class, INextApiDbContext
     {
         /// <summary>
         /// Accessor to DbContext
         /// </summary>
-        protected TDbContext Context;
+        protected readonly TDbContext Context;
+
+        /// <summary>
+        /// Indicates that repository sends DbTablesUpdatedEvent after commit 
+        /// </summary>
+        public bool SendUpdateEventAfterCommit { get; set; } = true;
+
+        private INextApiEventManager _eventManager;
+
 
         /// <inheritdoc />
-        protected NextApiUnitOfWork(TDbContext context)
+        protected NextApiUnitOfWork(TDbContext context, INextApiEventManager eventManager)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
+            _eventManager = eventManager;
         }
 
         /// <summary>
@@ -27,7 +42,31 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <returns></returns>
         public async Task CommitAsync()
         {
+            string[] changedTables = null;
+            if (SendUpdateEventAfterCommit)
+                changedTables = CollectChanges();
+
             await Context.SaveChangesAsync();
+
+            if (SendUpdateEventAfterCommit)
+                await RaiseUpdateEvent(changedTables);
+        }
+
+        private string[] CollectChanges()
+        {
+            if (!(Context is DbContext db))
+                throw new InvalidOperationException("Context should be based on DbContext");
+
+            return db.ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Modified || e.State == EntityState.Added ||
+                            e.State == EntityState.Deleted).Select(e => e.Metadata.ShortName()).Distinct().ToArray();
+        }
+
+        private async Task RaiseUpdateEvent(string[] changedTables)
+        {
+            if (changedTables == null || !changedTables.Any())
+                return;
+            await _eventManager.Publish<DbTablesUpdatedEvent, string[]>(changedTables);
         }
     }
 }
