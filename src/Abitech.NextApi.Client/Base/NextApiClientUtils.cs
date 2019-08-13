@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model;
@@ -21,7 +22,7 @@ namespace Abitech.NextApi.Client.Base
         public static async Task<NextApiFileResponse> ProcessNextApiFileResponse(HttpResponseMessage response)
         {
             var content = response.Content;
-            var fileName = content.Headers.ContentDisposition.FileName;
+            var fileName = WebUtility.UrlDecode(content.Headers.ContentDisposition.FileName);
             var mimeType = content.Headers.ContentType.MediaType;
             var stream = await content.ReadAsStreamAsync();
             return new NextApiFileResponse(fileName, stream, mimeType);
