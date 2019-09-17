@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.UploadQueue;
@@ -72,7 +68,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
         {
             _columnChangesLogger.LoggingEnabled = false;
             
-            var resultDict = new Dictionary<Guid, UploadQueueResult>();
+            var resultDict = new Dictionary<Guid, (UploadQueueDto, UploadQueueResult)>();
 
             foreach (var (modelType, _) in _repositoryList)
             {
@@ -91,7 +87,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
                     foreach (var operation in entityNameGroupingList)
                     {
-                        AddOrUpdate(resultDict, operation.Id, result);
+                        AddOrUpdate(resultDict, operation, result);
                     }
                 }
             }
@@ -101,17 +97,16 @@ namespace Abitech.NextApi.Server.EfCore.Service
             foreach (var dto in uploadQueue)
             {
                 if (resultDict.Any(pair => pair.Key == dto.Id)) continue;
-                // if not in result dict, then it was not processed ny entity name
-                resultDict.Add(dto.Id, new UploadQueueResult(UploadQueueError.Exception,
-                    $"No repo for {dto.EntityName}"));
+                // if not in result dict, then it was not processed by entity name
+                resultDict.Add(dto.Id, (dto, new UploadQueueResult(UploadQueueError.Exception, $"No repo for {dto.EntityName}")));
             }
             
             _columnChangesLogger.LoggingEnabled = true;
-            return resultDict.ToDictionary(k=> k.Key, v=> v.Value);
+            return resultDict.ToDictionary(k=> k.Key, v=> v.Value.Item2);
         }
         
         private async Task ProcessByEntityName(
-            Dictionary<Guid, UploadQueueResult> resultDict,
+            Dictionary<Guid, (UploadQueueDto, UploadQueueResult)> resultDict,
             string entityName,
             IList<UploadQueueDto> entityNameGroupingList)
         {
@@ -146,7 +141,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
                     foreach (var operation in rowGuidGroupingList)
                     {
-                        AddOrUpdate(resultDict, operation.Id, result);
+                        AddOrUpdate(resultDict, operation, result);
                     }
                 }
             }
@@ -162,7 +157,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     var result = new UploadQueueResult(UploadQueueError.NoError);
                     foreach (var operation in rowGuidGroupingList)
                     {
-                        AddOrUpdate(resultDict, operation.Id, result);
+                        AddOrUpdate(resultDict, operation, result);
                     }
                     return;
                 }
@@ -220,7 +215,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     {
                         foreach (var deleteOperation in deleteList)
                         {
-                            AddOrUpdate(resultDict, deleteOperation.Id, result);
+                            AddOrUpdate(resultDict, deleteOperation, result);
                         }
                     }
                 }
@@ -229,7 +224,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     var result = new UploadQueueResult(UploadQueueError.EntityDoesNotExist);
                     foreach (var deleteOperation in deleteList)
                     {
-                        AddOrUpdate(resultDict, deleteOperation.Id, result);
+                        AddOrUpdate(resultDict, deleteOperation, result);
                     }
                 }
                 
@@ -239,17 +234,17 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                                                  && dto.EntityRowGuid == rowGuid).ToList();
                 
                 // get only first create operation for this rowguid
-                var createOperation = createList.FirstOrDefault();
+                var firstCreateOperation = createList.FirstOrDefault();
                 
-                async Task CreateEntityAsync()
+                async Task CreateEntityAsync(dynamic entityInstanceArg)
                 {
                     if (changesHandlerInstance != null)
-                        await changesHandlerInstance.OnBeforeCreate(entityInstance);
-                    await repoInstance.AddAsync(entityInstance);
+                        await changesHandlerInstance.OnBeforeCreate(entityInstanceArg);
+                    await repoInstance.AddAsync(entityInstanceArg);
                     try
                     {
                         if (changesHandlerInstance != null)
-                            await changesHandlerInstance.OnAfterCreate(entityInstance);
+                            await changesHandlerInstance.OnAfterCreate(entityInstanceArg);
                     }
                     catch
                     {
@@ -257,18 +252,18 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     }
                 }
 
-                if (createOperation != null)
+                if (firstCreateOperation != null)
                 {
                     var createResult = new UploadQueueResult(UploadQueueError.NoError);
                     try
                     {
                         if (entityInstance == null)
                         {
-                            entityInstance = JsonConvert.DeserializeObject((string)createOperation.NewValue, modelType);
+                            entityInstance = JsonConvert.DeserializeObject((string)firstCreateOperation.NewValue, modelType);
 
                             // Create entity, if only create operation is in the batch
                             if (!createAndUpdateInSameBatch)
-                                await CreateEntityAsync();
+                                await CreateEntityAsync(entityInstance);
                         }
                         else
                             createResult.Error = UploadQueueError.EntityAlreadyExists;
@@ -282,7 +277,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     }
                     finally
                     {
-                        AddOrUpdate(resultDict, createOperation.Id, createResult);
+                        AddOrUpdate(resultDict, firstCreateOperation, createResult);
                     }
                 }
                 
@@ -293,7 +288,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     foreach (var createOp in createList)
                     {
                         if (resultDict.ContainsKey(createOp.Id)) continue;
-                        resultDict.Add(createOp.Id, multipleCreateOpsResult);
+                        AddOrUpdate(resultDict, createOp, multipleCreateOpsResult);
                     }
                 }
                 
@@ -315,7 +310,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         {
                             updateList.Remove(updateOperation); // reject
                             var result = new UploadQueueResult(UploadQueueError.OutdatedChange);
-                            AddOrUpdate(resultDict, updateOperation.Id, result);
+                            AddOrUpdate(resultDict, updateOperation, result);
                         }
                         else
                         {
@@ -329,7 +324,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                             {
                                 updateList.Remove(updateOperation); // reject
                                 var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
-                                AddOrUpdate(resultDict, updateOperation.Id, result);
+                                AddOrUpdate(resultDict, updateOperation, result);
                             }
                         }
                     }
@@ -343,7 +338,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                             
                             // Add entity, if create and update ops are in the same batch
                             if (createAndUpdateInSameBatch)
-                                await CreateEntityAsync();
+                                await CreateEntityAsync(entityInstance);
                             // Else just update existing entity
                             else
                                 await repoInstance.UpdateAsync(entityInstance);
@@ -378,11 +373,11 @@ namespace Abitech.NextApi.Server.EfCore.Service
                                     }
                                 }
 
-                                AddOrUpdate(resultDict, updateOperation.Id, result);
+                                AddOrUpdate(resultDict, updateOperation, result);
                             }
                         }
                         else if (createAndUpdateInSameBatch)
-                            await CreateEntityAsync();
+                            await CreateEntityAsync(entityInstance);
                     }
                     catch (Exception e)
                     {
@@ -390,11 +385,11 @@ namespace Abitech.NextApi.Server.EfCore.Service
                         var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
                         if (createAndUpdateInSameBatch)
                         {
-                            AddOrUpdate(resultDict, createOperation.Id, result);
+                            AddOrUpdate(resultDict, firstCreateOperation, result);
                         }
                         foreach (var updateOperation in updateList)
                         {
-                            AddOrUpdate(resultDict, updateOperation.Id, result);
+                            AddOrUpdate(resultDict, updateOperation, result);
                         }
                     }
                 }
@@ -403,7 +398,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
                     var result = new UploadQueueResult(UploadQueueError.EntityDoesNotExist);
                     foreach (var updateOperation in updateList)
                     {
-                        AddOrUpdate(resultDict, updateOperation.Id, result);
+                        AddOrUpdate(resultDict, updateOperation, result);
                     }
                 }
             }
@@ -412,15 +407,15 @@ namespace Abitech.NextApi.Server.EfCore.Service
         }
 
         private void AddOrUpdate(
-            Dictionary<Guid, UploadQueueResult> resultDict,
-            Guid rowGuid,
+            Dictionary<Guid, (UploadQueueDto, UploadQueueResult)> resultDict,
+            UploadQueueDto uploadQueueDto,
             UploadQueueResult result)
         {
-            var exists = resultDict.TryGetValue(rowGuid, out _);
+            var exists = resultDict.TryGetValue(uploadQueueDto.Id, out _);
             if (exists)
-                resultDict[rowGuid] = result;
+                resultDict[uploadQueueDto.Id] = (uploadQueueDto, result);
             else
-                resultDict.Add(rowGuid, result);
+                resultDict.Add(uploadQueueDto.Id, (uploadQueueDto, result));
         }
     }
 }
