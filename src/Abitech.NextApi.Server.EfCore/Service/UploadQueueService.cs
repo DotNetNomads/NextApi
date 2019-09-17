@@ -26,6 +26,8 @@ namespace Abitech.NextApi.Server.EfCore.Service
         private readonly TUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
 
+        private List<IUploadQueueChangesHandler> _changesHandlers = new List<IUploadQueueChangesHandler>();
+
         protected UploadQueueService(
             IColumnChangesLogger columnChangesLogger,
             TUnitOfWork unitOfWork,
@@ -93,6 +95,9 @@ namespace Abitech.NextApi.Server.EfCore.Service
             }
             
             await _unitOfWork.CommitAsync();
+
+            foreach (var changesHandler in _changesHandlers)
+                await changesHandler.OnCommit();
             
             foreach (var dto in uploadQueue)
             {
@@ -124,6 +129,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
             var changesHandlerType = typeof(IUploadQueueChangesHandler<>);
             var genericChangesHandlerType = changesHandlerType.MakeGenericType(modelType);
             var changesHandlerInstance = (IUploadQueueChangesHandler) _serviceProvider.GetService(genericChangesHandlerType);
+            _changesHandlers.Add(changesHandlerInstance);
             
             // Process by row guid
             var rowGuidGroupings = entityNameGroupingList.GroupBy(dto => dto.EntityRowGuid);

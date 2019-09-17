@@ -106,5 +106,11 @@ namespace Abitech.NextApi.Model.Abstractions
         /// <param name="entity">Entity instance that has been created</param>
         /// <returns>void</returns>
         Task OnAfterCreate(object entity);
+        
+        /// <summary>
+        /// This method is called right after all changes are commited by the unit of work
+        /// </summary>
+        /// <returns>void</returns>
+        Task OnCommit();
     }
 }
