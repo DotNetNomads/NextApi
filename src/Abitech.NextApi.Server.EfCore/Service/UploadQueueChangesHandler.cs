@@ -59,5 +59,9 @@ namespace Abitech.NextApi.Server.EfCore.Service
         {
             return OnAfterCreate((TEntity)entity);
         }
+
+        public async Task OnCommit()
+        {
+        }
     }
 }
