@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.Filtering;
@@ -78,6 +78,18 @@ namespace Abitech.NextApi.Client
         }
 
         /// <inheritdoc />
+        public async Task<object> GetById(object key, object[] expand = null)
+        {
+            return await GetById((TKey)key, expand);
+        }
+
+        /// <inheritdoc />
+        public async Task<object[]> GetByIds(object[] keys, object[] expand = null)
+        {
+            return await GetByIds(keys, expand);
+        }
+        
+        /// <inheritdoc />
         public async Task<PagedList<TEntity>> GetPaged(PagedRequest request)
         {
             return await InvokeService<PagedList<TEntity>>("GetPaged",
@@ -140,7 +152,23 @@ namespace Abitech.NextApi.Client
         /// <param name="patch">patch entity</param>
         /// <returns></returns>
         Task<object> Update(object key, object patch);
-        
+
+        /// <summary>
+        /// Gets entity by its Id
+        /// </summary>
+        /// <param name="key">entity id</param>
+        /// <param name="expand"></param>
+        /// <returns></returns>
+        Task<object> GetById(object key, object[] expand = null);
+
+        /// <summary>
+        /// Gets entities by their Ids
+        /// </summary>
+        /// <param name="key">entity id</param>
+        /// <param name="expand"></param>
+        /// <returns></returns>
+        Task<object[]> GetByIds(object[] key, object[] expand = null);
+
 #pragma warning disable 1591
         Task<int> Count(Filter filter = null);
 #pragma warning restore 1591
