@@ -40,7 +40,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// Save all changes
         /// </summary>
         /// <returns></returns>
-        public async Task CommitAsync()
+        public virtual async Task CommitAsync()
         {
             string[] changedTables = null;
             if (SendUpdateEventAfterCommit)

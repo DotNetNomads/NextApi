@@ -225,6 +225,7 @@ namespace Abitech.NextApi.Server.Entity
             if (AutoCommit)
             {
                 await _unitOfWork.CommitAsync();
+                await AfterCommit();
             }
         }
 
@@ -288,6 +289,14 @@ namespace Abitech.NextApi.Server.Entity
         /// <remarks>Should call CommitAsync in case you finalize delete operation</remarks>
         /// <returns></returns>
         protected virtual async Task AfterDelete(TEntity entity)
+        {
+        }
+        
+        /// <summary>
+        /// Hook: runs after CommitAsync is called
+        /// </summary>
+        /// <returns></returns>
+        protected virtual async Task AfterCommit()
         {
         }
 
