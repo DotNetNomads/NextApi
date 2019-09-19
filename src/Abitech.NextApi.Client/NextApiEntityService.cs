@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.Filtering;
@@ -78,15 +79,15 @@ namespace Abitech.NextApi.Client
         }
 
         /// <inheritdoc />
-        public async Task<object> GetById(object key, object[] expand = null)
+        public async Task<object> GetByIdNonGeneric(object key, string[] expand = null)
         {
             return await GetById((TKey)key, expand);
         }
 
         /// <inheritdoc />
-        public async Task<object[]> GetByIds(object[] keys, object[] expand = null)
+        public async Task<object[]> GetByIdsNonGeneric(object[] keys, string[] expand = null)
         {
-            return await GetByIds(keys, expand);
+            return await GetByIds(keys.Cast<TKey>().ToArray(), expand);
         }
         
         /// <inheritdoc />
@@ -159,7 +160,7 @@ namespace Abitech.NextApi.Client
         /// <param name="key">entity id</param>
         /// <param name="expand"></param>
         /// <returns></returns>
-        Task<object> GetById(object key, object[] expand = null);
+        Task<object> GetByIdNonGeneric(object key, string[] expand = null);
 
         /// <summary>
         /// Gets entities by their Ids
@@ -167,7 +168,7 @@ namespace Abitech.NextApi.Client
         /// <param name="key">entity id</param>
         /// <param name="expand"></param>
         /// <returns></returns>
-        Task<object[]> GetByIds(object[] key, object[] expand = null);
+        Task<object[]> GetByIdsNonGeneric(object[] key, string[] expand = null);
 
 #pragma warning disable 1591
         Task<int> Count(Filter filter = null);
