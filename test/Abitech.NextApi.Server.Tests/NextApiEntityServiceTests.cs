@@ -298,6 +298,25 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Theory]
+        [InlineData(NextApiTransport.Http, true, "name15", new int[] {15})]
+        [InlineData(NextApiTransport.SignalR, true, "name15", new int[] {15})]
+        [InlineData(NextApiTransport.Http, true, "5", new int[] {5, 15})]
+        [InlineData(NextApiTransport.SignalR, true, "5", new int[] {5, 15})]
+        public async Task GetIdsByFilter(NextApiTransport transport, bool enableFilter, string filterValue,
+            int[] shouldReturnIds)
+        {
+            var client = await GetServiceClient(transport);
+            Filter filter = null;
+            if (enableFilter)
+            {
+                filter = new FilterBuilder().Contains("Name", filterValue).Build();
+            }
+
+            var result = await client.GetIdsByFilter(filter);
+            Assert.Equal(shouldReturnIds, result);
+        }
+
+        [Theory]
         [InlineData(NextApiTransport.SignalR, null, 3)]
         [InlineData(NextApiTransport.Http, null, 3)]
         [InlineData(NextApiTransport.SignalR, 1, 1)]

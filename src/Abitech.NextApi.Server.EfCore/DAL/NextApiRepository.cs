@@ -122,6 +122,18 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             return await GetAll().FirstOrDefaultAsync(KeyPredicate(id));
         }
 
+        public Expression<Func<T, TKey>> KeySelector()
+        {
+            if (!_isIEntity)
+            {
+                throw new NotSupportedException(
+                    "Default implementation of KeySelector method supports only entities that implements IEntity<TKey>." +
+                    "Override KeySelector for your entity type.");
+            }
+
+            return entity => (entity as IEntity<TKey>).Id;
+        }
+
         /// <summary>
         /// 
         /// </summary>

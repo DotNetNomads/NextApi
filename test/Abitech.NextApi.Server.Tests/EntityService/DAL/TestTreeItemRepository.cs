@@ -93,6 +93,11 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
             return entity => keys.Contains(entity.Id);
         }
 
+        public Expression<Func<TestTreeItem, int>> KeySelector()
+        {
+            return entity => (entity as IEntity<int>).Id;
+        }
+
         public async Task<TestTreeItem[]> GetByIdsAsync(int[] ids)
         {
             return await _dbset.ToArrayAsync();

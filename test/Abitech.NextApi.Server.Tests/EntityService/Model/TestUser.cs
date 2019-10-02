@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Abitech.NextApi.Server.EfCore.Model.Base;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.Model
 {
-    public class TestUser
+    public class TestUser : IEntity<int>
     {
         [Key]
         public int Id { get; set; }
