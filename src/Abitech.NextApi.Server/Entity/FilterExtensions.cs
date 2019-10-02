@@ -138,12 +138,31 @@ namespace Abitech.NextApi.Server.Entity
                         throw new ArgumentOutOfRangeException();
                 }
 
+                Expression tempExpression;
+                if (allExpressions != null)
+                {
+                    switch (filter.LogicalOperator)
+                    {
+                        case LogicalOperators.Or:
+                            tempExpression = Expression.OrElse(allExpressions, currentExpression);
+                            break;
+                        case LogicalOperators.Not:
+                            tempExpression = Expression.AndAlso(allExpressions, Expression.Not(currentExpression));
+                            break;
+                        default:
+                            tempExpression = Expression.AndAlso(allExpressions, currentExpression);
+                            break;
+                    }
+                }
+                else
+                {
+                    tempExpression = filter.LogicalOperator == LogicalOperators.Not ? 
+                        Expression.Not(currentExpression) : currentExpression;
+                }
+
                 if (currentExpression != null)
-                    allExpressions = allExpressions == null
-                        ? currentExpression
-                        : filter.LogicalOperator == LogicalOperators.And
-                            ? Expression.AndAlso(allExpressions, currentExpression)
-                            : Expression.OrElse(allExpressions, currentExpression);
+                    allExpressions = tempExpression;
+
             }
 
             return allExpressions;

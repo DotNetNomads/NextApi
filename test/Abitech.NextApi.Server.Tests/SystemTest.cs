@@ -57,13 +57,18 @@ namespace Abitech.NextApi.Server.Tests
             //                   (entity.Number == 1 || entity.Number == 2) &&
             //                   (new [] {5,6,10}).Contains("Number")
             var filter = new FilterBuilder()
-                .Contains("ReferenceModel.Name", "Model")
-                .Or(f => f
-                    .MoreThan<int>("Number", 1)
-                    .LessThan<int>("Number", 2)
-                    .Contains("Number", "4")
-                )
-                .In<int>("Number", new[] {5, 6, 10})
+                .Not(f => f.In<int>("Number", new[] {5, 6, 10}))
+                .Build();
+            
+            var filter1 = new FilterBuilder()
+                .Contains("Name", "6")
+                .Not(f => f.In<int>("Number", new[] {5, 6, 10}))
+                .Build();
+            
+            var filter1_0 = new FilterBuilder()
+                .Not(f => f
+                    .Not(d => d.Equal("Number", 3))
+                    .Contains("Name", "l3"))
                 .Build();
             
             var filter2_0 = new FilterBuilder()
@@ -83,12 +88,17 @@ namespace Abitech.NextApi.Server.Tests
                 .Build();
 
             var expression = filter.ToLambdaFilter<TestModel>();
+            var expression1 = filter1.ToLambdaFilter<TestModel>();
+            var expression1_0 = filter1_0.ToLambdaFilter<TestModel>();
+            
             var expression2_0 = filter2_0.ToLambdaFilter<TestModel>();
             var expression2_1 = filter2_1.ToLambdaFilter<TestModel>();
             var expression2_2 = filter2_2.ToLambdaFilter<TestModel>();
             var expression2_3 = filter2_3.ToLambdaFilter<TestModel>();
 
             var filtered = data.Where(expression).ToList();
+            var filtered1 = data.Where(expression1).ToList();
+            var filtered1_0 = data.Where(expression1_0).ToList();
 
             var filtered2_0 = data.Where(expression2_0).ToList();
             var filtered2_1 = data.Where(expression2_1).ToList();
@@ -100,8 +110,9 @@ namespace Abitech.NextApi.Server.Tests
             Assert.True(filtered2_2.Count==500);
             Assert.True(filtered2_3.Count==500);
 
-            Assert.True(filtered.Count == 3);
-            Assert.True(filtered.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
+            Assert.True(filtered.Count == 498);
+            Assert.False(filtered1.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
+            Assert.True(filtered1_0.Count==0);
         }
 
         [Fact]
