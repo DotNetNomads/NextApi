@@ -181,6 +181,21 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <inheritdoc />
+        public async virtual Task<TKey[]> GetIdsByFilter(Filter filter = null)
+        {
+            var entitiesQuery = _repository.GetAll();
+            // apply filter
+            var filterExpression = filter?.ToLambdaFilter<TEntity>();
+            if (filterExpression != null)
+            {
+                entitiesQuery = entitiesQuery.Where(filterExpression);
+            }
+
+            var selector = _repository.KeySelector();
+            return await entitiesQuery.Select(selector).ToArrayAsync();
+        }
+
+        /// <inheritdoc />
         public async virtual Task<TreeItem<TDto>[]> GetTree(TreeRequest request)
         {
             var parentPredicate = await ParentPredicate(request.ParentId);

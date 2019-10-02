@@ -64,6 +64,11 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="keys"></param>
         /// <returns></returns>
         Expression<Func<T, bool>> KeyPredicate(TKey[] keys);
+        /// <summary>
+        /// Returns identifier selector for entity type
+        /// </summary>
+        /// <returns></returns>
+        Expression<Func<T, TKey>> KeySelector();
 
         /// <summary>
         /// 

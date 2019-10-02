@@ -151,6 +151,19 @@ namespace Abitech.NextApi.Model.Filtering
             AddFilter(filterBuilder.Build());
             return this;
         }
+        
+        /// <summary>
+        /// Operation represents logical expressions group (NOT)
+        /// </summary>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder Not(Action<FilterBuilder> builder)
+        {
+            var filterBuilder = new FilterBuilder(LogicalOperators.Not);
+            builder.Invoke(filterBuilder);
+            AddFilter(filterBuilder.Build());
+            return this;
+        }
 
         private void AddFilter(Filter filter)
         {

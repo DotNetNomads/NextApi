@@ -7,7 +7,8 @@ namespace Abitech.NextApi.Model.Filtering
     {
 #pragma warning disable 1591
         And,
-        Or
+        Or, 
+        Not
 #pragma warning restore 1591
     }
 }
