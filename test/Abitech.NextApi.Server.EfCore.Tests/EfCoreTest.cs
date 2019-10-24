@@ -2,10 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model.Event.System;
+using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
+using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Security;
 using DeepEqual.Syntax;
@@ -31,14 +33,51 @@ namespace Abitech.NextApi.Server.EfCore.Tests
 
                 // check adding 
                 {
-                    var entityToAdd = new TestEntity() {Name = "TestEntityToAdd"};
+                    var entityToAdd = new TestEntity()
+                    {
+                        Name = "TestEntityToAdd",
+                        Date = new DateTime(2019, 10, 24, 4, 4, 4)
+                    };
+                    
+                    var entityToAdd1 = new TestEntity()
+                    {
+                        Name = "TestEntityToAdd"
+                    };
 
                     await repo.AddAsync(entityToAdd);
+                    await repo.AddAsync(entityToAdd1);
                     await unitOfWork.CommitAsync();
                     // should contain id after commit
                     Assert.True(entityToAdd.Id > 0);
                     var entityAdded = await repo.GetByIdAsync(entityToAdd.Id);
                     entityToAdd.ShouldDeepEqual(entityAdded);
+                }
+
+                // check filter by date
+                {
+                    var filteredByDateList = await repo.GetAll().Where(
+                        new FilterBuilder()
+                            .EqualToDate("Date",
+                                new DateTime(2019, 10, 24, 4, 5, 6))
+                            .Build()
+                            .ToLambdaFilter<TestEntity>()).ToListAsync();
+                    Assert.Equal("TestEntityToAdd", filteredByDateList[0].Name);
+                    
+                    var filteredByDateListNoOutput = await repo.GetAll().Where(
+                        new FilterBuilder()
+                            .EqualToDate("Date",
+                                new DateTime(2019, 10, 9, 4, 5, 6))
+                            .Build()
+                            .ToLambdaFilter<TestEntity>()).ToListAsync();
+                    Assert.Equal(0, filteredByDateListNoOutput.Count);
+                    
+                    var filteredByDateListNoOutput1 = await repo.GetAll().Where(
+                        new FilterBuilder()
+                            .EqualToDate("Date",
+                                new DateTime())
+                            .Build()
+                            .ToLambdaFilter<TestEntity>()).ToListAsync();
+                    Assert.Equal(1, filteredByDateListNoOutput1.Count);
                 }
                 // check update
                 {
@@ -56,6 +95,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 {
                     Assert.True(await repo.GetAll().AnyAsync());
                     await repo.DeleteAsync(e => e.Id == 1);
+                    await repo.DeleteAsync(e => e.Id == 2);
                     await unitOfWork.CommitAsync();
                     Assert.False(await repo.GetAll().AnyAsync());
                 }
