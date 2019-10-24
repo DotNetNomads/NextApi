@@ -116,7 +116,7 @@ namespace Abitech.NextApi.Server.Tests
             Assert.True(filtered1_0.Count==0);
 
             var filterEqualToDate = new FilterBuilder()
-                .EqualToDate("Date", new DateTime(2019, 1, 24))
+                .EqualToDate("Date", new DateTime(2019, 1, 24, 15, 15, 15))
                 .Build();
             var expressionEqualToDate = filterEqualToDate.ToLambdaFilter<TestModel>();
             var filteredEqualToDate = data.Where(expressionEqualToDate).ToList();
