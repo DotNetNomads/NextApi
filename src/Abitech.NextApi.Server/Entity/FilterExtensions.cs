@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Abitech.NextApi.Model.Filtering;
-using AutoMapper.Configuration.Conventions;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json.Linq;
 
