@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
@@ -113,6 +114,20 @@ namespace Abitech.NextApi.Server.Tests
             Assert.True(filtered.Count == 498);
             Assert.False(filtered1.All(e => e.Number == 5 || e.Number == 6 || e.Number == 10));
             Assert.True(filtered1_0.Count==0);
+
+            var filterEqualToDate = new FilterBuilder()
+                .EqualToDate("Date", new DateTime(2019, 1, 24))
+                .Build();
+            var expressionEqualToDate = filterEqualToDate.ToLambdaFilter<TestModel>();
+            var filteredEqualToDate = data.Where(expressionEqualToDate).ToList();
+            Assert.Equal(100, filteredEqualToDate.Count);
+            
+            var filterEqualToDateNull = new FilterBuilder()
+                .EqualToDate("Date", new DateTime())
+                .Build();
+            var expressionEqualToDateNull = filterEqualToDateNull.ToLambdaFilter<TestModel>();
+            var filteredEqualToDateNull = data.Where(expressionEqualToDateNull).ToList();
+            Assert.Equal(1, filteredEqualToDateNull.Count); //500
         }
 
         [Fact]

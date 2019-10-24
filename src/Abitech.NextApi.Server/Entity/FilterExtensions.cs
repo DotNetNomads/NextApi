@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Abitech.NextApi.Model.Filtering;
+using AutoMapper.Configuration.Conventions;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json.Linq;
 
@@ -133,6 +134,10 @@ namespace Abitech.NextApi.Server.Entity
                         currentExpression =
                             Expression.NotEqual(property,
                                 Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
+                        break;
+                    case FilterExpressionTypes.EqualToDate:
+                        currentExpression = Expression.Equal( Expression.Property(property, "Date"),
+                            Expression.Constant(Convert.ToDateTime(filterExpression.Value).Date));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
