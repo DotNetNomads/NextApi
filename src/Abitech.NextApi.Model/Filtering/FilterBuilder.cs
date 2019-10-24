@@ -47,6 +47,19 @@ namespace Abitech.NextApi.Model.Filtering
             AddExpression(property, FilterExpressionTypes.Equal, value);
             return this;
         }
+        
+        /// <summary>
+        /// Operation represents: property == value for dates
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TProperty">Type of property</typeparam>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder EqualToDate<TProperty>(string property, TProperty value)
+        {
+            AddExpression(property, FilterExpressionTypes.EqualToDate, value);
+            return this;
+        }
 
         /// <summary>
         /// Operation represents: property != value

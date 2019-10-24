@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,6 +17,7 @@ namespace Abitech.NextApi.Server.Tests.Filtering
                     Id = i.ToString(),
                     Name = $"testModel{i}",
                     Number = i,
+                    Date = new DateTime(2019, 1, 24+i%5, 12, 12, 12),
                     ReferenceModel = new ReferenceModel
                     {
                         Id = i.ToString(),

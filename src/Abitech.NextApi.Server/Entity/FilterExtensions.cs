@@ -134,6 +134,10 @@ namespace Abitech.NextApi.Server.Entity
                             Expression.NotEqual(property,
                                 Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
+                    case FilterExpressionTypes.EqualToDate:
+                        currentExpression = Expression.Equal( Expression.Property(property, "Date"),
+                            Expression.Constant(Convert.ToDateTime(filterExpression.Value).Date));
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

@@ -7,6 +7,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests.Entity
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public DateTime Date { get; set; }
         public Guid RowGuid { get; set; } = Guid.NewGuid();
     }
 }
