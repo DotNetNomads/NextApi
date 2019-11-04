@@ -146,5 +146,24 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(423, filtered.FirstOrDefault()?.Number);
         }
         
+        [Fact]
+        public async Task FilterAnyTest()
+        {
+            var data = TestSource.GetData();
+            
+            var filter499 = new FilterBuilder()
+                .Equal("Name", "testModel499")
+                .Build();
+            var expression499 = filter499.ToLambdaFilter<TestModel>();
+            var any499 = data.Any(expression499);
+            Assert.True(any499);
+            
+            var filter600 = new FilterBuilder()
+                .Equal("Name", "testModel600")
+                .Build();
+            var expression600 = filter600.ToLambdaFilter<TestModel>();
+            var any600 = data.Any(expression600);
+            Assert.False(any600);
+        }
     }
 }

@@ -179,6 +179,15 @@ namespace Abitech.NextApi.Server.Entity
 
             return await entitiesQuery.CountAsync();
         }
+        
+        /// <inheritdoc />
+        public async virtual Task<bool> Any(Filter filter = null)
+        {
+            var entitiesQuery = _repository.GetAll();
+            // apply filter
+            var filterExpression = filter?.ToLambdaFilter<TEntity>();
+            return filterExpression == null ? await entitiesQuery.AnyAsync() : await entitiesQuery.AnyAsync(filterExpression);
+        }
 
         /// <inheritdoc />
         public async virtual Task<TKey[]> GetIdsByFilter(Filter filter = null)

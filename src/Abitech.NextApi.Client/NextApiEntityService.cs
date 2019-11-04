@@ -118,7 +118,14 @@ namespace Abitech.NextApi.Client
         {
             return await InvokeService<int>(nameof(Count), new NextApiArgument(nameof(filter), filter));
         }
+        
+        /// <inheritdoc />
+        public async Task<bool> Any(Filter filter = null)
+        {
+            return await InvokeService<bool>(nameof(Any), new NextApiArgument(nameof(filter), filter));
+        }
 
+        /// <inheritdoc />
         public async Task<int[]> GetIdsByFilter(Filter filter = null)
         {
             return await InvokeService<int[]>(nameof(GetIdsByFilter), new NextApiArgument(nameof(filter), filter));
@@ -177,8 +184,10 @@ namespace Abitech.NextApi.Client
 
 #pragma warning disable 1591
         Task<int> Count(Filter filter = null);
-#pragma warning restore 1591
 
+        Task<bool> Any(Filter filter = null);
+        
         Task<int[]> GetIdsByFilter(Filter filter = null);
+#pragma warning restore 1591
     }
 }
