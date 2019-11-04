@@ -67,6 +67,14 @@ namespace Abitech.NextApi.Model.Abstractions
         Task<int> Count(Filter filter = null);
 
         /// <summary>
+        /// Determine whether any element or elements that satisfy a filter exist
+        /// </summary>
+        /// <param name="filter">Filter object</param>
+        /// <returns>Boolean value</returns>
+        /// <remarks>When filter is null, all items are eligible to be determined as existent</remarks>
+        Task<bool> Any(Filter filter = null);
+
+        /// <summary>
         /// Get entity tree by specific request
         /// </summary>
         /// <param name="request"></param>

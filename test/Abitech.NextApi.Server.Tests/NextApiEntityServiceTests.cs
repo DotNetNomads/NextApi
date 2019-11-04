@@ -298,6 +298,27 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Theory]
+        [InlineData(NextApiTransport.Http, false, null, true)]
+        [InlineData(NextApiTransport.SignalR, false, null, true)]
+        [InlineData(NextApiTransport.Http, true, "name15", true)]
+        [InlineData(NextApiTransport.SignalR, true, "name15", true)]
+        [InlineData(NextApiTransport.Http, true, "someNonExistentName", false)]
+        [InlineData(NextApiTransport.SignalR, true, "someNonExistentName", false)]
+        public async Task Any(NextApiTransport transport, bool enableFilter, string filterValue,
+            bool shouldReturnAny)
+        {
+            var client = await GetServiceClient(transport);
+            Filter filter = null;
+            if (enableFilter)
+            {
+                filter = new FilterBuilder().Contains("Name", filterValue).Build();
+            }
+
+            var resultAny = await client.Any(filter);
+            Assert.Equal(shouldReturnAny, resultAny);
+        }
+
+        [Theory]
         [InlineData(NextApiTransport.Http, true, "name15", new int[] {15})]
         [InlineData(NextApiTransport.SignalR, true, "name15", new int[] {15})]
         [InlineData(NextApiTransport.Http, true, "5", new int[] {5, 15})]
