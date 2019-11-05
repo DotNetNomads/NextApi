@@ -132,9 +132,9 @@ namespace Abitech.NextApi.Client
         }
 
         /// <inheritdoc />
-        public async Task<TreeItem<TEntity>[]> GetTree(TreeRequest request)
+        public async Task<PagedList<TreeItem<TEntity>>> GetTree(TreeRequest request)
         {
-            return await InvokeService<TreeItem<TEntity>[]>(nameof(GetTree),
+            return await InvokeService<PagedList<TreeItem<TEntity>>>(nameof(GetTree),
                 new NextApiArgument(nameof(request), request));
         }
     }

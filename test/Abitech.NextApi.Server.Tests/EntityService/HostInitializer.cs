@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
@@ -110,7 +111,17 @@ namespace Abitech.NextApi.Server.Tests.EntityService
                     }
                 }
             };
+            var sampleTestTreeItems = new List<TestTreeItem>();
+            for (int i = 8; i < 38; i++)
+            {
+                sampleTestTreeItems.Add(new TestTreeItem
+                {
+                    Id = i,
+                    Name = $"Node{i}"
+                });
+            }
             await context.TestTreeItems.AddAsync(mainTree);
+            await context.TestTreeItems.AddRangeAsync(sampleTestTreeItems);
         }
     }
 }

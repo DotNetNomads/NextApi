@@ -79,6 +79,6 @@ namespace Abitech.NextApi.Model.Abstractions
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<TreeItem<TDto>[]> GetTree(TreeRequest request);
+        Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request);
     }
 }

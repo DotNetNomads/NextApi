@@ -352,7 +352,40 @@ namespace Abitech.NextApi.Server.Tests
 
             var response = await service.GetTree(request);
 
-            Assert.Equal(shouldReturnCount, response.FirstOrDefault()?.ChildrenCount);
+            Assert.Equal(shouldReturnCount, response.Items.FirstOrDefault()?.ChildrenCount);
+        }
+        
+        [Theory]
+        [InlineData(NextApiTransport.SignalR)]
+        [InlineData(NextApiTransport.Http)]
+        public async Task TestTreeWithFilters(NextApiTransport transport)
+        {
+            var client = await GetClient(transport);
+            var service = new TreeEntityService(client);
+
+            var request = new TreeRequest()
+            {
+                ParentId = null,
+                PagedRequest = new PagedRequest()
+                {
+                    Filter = new FilterBuilder().Contains("Name", "0").Build()
+                }
+            };
+            var response = await service.GetTree(request);
+            Assert.Equal(3, response.Items.Count);
+            
+            var request1 = new TreeRequest()
+            {
+                ParentId = null,
+                PagedRequest = new PagedRequest()
+                {
+                    Filter = new FilterBuilder().Contains("Name", "node").Build(),
+                    Take = 20
+                }
+            };
+            var response1 = await service.GetTree(request1);
+            Assert.Equal(20, response1.Items.Count);
+            Assert.Equal(31, response1.TotalItems);
         }
 
         private async Task<TestEntityService> GetServiceClient(NextApiTransport transport)
