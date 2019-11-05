@@ -196,7 +196,7 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <inheritdoc />
-        public async virtual Task<TreeItem<TDto>[]> GetTree(TreeRequest request)
+        public async virtual Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request)
         {
             var parentPredicate = await ParentPredicate(request.ParentId);
             if (parentPredicate == null)
@@ -205,18 +205,41 @@ namespace Abitech.NextApi.Server.Entity
                 throw new NextApiException(NextApiErrorCode.OperationIsNotSupported,
                     "Please provide ParentPredicate and SelectTreeChunk implementations");
             }
-
+            
             var entitiesQuery = _repository.GetAll();
             entitiesQuery = await BeforeGet(entitiesQuery);
-            var rootQuery = entitiesQuery.Where(parentPredicate)
-                .Expand(request.Expand);
-            var treeChunk = await rootQuery.Select(SelectTreeChunk(entitiesQuery)).ToArrayAsync();
-
-            return treeChunk.Select(chunkItem =>
-                new TreeItem<TDto>
+            var rootQuery = entitiesQuery.Where(parentPredicate);
+            var totalCount = 0;
+            
+            if (request.PagedRequest != null)
+            {
+                var filterExpression = request.PagedRequest.Filter?.ToLambdaFilter<TEntity>();
+                if (filterExpression != null)
                 {
-                    ChildrenCount = chunkItem.ChildrenCount, Entity = _mapper.Map<TEntity, TDto>(chunkItem.Entity)
-                }).ToArray();
+                    rootQuery = rootQuery.Where(filterExpression);
+                }
+                totalCount = rootQuery.Count();
+                if (request.PagedRequest.Skip != null)
+                    rootQuery = rootQuery.Skip(request.PagedRequest.Skip.Value);
+                if (request.PagedRequest.Take != null)
+                    rootQuery = rootQuery.Take(request.PagedRequest.Take.Value);
+                if (request.PagedRequest.Expand != null)
+                    rootQuery = rootQuery.Expand(request.PagedRequest.Expand);
+            }
+            
+            var treeChunk = await rootQuery
+                .Select(SelectTreeChunk(entitiesQuery)).ToArrayAsync();
+            var output = treeChunk.Select(chunkItem =>
+                new TreeItem<TDto>
+                    {
+                        ChildrenCount = chunkItem.ChildrenCount, Entity = _mapper.Map<TEntity, TDto>(chunkItem.Entity)
+                    }).ToList();
+            
+            return new PagedList<TreeItem<TDto>>
+            {
+                Items = output,
+                TotalItems = totalCount == 0 ? output.Count : totalCount
+            };            
         }
 
         /// <summary>

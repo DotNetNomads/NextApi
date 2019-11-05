@@ -1,3 +1,5 @@
+using Abitech.NextApi.Model.Paged;
+
 namespace Abitech.NextApi.Model.Tree
 {
     /// <summary>
@@ -12,6 +14,6 @@ namespace Abitech.NextApi.Model.Tree
         /// <summary>
         /// Expand references aka Include
         /// </summary>
-        public string[] Expand { get; set; }
+        public PagedRequest PagedRequest { get; set; }
     }
 }
