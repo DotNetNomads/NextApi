@@ -9,17 +9,14 @@ namespace Abitech.NextApi.Model.Filtering
     {
         private readonly Filter _filter;
 
-        
+
         /// <summary>
         /// Initializes filter builder
         /// </summary>
         /// <param name="logicalOperator">Logical operation for expressions (default: and)</param>
         public FilterBuilder(LogicalOperators logicalOperator = LogicalOperators.And)
         {
-            _filter = new Filter
-            {
-                LogicalOperator = logicalOperator
-            };
+            _filter = new Filter {LogicalOperator = logicalOperator};
         }
 
         /// <summary>
@@ -47,7 +44,7 @@ namespace Abitech.NextApi.Model.Filtering
             AddExpression(property, FilterExpressionTypes.Equal, value);
             return this;
         }
-        
+
         /// <summary>
         /// Operation represents: property == value for dates
         /// </summary>
@@ -164,7 +161,7 @@ namespace Abitech.NextApi.Model.Filtering
             AddFilter(filterBuilder.Build());
             return this;
         }
-        
+
         /// <summary>
         /// Operation represents logical expressions group (NOT)
         /// </summary>
@@ -178,22 +175,42 @@ namespace Abitech.NextApi.Model.Filtering
             return this;
         }
 
+        /// <summary>
+        /// Verifies the collection property contains any element.
+        /// </summary>
+        /// <param name="collectionPropertyName">Collection property name</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder Any(string collectionPropertyName)
+        {
+            AddExpression(collectionPropertyName, FilterExpressionTypes.Any, null);
+            return this;
+        }
+
+        /// <summary>
+        /// Verifies that collection has one or many elements with accordance for a filter expression.
+        /// </summary>
+        /// <param name="collectionPropertyName">Collection property name</param>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder Any(string collectionPropertyName, Action<FilterBuilder> builder)
+        {
+            var filterBuilder = new FilterBuilder();
+            builder.Invoke(filterBuilder);
+            AddExpression(collectionPropertyName, FilterExpressionTypes.Any, filterBuilder);
+            return this;
+        }
+
         private void AddFilter(Filter filter)
         {
-            _filter.Expressions.Add(new FilterExpression
-            {
-                ExpressionType = FilterExpressionTypes.Filter,
-                Value = filter
-            });
+            _filter.Expressions.Add(
+                new FilterExpression {ExpressionType = FilterExpressionTypes.Filter, Value = filter});
         }
 
         private void AddExpression(string property, FilterExpressionTypes expressionType, object value)
         {
             _filter.Expressions.Add(new FilterExpression
             {
-                Property = property,
-                ExpressionType = expressionType,
-                Value = value
+                Property = property, ExpressionType = expressionType, Value = value
             });
         }
 

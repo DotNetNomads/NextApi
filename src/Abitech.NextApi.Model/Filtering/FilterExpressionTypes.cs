@@ -15,7 +15,8 @@ namespace Abitech.NextApi.Model.Filtering
         In,
         Filter,
         NotEqual,
-        EqualToDate
+        EqualToDate,
+        Any
 #pragma warning restore 1591
     }
 }

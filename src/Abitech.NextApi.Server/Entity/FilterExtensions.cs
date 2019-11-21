@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Abitech.NextApi.Model;
 using Abitech.NextApi.Model.Filtering;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json.Linq;
@@ -17,10 +18,20 @@ namespace Abitech.NextApi.Server.Entity
     {
         private static readonly MethodInfo StringContainsMethod =
             typeof(string).GetMethod("Contains", new[] {typeof(string)});
+
         private static readonly MethodInfo ToStringMethod =
             typeof(object).GetMethod("ToString", Type.EmptyTypes);
+
         private static readonly MethodInfo ToLowerMethod =
             typeof(string).GetMethod("ToLower", Type.EmptyTypes);
+
+        // more info: https://docs.microsoft.com/en-us/dotnet/api/system.linq.queryable.any?view=netcore-2.2
+        private static readonly MethodInfo Any = typeof(Enumerable).GetMethods()
+            .First(m => m.Name == "Any" && m.GetParameters().Length == 1);
+
+        private static readonly MethodInfo AnyWithPredicate = typeof(Enumerable).GetMethods()
+            .First(m => m.Name == "Any" && m.GetParameters().Length == 2);
+
         // thx to: https://www.codeproject.com/Articles/1079028/Build-Lambda-Expressions-Dynamically
 
         /// <summary>
@@ -80,11 +91,12 @@ namespace Abitech.NextApi.Server.Entity
                     case FilterExpressionTypes.Contains:
                         var value = FormatValue(filterExpression.Value, typeof(string)) as string;
                         if (value == null) break;
-                        var convertedProperty = Expression.Call(Expression.Call(property, ToStringMethod), ToLowerMethod);
+                        var convertedProperty =
+                            Expression.Call(Expression.Call(property, ToStringMethod), ToLowerMethod);
                         currentExpression = Expression.AndAlso(
-                            Expression.NotEqual(property, Expression.Constant(null, property.Type)), 
+                            Expression.NotEqual(property, Expression.Constant(null, property.Type)),
                             Expression.Call(convertedProperty, StringContainsMethod,
-                            Expression.Constant(value.ToLower())));
+                                Expression.Constant(value.ToLower())));
                         break;
                     case FilterExpressionTypes.Equal:
                         currentExpression = Expression.Equal(property,
@@ -135,8 +147,45 @@ namespace Abitech.NextApi.Server.Entity
                                 Expression.Constant(ValueForMember(filterExpression.Value, property), property.Type));
                         break;
                     case FilterExpressionTypes.EqualToDate:
-                        currentExpression = Expression.Equal( Expression.Property(property, "Date"),
+                        currentExpression = Expression.Equal(Expression.Property(property, "Date"),
                             Expression.Constant(Convert.ToDateTime(filterExpression.Value).Date));
+                        break;
+                    case FilterExpressionTypes.Any:
+                        // first we should ensure that property is a queryable collection
+                        if (!typeof(IEnumerable).IsAssignableFrom(property.Type) || !property.Type.IsGenericType)
+                        {
+                            throw new NextApiException(NextApiErrorCode.UnsupportedFilterOperation,
+                                "Filter expression 'Any' supported only for generic 'Enumerable'-like properties");
+                        }
+
+                        var collectionItemType = property.Type.GetGenericArguments().First();
+                        Expression anyExpression;
+                        // process as any without predicate
+                        if (filterExpression.Value == null)
+                        {
+                            var method = Any.MakeGenericMethod(collectionItemType);
+                            anyExpression = Expression.Call(method, property);
+                        }
+                        // in case we have predicate, call another any implementation
+                        else
+                        {
+                            var method = AnyWithPredicate.MakeGenericMethod(collectionItemType);
+                            var collectionItemParameter = Expression.Parameter(collectionItemType);
+                            var compiledFilter = BuildExpression(collectionItemParameter,
+                                (Filter)FormatValue(filterExpression.Value, typeof(Filter)));
+                            var predicateType = typeof(Func<>).MakeGenericType(collectionItemType, typeof(bool));
+                            var filterPredicate =
+                                Expression.Lambda(predicateType, compiledFilter, collectionItemParameter);
+                            anyExpression = Expression.Call(method, property, filterPredicate);
+                        }
+
+                        // check property for null value also
+                        var notEqualNullExpression =
+                            Expression.NotEqual(property, Expression.Constant(null, property.Type));
+                        currentExpression =
+                            Expression.AndAlso(notEqualNullExpression,
+                                anyExpression);
+
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -153,20 +202,22 @@ namespace Abitech.NextApi.Server.Entity
                         case LogicalOperators.Not:
                             tempExpression = Expression.AndAlso(allExpressions, Expression.Not(currentExpression));
                             break;
-                        default:
+                        case LogicalOperators.And:
                             tempExpression = Expression.AndAlso(allExpressions, currentExpression);
                             break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
                 }
                 else
                 {
-                    tempExpression = filter.LogicalOperator == LogicalOperators.Not ? 
-                        Expression.Not(currentExpression) : currentExpression;
+                    tempExpression = filter.LogicalOperator == LogicalOperators.Not
+                        ? Expression.Not(currentExpression)
+                        : currentExpression;
                 }
 
                 if (currentExpression != null)
                     allExpressions = tempExpression;
-
             }
 
             return allExpressions;
