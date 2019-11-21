@@ -176,10 +176,55 @@ namespace Abitech.NextApi.Server.Tests
             }.AsQueryable();
             // case 1: test any without predicate
             {
-                var filterPositive = new FilterBuilder().Any("NestedModels").Build();
-                var filter = filterPositive.ToLambdaFilter<TestModel>();
-                var resultPositive = items.Where(filter).ToList();
+                // 1.1: positive test
+                var filterPositive = new FilterBuilder()
+                    .NotNull("NestedModels")
+                    .Any("NestedModels")
+                    .Build()
+                    .ToLambdaFilter<TestModel>();
+                var resultPositive = items.Where(filterPositive).ToList();
                 resultPositive.ShouldDeepEqual(new List<TestModel> {items.ElementAt(2), items.ElementAt(3)});
+
+                // 1.2: negative test
+                var filterNegative = new FilterBuilder(LogicalOperators.Or)
+                    .Null("NestedModels")
+                    .Not(b => b.Any("NestedModels"))
+                    .Build()
+                    .ToLambdaFilter<TestModel>();
+                var resultNegative = items.Where(filterNegative).ToList();
+                resultNegative.ShouldDeepEqual(new List<TestModel> {items.ElementAt(0), items.ElementAt(1)});
+            }
+            // case 2: test any with predicate
+            {
+                // 2.1: positive test
+                var filterPositive = new FilterBuilder()
+                    .NotNull("NestedModels")
+                    .Any("NestedModels",
+                        anyB => anyB
+                            .Or(orB => orB
+                                .Equal("NestedName", "Name2")
+                                .Equal("NestedName", "Name3")
+                            )
+                    )
+                    .Build()
+                    .ToLambdaFilter<TestModel>();
+                var resultPositive = items.Where(filterPositive).ToList();
+                resultPositive.ShouldDeepEqual(new List<TestModel> {items.ElementAt(2), items.ElementAt(3)});
+                // 2.2: negative test
+                var filterNegative = new FilterBuilder(
+//                        LogicalOperators.Or
+                    )
+//                    .Null("NestedModels")
+                    .Any("NestedModels",
+                        notB => notB
+                            .Not(
+                                nB => nB.In("NestedName", new[] {"Name2"})
+                            )
+                    )
+                    .Build()
+                    .ToLambdaFilter<TestModel>();
+                var resultNegative = items.Where(filterNegative).ToList();
+                resultNegative.ShouldDeepEqual(new List<TestModel> {items.ElementAt(0), items.ElementAt(1)});
             }
         }
     }

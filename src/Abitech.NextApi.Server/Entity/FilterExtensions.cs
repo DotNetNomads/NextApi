@@ -159,12 +159,11 @@ namespace Abitech.NextApi.Server.Entity
                         }
 
                         var collectionItemType = property.Type.GetGenericArguments().First();
-                        Expression anyExpression;
                         // process as any without predicate
                         if (filterExpression.Value == null)
                         {
                             var method = Any.MakeGenericMethod(collectionItemType);
-                            anyExpression = Expression.Call(method, property);
+                            currentExpression = Expression.Call(method, property);
                         }
                         // in case we have predicate, call another any implementation
                         else
@@ -173,18 +172,11 @@ namespace Abitech.NextApi.Server.Entity
                             var collectionItemParameter = Expression.Parameter(collectionItemType);
                             var compiledFilter = BuildExpression(collectionItemParameter,
                                 (Filter)FormatValue(filterExpression.Value, typeof(Filter)));
-                            var predicateType = typeof(Func<>).MakeGenericType(collectionItemType, typeof(bool));
+                            var predicateType = typeof(Func<,>).MakeGenericType(collectionItemType, typeof(bool));
                             var filterPredicate =
                                 Expression.Lambda(predicateType, compiledFilter, collectionItemParameter);
-                            anyExpression = Expression.Call(method, property, filterPredicate);
+                            currentExpression = Expression.Call(method, property, filterPredicate);
                         }
-
-                        // check property for null value also
-                        var notEqualNullExpression =
-                            Expression.NotEqual(property, Expression.Constant(null, property.Type));
-                        currentExpression =
-                            Expression.AndAlso(notEqualNullExpression,
-                                anyExpression);
 
                         break;
                     default:
