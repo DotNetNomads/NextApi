@@ -25,12 +25,16 @@ namespace Abitech.NextApi.Server.Entity
         private static readonly MethodInfo ToLowerMethod =
             typeof(string).GetMethod("ToLower", Type.EmptyTypes);
 
-        // more info: https://docs.microsoft.com/en-us/dotnet/api/system.linq.queryable.any?view=netcore-2.2
+        // more info: https://docs.microsoft.com/en-us/dotnet/api/system.linq.enumerable.any?view=netcore-2.2
         private static readonly MethodInfo Any = typeof(Enumerable).GetMethods()
             .First(m => m.Name == "Any" && m.GetParameters().Length == 1);
 
         private static readonly MethodInfo AnyWithPredicate = typeof(Enumerable).GetMethods()
             .First(m => m.Name == "Any" && m.GetParameters().Length == 2);
+
+        // more info: https://docs.microsoft.com/en-us/dotnet/api/system.linq.enumerable.all?view=netcore-2.2
+        private static readonly MethodInfo All = typeof(Enumerable).GetMethods()
+            .First(m => m.Name == "All" && m.GetParameters().Length == 2);
 
         // thx to: https://www.codeproject.com/Articles/1079028/Build-Lambda-Expressions-Dynamically
 
@@ -57,10 +61,6 @@ namespace Abitech.NextApi.Server.Entity
         private static Expression BuildExpression(ParameterExpression parameter, Filter filter)
         {
             // json support
-            object FormatValue(object val, Type type)
-            {
-                return val is JToken token ? token.ToObject(type) : val;
-            }
 
             object ValueForMember(object val, MemberExpression memberExpression)
             {
@@ -151,33 +151,39 @@ namespace Abitech.NextApi.Server.Entity
                             Expression.Constant(Convert.ToDateTime(filterExpression.Value).Date));
                         break;
                     case FilterExpressionTypes.Any:
-                        // first we should ensure that property is a queryable collection
-                        if (!typeof(IEnumerable).IsAssignableFrom(property.Type) || !property.Type.IsGenericType)
+                        if (!IsItACollection(property))
                         {
                             throw new NextApiException(NextApiErrorCode.UnsupportedFilterOperation,
                                 "Filter expression 'Any' supported only for generic 'Enumerable'-like properties");
                         }
 
-                        var collectionItemType = property.Type.GetGenericArguments().First();
+                        var collectionAnyItemType = property.Type.GetGenericArguments().First();
                         // process as any without predicate
                         if (filterExpression.Value == null)
                         {
-                            var method = Any.MakeGenericMethod(collectionItemType);
-                            currentExpression = Expression.Call(method, property);
+                            var genericAnyMethod = Any.MakeGenericMethod(collectionAnyItemType);
+                            currentExpression = Expression.Call(genericAnyMethod, property);
                         }
                         // in case we have predicate, call another any implementation
                         else
                         {
-                            var method = AnyWithPredicate.MakeGenericMethod(collectionItemType);
-                            var collectionItemParameter = Expression.Parameter(collectionItemType);
-                            var compiledFilter = BuildExpression(collectionItemParameter,
-                                (Filter)FormatValue(filterExpression.Value, typeof(Filter)));
-                            var predicateType = typeof(Func<,>).MakeGenericType(collectionItemType, typeof(bool));
-                            var filterPredicate =
-                                Expression.Lambda(predicateType, compiledFilter, collectionItemParameter);
-                            currentExpression = Expression.Call(method, property, filterPredicate);
+                            var genericAnyMethod = AnyWithPredicate.MakeGenericMethod(collectionAnyItemType);
+                            var anyFilterPredicate = MakeNestedFilter(collectionAnyItemType, filterExpression);
+                            currentExpression = Expression.Call(genericAnyMethod, property, anyFilterPredicate);
                         }
 
+                        break;
+                    case FilterExpressionTypes.All:
+                        if (!IsItACollection(property))
+                        {
+                            throw new NextApiException(NextApiErrorCode.UnsupportedFilterOperation,
+                                "Filter expression 'All' supported only for generic 'Enumerable'-like properties");
+                        }
+
+                        var collectionAllItemType = property.Type.GetGenericArguments().First();
+                        var genericAllMethod = All.MakeGenericMethod(collectionAllItemType);
+                        var allFilterPredicate = MakeNestedFilter(collectionAllItemType, filterExpression);
+                        currentExpression = Expression.Call(genericAllMethod, property, allFilterPredicate);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -213,6 +219,28 @@ namespace Abitech.NextApi.Server.Entity
             }
 
             return allExpressions;
+        }
+
+        private static object FormatValue(object val, Type type)
+        {
+            return val is JToken token ? token.ToObject(type) : val;
+        }
+
+        private static bool IsItACollection(Expression property)
+        {
+            // first we should ensure that property is a queryable collection
+            return typeof(IEnumerable).IsAssignableFrom(property.Type) && property.Type.IsGenericType;
+        }
+
+        private static LambdaExpression MakeNestedFilter(Type collectionItemType, FilterExpression filterExpression)
+        {
+            var collectionItemParameter = Expression.Parameter(collectionItemType);
+            var compiledFilter = BuildExpression(collectionItemParameter,
+                (Filter)FormatValue(filterExpression.Value, typeof(Filter)));
+            var predicateType = typeof(Func<,>).MakeGenericType(collectionItemType, typeof(bool));
+            var filterPredicate =
+                Expression.Lambda(predicateType, compiledFilter, collectionItemParameter);
+            return filterPredicate;
         }
 
         private static MemberExpression GetMemberExpression(Expression param, string propertyName)

@@ -270,6 +270,56 @@ namespace Abitech.NextApi.Model.Filtering
             return this;
         }
 
+        /// <summary>
+        /// Verifies every element of that collection has  accordance for a filter expression.
+        /// </summary>
+        /// <param name="collectionPropertyName">Collection property name</param>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder All(string collectionPropertyName, Action<FilterBuilder> builder)
+        {
+            var filterBuilder = new FilterBuilder();
+            builder.Invoke(filterBuilder);
+            return All(collectionPropertyName, filterBuilder);
+        }
+
+        /// <summary>
+        /// Verifies every element of that collection has  accordance for a filter expression.
+        /// </summary>
+        /// <param name="collectionPropertyName">Collection property name</param>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder All(string collectionPropertyName, FilterBuilder builder)
+        {
+            AddExpression(collectionPropertyName, FilterExpressionTypes.All, builder.Build());
+            return this;
+        }
+
+        /// <summary>
+        /// Verifies every element of that collection hasn't  accordance for a filter expression.
+        /// </summary>
+        /// <param name="collectionPropertyName">Collection property name</param>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder AllNot(string collectionPropertyName, Action<FilterBuilder> builder)
+        {
+            var filterBuilder = new FilterBuilder();
+            builder.Invoke(filterBuilder);
+            return AllNot(collectionPropertyName, filterBuilder);
+        }
+
+        /// <summary>
+        /// Verifies every element of that collection hasn't  accordance for a filter expression.
+        /// </summary>
+        /// <param name="collectionPropertyName">Collection property name</param>
+        /// <param name="builder">Filter builder for current group</param>
+        /// <returns>Current filter builder instance (for chaining)</returns>
+        public FilterBuilder AllNot(string collectionPropertyName, FilterBuilder builder)
+        {
+            var filterBuilder = new FilterBuilder().Not(builder);
+            return All(collectionPropertyName, filterBuilder);
+        }
+
         private void AddFilter(Filter filter)
         {
             _filter.Expressions.Add(

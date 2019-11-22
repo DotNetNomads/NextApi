@@ -200,26 +200,19 @@ namespace Abitech.NextApi.Server.Tests
                 var filterPositive = new FilterBuilder()
                     .NotNull("NestedModels")
                     .Any("NestedModels",
-                        anyB => anyB
-                            .Or(orB => orB
-                                .Equal("NestedName", "Name2")
-                                .Equal("NestedName", "Name3")
-                            )
+                        anyB => anyB.In("NestedName", new[] {"Name2", "Name3"})
                     )
                     .Build()
                     .ToLambdaFilter<TestModel>();
                 var resultPositive = items.Where(filterPositive).ToList();
                 resultPositive.ShouldDeepEqual(new List<TestModel> {items.ElementAt(2), items.ElementAt(3)});
-                // 2.2: negative test
+                // 2.2: negative test (using all)
                 var filterNegative = new FilterBuilder(
-//                        LogicalOperators.Or
+                        LogicalOperators.Or
                     )
-//                    .Null("NestedModels")
-                    .Any("NestedModels",
-                        notB => notB
-                            .Not(
-                                nB => nB.In("NestedName", new[] {"Name2"})
-                            )
+                    .Null("NestedModels")
+                    .AllNot("NestedModels",
+                        allNot => allNot.In("NestedName", new[] {"Name2", "Name3"})
                     )
                     .Build()
                     .ToLambdaFilter<TestModel>();
