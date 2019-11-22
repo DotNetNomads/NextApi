@@ -173,6 +173,7 @@ namespace Abitech.NextApi.Model
         EntityIsNotExist,
         EntitiesIsNotExist,
         OperationIsNotSupported,
+        UnsupportedFilterOperation
 #pragma warning restore 1591
     }
 }
