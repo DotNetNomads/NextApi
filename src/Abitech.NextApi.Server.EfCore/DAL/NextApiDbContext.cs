@@ -83,7 +83,9 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
 
+#pragma warning disable 1998
         protected virtual async Task HandleTrackedEntity(EntityEntry entityEntry)
+#pragma warning restore 1998
         {
             var userId = _nextApiUserAccessor?.SubjectId;
             this.RecordAuditInfo(userId, entityEntry);

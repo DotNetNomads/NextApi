@@ -53,41 +53,15 @@ namespace Abitech.NextApi.Server.Entity
         IQueryable<T> GetAll();
 
         /// <summary>
-        /// Given a entity and id, return true if entity's key property equals id.
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        Expression<Func<T, bool>> KeyPredicate(TKey key);
-        /// <summary>
-        /// Given a entity and ids, return true if entity's key property contains in current array.
-        /// </summary>
-        /// <param name="keys"></param>
-        /// <returns></returns>
-        Expression<Func<T, bool>> KeyPredicate(TKey[] keys);
-        /// <summary>
-        /// Returns identifier selector for entity type
-        /// </summary>
-        /// <returns></returns>
-        Expression<Func<T, TKey>> KeySelector();
-
-        /// <summary>
         /// 
         /// </summary>
         /// <param name="ids"></param>
         /// <returns></returns>
         Task<T[]> GetByIdsAsync(TKey[] ids);
-
-        /// <summary>
-        /// Given a entity, returns id value of entity
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns>Entity id</returns>
-        /// <exception cref="NotSupportedException">In case entity doesn't implements IEntity</exception>
-        TKey GetEntityId(T entity);
     }
     
     /// <summary>
-    /// Base interface for INextApiRepository<T,TKey> repo
+    /// Base interface for INextApiRepository repo (used generally in non-generic code)
     /// </summary>
     public interface INextApiRepository
     {

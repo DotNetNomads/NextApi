@@ -17,8 +17,15 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiEntityServiceTests : NextApiTest
+    public class NextApiEntityServiceTests : IClassFixture<NextApiTest>
     {
+        private readonly NextApiTest _nextApiTest;
+
+        public NextApiEntityServiceTests(NextApiTest nextApiTest)
+        {
+            _nextApiTest = nextApiTest;
+        }
+
         [Theory]
         [InlineData(false, false, NextApiTransport.Http)]
         [InlineData(true, false, NextApiTransport.Http)]
@@ -76,27 +83,25 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task Delete(NextApiTransport transport)
         {
-            using (var scope = Factory.Server.Host.Services.CreateScope())
+            using var scope = _nextApiTest.Factory.Server.Host.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var repo = services.GetService<TestUserRepository>();
+            var unitOfWork = services.GetService<TestUnitOfWork>();
+            var createdUser = new TestUser()
             {
-                var services = scope.ServiceProvider;
-                var repo = services.GetService<TestUserRepository>();
-                var unitOfWork = services.GetService<TestUnitOfWork>();
-                var createdUser = new TestUser()
-                {
-                    Name = "petyaTest", Email = "petya@mail.ru", Enabled = true, Surname = "Ivanov"
-                };
-                await repo.AddAsync(createdUser);
-                await unitOfWork.CommitAsync();
+                Name = "petyaTest", Email = "petya@mail.ru", Enabled = true, Surname = "Ivanov"
+            };
+            await repo.AddAsync(createdUser);
+            await unitOfWork.CommitAsync();
 
-                var userExists = await repo.GetAll()
-                    .AnyAsync(u => u.Id == createdUser.Id);
-                Assert.True(userExists);
-                var client = await GetServiceClient(transport);
-                await client.Delete(createdUser.Id);
-                var userExistsAfterDelete = await repo.GetAll()
-                    .AnyAsync(u => u.Id == createdUser.Id);
-                Assert.False(userExistsAfterDelete);
-            }
+            var userExists = await repo.GetAll()
+                .AnyAsync(u => u.Id == createdUser.Id);
+            Assert.True(userExists);
+            var client = await GetServiceClient(transport);
+            await client.Delete(createdUser.Id);
+            var userExistsAfterDelete = await repo.GetAll()
+                .AnyAsync(u => u.Id == createdUser.Id);
+            Assert.False(userExistsAfterDelete);
         }
 
         [Theory]
@@ -106,27 +111,25 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(null, NextApiTransport.SignalR)]
         public async Task Update(string name, NextApiTransport transport)
         {
-            using (var scope = Factory.Server.Host.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                var repo = services.GetService<TestUserRepository>();
-                var mapper = services.GetService<IMapper>();
-                var client = await GetServiceClient(transport);
-                // data from db
-                var user = await repo.GetByIdAsync(14);
-                var userDTO = mapper.Map<TestUser, TestUserDTO>(user);
+            using var scope = _nextApiTest.Factory.Server.Host.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var repo = services.GetService<TestUserRepository>();
+            var mapper = services.GetService<IMapper>();
+            var client = await GetServiceClient(transport);
+            // data from db
+            var user = await repo.GetByIdAsync(14);
+            var userDTO = mapper.Map<TestUser, TestUserDTO>(user);
 
-                // update field
-                userDTO.Name = name;
-                // should skip as
-                // https://gitlab.abitech.kz/development/common/abitech.nextapi/issues/12
-                userDTO.UnknownProperty = "someValue";
-                var updatedDTO = await client.Update(14, userDTO);
-                Assert.Equal(14, updatedDTO.Id);
-                Assert.Equal(name, updatedDTO.Name);
-                Assert.Null(updatedDTO.City);
-                Assert.Null(updatedDTO.Role);
-            }
+            // update field
+            userDTO.Name = name;
+            // should skip as
+            // https://gitlab.abitech.kz/development/common/abitech.nextapi/issues/12
+            userDTO.UnknownProperty = "someValue";
+            var updatedDTO = await client.Update(14, userDTO);
+            Assert.Equal(14, updatedDTO.Id);
+            Assert.Equal(name, updatedDTO.Name);
+            Assert.Null(updatedDTO.City);
+            Assert.Null(updatedDTO.Role);
         }
 
         [Theory]
@@ -344,7 +347,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.Http, 1, 1)]
         public async Task TestTree(NextApiTransport transport, int? parentId, int shouldReturnCount)
         {
-            var client = await GetClient(transport);
+            var client = await _nextApiTest.GetClient(transport);
             var service = new TreeEntityService(client);
 
             var request = new TreeRequest() {ParentId = parentId};
@@ -360,7 +363,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.Http)]
         public async Task TestTreeWithFilters(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await _nextApiTest.GetClient(transport);
             var service = new TreeEntityService(client);
 
             var request = new TreeRequest()
@@ -390,8 +393,7 @@ namespace Abitech.NextApi.Server.Tests
 
         private async Task<TestEntityService> GetServiceClient(NextApiTransport transport)
         {
-            return _nextApiEntityService ??
-                   (_nextApiEntityService = new TestEntityService(await GetClient(transport), "TestUser"));
+            return _nextApiEntityService ??= new TestEntityService(await _nextApiTest.GetClient(transport), "TestUser");
         }
 
         private TestEntityService _nextApiEntityService;

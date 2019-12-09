@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model;
 using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.EfCore.Service;
+using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Entity.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -76,8 +78,8 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             {
                 var rowGuid = entity.RowGuid;
                 var mapping = context.Model.FindEntityType(
-                    entityEntry.Entity.GetType()).Relational();
-                var tableName = mapping.TableName;
+                    entityEntry.Entity.GetType());
+                var tableName = mapping.GetTableName();
                 foreach (var propertyEntry in entityEntry.Properties.Where(p =>
                     p.IsModified && p.Metadata.Name != "RowGuid"))
                 {
@@ -99,10 +101,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             {
                 columnChangesRecord = new ColumnChangesLog()
                 {
-                    RowGuid = rowGuid,
-                    TableName = tableName,
-                    ColumnName = columnName,
-                    LastChangedOn = time
+                    RowGuid = rowGuid, TableName = tableName, ColumnName = columnName, LastChangedOn = time
                 };
                 await dbSet.AddAsync(columnChangesRecord);
             }

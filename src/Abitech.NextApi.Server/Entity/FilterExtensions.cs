@@ -47,7 +47,7 @@ namespace Abitech.NextApi.Server.Entity
         public static Expression<Func<TEntity, bool>> ToLambdaFilter<TEntity>(this Filter filter)
             where TEntity : class
         {
-            if (filter?.Expressions == null || !EnumerableExtensions.Any(filter.Expressions))
+            if (filter?.Expressions == null || !filter.Expressions.Any())
             {
                 return null;
             }

@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Entity.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.Server.EfCore.DAL
@@ -15,12 +16,11 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// <typeparam name="TKey">Entity key type</typeparam>
     /// <typeparam name="TDbContext">DbContext type</typeparam>
     public abstract class NextApiRepository<T, TKey, TDbContext> : INextApiRepository<T, TKey>
-        where T : class
+        where T : class, IEntity<TKey>
         where TDbContext : class, INextApiDbContext
     {
         private readonly TDbContext _context;
         private readonly DbSet<T> _dbset;
-        private readonly bool _isIEntity;
         private readonly bool _isSoftDeleteSupported;
         private readonly bool _isRowGuidSupported;
 
@@ -37,7 +37,6 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         {
             _context = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _dbset = _context.Set<T>();
-            _isIEntity = typeof(IEntity<TKey>).IsAssignableFrom(typeof(T));
             _isSoftDeleteSupported = typeof(ISoftDeletableEntity).IsAssignableFrom(typeof(T));
             _isRowGuidSupported = typeof(IRowGuidEnabled).IsAssignableFrom(typeof(T));
         }
@@ -56,7 +55,9 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// Updates entity by instance
         /// </summary>
         /// <param name="entity">entity instance</param>
+#pragma warning disable 1998
         public virtual async Task UpdateAsync(T entity)
+#pragma warning restore 1998
         {
             AttachIfDetached(entity);
             _context.Entry(entity).State = EntityState.Modified;
@@ -65,8 +66,8 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         private void AttachIfDetached(T entity)
         {
             // find local copy if exists and detach it
-            var entityId = GetEntityId(entity);
-            var local = _dbset.Local.FirstOrDefault(KeyPredicate(entityId).Compile());
+            var entityId = entity.Id;
+            var local = _dbset.Local.FirstOrDefault(e => e.Id.Equals(entityId));
             // return if instances is same (in local dbset)
             if (local != null && ReferenceEquals(entity, local))
             {
@@ -119,19 +120,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <returns>entity</returns>
         public virtual async Task<T> GetByIdAsync(TKey id)
         {
-            return await GetAll().FirstOrDefaultAsync(KeyPredicate(id));
-        }
-
-        public Expression<Func<T, TKey>> KeySelector()
-        {
-            if (!_isIEntity)
-            {
-                throw new NotSupportedException(
-                    "Default implementation of KeySelector method supports only entities that implements IEntity<TKey>." +
-                    "Override KeySelector for your entity type.");
-            }
-
-            return entity => (entity as IEntity<TKey>).Id;
+            return await GetAll().FirstOrDefaultAsync(item => item.Id.Equals(id));
         }
 
         /// <summary>
@@ -141,7 +130,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// <returns></returns>
         public virtual async Task<T[]> GetByIdsAsync(TKey[] ids)
         {
-            return await GetAll().Where(KeyPredicate(ids)).ToArrayAsync();
+            return await GetAll().Where(items => ids.Contains(items.Id)).ToArrayAsync();
         }
 
         /// <summary>
@@ -159,55 +148,6 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             return query.AsNoTracking();
         }
 
-        /// <summary>
-        /// Given a entity and id, return true if entity's key property equals id.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <exception cref="NotSupportedException">In case entity doesn't implements IEntity</exception>
-        /// <returns></returns>
-        public virtual Expression<Func<T, bool>> KeyPredicate(TKey id)
-        {
-            if (!_isIEntity)
-            {
-                throw new NotSupportedException(
-                    "Default implementation of KeyPredicate method supports only entities that implements IEntity<TKey>." +
-                    "Override KeyPredicate for your entity type.");
-            }
-
-            return entity => (entity as IEntity<TKey>).Id.Equals(id);
-        }
-
-        /// <summary>
-        /// Given a entity, returns id value of entity
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns>Entity id</returns>
-        /// <exception cref="NotSupportedException">In case entity doesn't implements IEntity</exception>
-        public virtual TKey GetEntityId(T entity)
-        {
-            if (!_isIEntity)
-            {
-                throw new NotSupportedException(
-                    "Default implementation of GetEntityId method supports only entity that implements IEntity<TKey>." +
-                    "Override GetEntityId for your entity type.");
-            }
-
-            return ((IEntity<TKey>)entity).Id;
-        }
-
-
-        /// <inheritdoc />
-        public virtual Expression<Func<T, bool>> KeyPredicate(TKey[] keys)
-        {
-            if (!_isIEntity)
-            {
-                throw new NotSupportedException(
-                    "Default implementation of KeyPredicate method supports only entities that implements IEntity<TKey>." +
-                    "Override KeyPredicate for your entity type.");
-            }
-
-            return entity => keys.Contains((entity as IEntity<TKey>).Id);
-        }
 
         /// <summary>
         /// Returns entity using where expression

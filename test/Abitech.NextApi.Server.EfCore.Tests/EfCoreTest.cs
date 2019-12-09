@@ -69,7 +69,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                                 new DateTime(2019, 10, 9, 4, 5, 6))
                             .Build()
                             .ToLambdaFilter<TestEntity>()).ToListAsync();
-                    Assert.Equal(0, filteredByDateListNoOutput.Count);
+                    Assert.Empty(filteredByDateListNoOutput);
                     
                     var filteredByDateListNoOutput1 = await repo.GetAll().Where(
                         new FilterBuilder()
@@ -77,7 +77,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                                 new DateTime())
                             .Build()
                             .ToLambdaFilter<TestEntity>()).ToListAsync();
-                    Assert.Equal(1, filteredByDateListNoOutput1.Count);
+                    Assert.Single(filteredByDateListNoOutput1);
                 }
                 // check update
                 {
@@ -99,48 +99,6 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                     await unitOfWork.CommitAsync();
                     Assert.False(await repo.GetAll().AnyAsync());
                 }
-            }
-        }
-
-        [Fact]
-        public async Task CheckKeyPredicatesNotSupportedException()
-        {
-            using (var scope = Services)
-            {
-                var provider = scope.ServiceProvider;
-                var repo = provider.GetService<TestEntityPredicatesRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
-
-                // create entity 
-                var id = "id1";
-                await repo.AddAsync(new TestEntityKeyPredicate {Id = id, Description = "testException"});
-                await unitOfWork.CommitAsync();
-
-                // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
-                await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdAsync(id));
-            }
-        }
-
-        [Fact]
-        public async Task CheckKeyPredicateArrayNotSupportedException()
-        {
-            using (var scope = Services)
-            {
-                var provider = scope.ServiceProvider;
-                var repo = provider.GetService<TestEntityPredicatesRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
-
-                // create entity 
-                string[] ids = {"id1", "id2"};
-
-                await repo.AddAsync(new TestEntityKeyPredicate {Id = ids[0], Description = "testException"});
-
-                await repo.AddAsync(new TestEntityKeyPredicate {Id = ids[1], Description = "testException"});
-
-                await unitOfWork.CommitAsync();
-
-                // should throw a NotSupportedException (cause this entity type is not implements IEntity<TKey> interface)
-                await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetByIdsAsync(ids));
             }
         }
 

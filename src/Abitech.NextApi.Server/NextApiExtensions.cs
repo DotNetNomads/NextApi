@@ -30,14 +30,16 @@ namespace Abitech.NextApi.Server
             var nextApiOptions = new NextApiServicesOptions();
 
             // mvc
-            serviceCollection.AddMvc();
+            serviceCollection.AddMvc(mvcOptions => mvcOptions.EnableEndpointRouting = false);
             // signalr
             serviceCollection
                 .AddSignalR(srOptions => { srOptions.EnableDetailedErrors = true; })
                 .AddMessagePackProtocol(mpOptions =>
                 {
                     mpOptions.FormatterResolvers = new List<IFormatterResolver>
-                        {TypelessContractlessStandardResolver.Instance};
+                    {
+                        TypelessContractlessStandardResolver.Instance
+                    };
                 });
 
             options?.Invoke(nextApiOptions);

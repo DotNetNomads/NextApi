@@ -6,6 +6,7 @@ using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.UploadQueue;
 using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Entity.Model;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.SignalR.Internal;
 using Newtonsoft.Json;

@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.Entity;
+using Abitech.NextApi.Server.Entity.Model;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,18 +28,24 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
             await _context.AddAsync(entity);
         }
 
+#pragma warning disable 1998
         public async Task UpdateAsync(TestUser entity)
+#pragma warning restore 1998
         {
             _context.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
         }
 
+#pragma warning disable 1998
         public async Task DeleteAsync(TestUser entity)
+#pragma warning restore 1998
         {
             _context.Users.Remove(entity);
         }
 
+#pragma warning disable 1998
         public async Task DeleteAsync(Expression<Func<TestUser, bool>> where)
+#pragma warning restore 1998
         {
             var objects = _dbset.Where(where).AsEnumerable();
             foreach (var obj in objects)
@@ -60,30 +67,9 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
             return _dbset.AsQueryable();
         }
 
-        public Expression<Func<TestUser, bool>> KeyPredicate(int key)
-        {
-            return e => e.Id == key;
-        }
-
-        /// <inheritdoc />
-        public Expression<Func<TestUser, bool>> KeyPredicate(int[] keys)
-        {
-            return entity => keys.Contains(entity.Id);
-        }
-
-        public Expression<Func<TestUser, int>> KeySelector()
-        {
-            return entity => (entity as IEntity<int>).Id;
-        }
-
         public async Task<TestUser[]> GetByIdsAsync(int[] ids)
         {
             return await _dbset.ToArrayAsync();
-        }
-
-        public int GetEntityId(TestUser entity)
-        {
-            return entity.Id;
         }
 
         public async Task AddAsync(object entity)

@@ -128,7 +128,9 @@ namespace Abitech.NextApi.Client
             }
         }
 
+#pragma warning disable 1998
         private async Task ProcessNextApiEvent(object[] arg)
+#pragma warning restore 1998
         {
             if (arg == null || arg.Length < 1)
                 return;

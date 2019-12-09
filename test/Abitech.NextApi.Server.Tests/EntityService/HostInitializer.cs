@@ -24,7 +24,14 @@ namespace Abitech.NextApi.Server.Tests.EntityService
 
             await context.CreateTestTreeItems();
 
-            await context.SaveChangesAsync();
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         public static async Task AddUser(this TestDbContext context, int id, int? roleId, int? cityId)
@@ -45,7 +52,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService
 
             if (cityId != null)
             {
-                if (await context.Cities.AnyAsync(c => c.CityId == cityId))
+                if (await context.Cities.AnyAsync(c => c.Id == cityId))
                 {
                     user.CityId = cityId;
                 }
@@ -112,14 +119,11 @@ namespace Abitech.NextApi.Server.Tests.EntityService
                 }
             };
             var sampleTestTreeItems = new List<TestTreeItem>();
-            for (int i = 8; i < 38; i++)
+            for (var i = 8; i < 38; i++)
             {
-                sampleTestTreeItems.Add(new TestTreeItem
-                {
-                    Id = i,
-                    Name = $"Node{i}"
-                });
+                sampleTestTreeItems.Add(new TestTreeItem {Id = i, Name = $"Node{i}"});
             }
+
             await context.TestTreeItems.AddAsync(mainTree);
             await context.TestTreeItems.AddRangeAsync(sampleTestTreeItems);
         }

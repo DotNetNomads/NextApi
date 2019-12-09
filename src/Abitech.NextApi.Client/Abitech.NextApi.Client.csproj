@@ -4,6 +4,7 @@
     <Authors>Abitech Team</Authors>
     <Company>Abitech LLC</Company>
     <Description>Basic client for server powered by NextApi</Description>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -19,9 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MessagePack" Version="1.8.80" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.5" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.0" />
   </ItemGroup>
   
   <!-- workaround, thanx @daMulli, see: https://github.com/dotnet/cli/issues/3959#issuecomment-333318028 -->

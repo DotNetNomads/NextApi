@@ -9,6 +9,7 @@ using Abitech.NextApi.Model.Filtering;
 using Abitech.NextApi.Model.Paged;
 using Abitech.NextApi.Model.Tree;
 using Abitech.NextApi.Server.Base;
+using Abitech.NextApi.Server.Entity.Model;
 using Abitech.NextApi.Server.Service;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,7 @@ namespace Abitech.NextApi.Server.Entity
     public abstract class NextApiEntityService<TDto, TEntity, TKey, TRepo, TUnitOfWork> : NextApiService,
         INextApiEntityService<TDto, TKey>
         where TDto : class
-        where TEntity : class
+        where TEntity : class, IEntity<TKey>
         where TRepo : class, INextApiRepository<TEntity, TKey>
         where TUnitOfWork : class, INextApiUnitOfWork
     {
@@ -62,9 +63,7 @@ namespace Abitech.NextApi.Server.Entity
             await _repository.AddAsync(entityFromDto);
             await AfterCreate(entityFromDto);
             await CommitAsync();
-            var insertedEntity = await _repository.GetByIdAsync(
-                _repository.GetEntityId(entityFromDto)
-            );
+            var insertedEntity = await _repository.GetByIdAsync(entityFromDto.Id);
             return _mapper.Map<TEntity, TDto>(insertedEntity);
         }
 
@@ -98,9 +97,7 @@ namespace Abitech.NextApi.Server.Entity
             await _repository.UpdateAsync(entity);
             await AfterUpdate(entity);
             await CommitAsync();
-            var updatedEntity = await _repository.GetByIdAsync(
-                _repository.GetEntityId(entity)
-            );
+            var updatedEntity = await _repository.GetByIdAsync(entity.Id);
             return _mapper.Map<TEntity, TDto>(updatedEntity);
         }
 
@@ -133,7 +130,7 @@ namespace Abitech.NextApi.Server.Entity
         {
             var entityQuery = _repository
                 .GetAll()
-                .Where(_repository.KeyPredicate(key))
+                .Where(e => e.Id.Equals(key))
                 .Expand(expand);
             entityQuery = await BeforeGet(entityQuery);
             var entity = await entityQuery.FirstOrDefaultAsync();
@@ -154,7 +151,7 @@ namespace Abitech.NextApi.Server.Entity
         {
             var entitiesQuery = _repository
                 .GetAll()
-                .Where(_repository.KeyPredicate(keys))
+                .Where(e => keys.Contains(e.Id))
                 .Expand(expand);
             entitiesQuery = await BeforeGet(entitiesQuery);
             var entities = await entitiesQuery.ToArrayAsync();
@@ -179,18 +176,20 @@ namespace Abitech.NextApi.Server.Entity
 
             return await entitiesQuery.CountAsync();
         }
-        
+
         /// <inheritdoc />
-        public async virtual Task<bool> Any(Filter filter = null)
+        public virtual async Task<bool> Any(Filter filter = null)
         {
             var entitiesQuery = _repository.GetAll();
             // apply filter
             var filterExpression = filter?.ToLambdaFilter<TEntity>();
-            return filterExpression == null ? await entitiesQuery.AnyAsync() : await entitiesQuery.AnyAsync(filterExpression);
+            return filterExpression == null
+                ? await entitiesQuery.AnyAsync()
+                : await entitiesQuery.AnyAsync(filterExpression);
         }
 
         /// <inheritdoc />
-        public async virtual Task<TKey[]> GetIdsByFilter(Filter filter = null)
+        public virtual async Task<TKey[]> GetIdsByFilter(Filter filter = null)
         {
             var entitiesQuery = _repository.GetAll();
             // apply filter
@@ -200,12 +199,11 @@ namespace Abitech.NextApi.Server.Entity
                 entitiesQuery = entitiesQuery.Where(filterExpression);
             }
 
-            var selector = _repository.KeySelector();
-            return await entitiesQuery.Select(selector).ToArrayAsync();
+            return await entitiesQuery.Select(e => e.Id).ToArrayAsync();
         }
 
         /// <inheritdoc />
-        public async virtual Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request)
+        public virtual async Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request)
         {
             var parentPredicate = await ParentPredicate(request.ParentId);
             if (parentPredicate == null)
@@ -214,12 +212,12 @@ namespace Abitech.NextApi.Server.Entity
                 throw new NextApiException(NextApiErrorCode.OperationIsNotSupported,
                     "Please provide ParentPredicate and SelectTreeChunk implementations");
             }
-            
+
             var entitiesQuery = _repository.GetAll();
             entitiesQuery = await BeforeGet(entitiesQuery);
             var rootQuery = entitiesQuery.Where(parentPredicate);
             var totalCount = 0;
-            
+
             if (request.PagedRequest != null)
             {
                 var filterExpression = request.PagedRequest.Filter?.ToLambdaFilter<TEntity>();
@@ -227,6 +225,7 @@ namespace Abitech.NextApi.Server.Entity
                 {
                     rootQuery = rootQuery.Where(filterExpression);
                 }
+
                 totalCount = rootQuery.Count();
                 if (request.PagedRequest.Skip != null)
                     rootQuery = rootQuery.Skip(request.PagedRequest.Skip.Value);
@@ -235,20 +234,19 @@ namespace Abitech.NextApi.Server.Entity
                 if (request.PagedRequest.Expand != null)
                     rootQuery = rootQuery.Expand(request.PagedRequest.Expand);
             }
-            
+
             var treeChunk = await rootQuery
                 .Select(SelectTreeChunk(entitiesQuery)).ToArrayAsync();
             var output = treeChunk.Select(chunkItem =>
                 new TreeItem<TDto>
-                    {
-                        ChildrenCount = chunkItem.ChildrenCount, Entity = _mapper.Map<TEntity, TDto>(chunkItem.Entity)
-                    }).ToList();
-            
+                {
+                    ChildrenCount = chunkItem.ChildrenCount, Entity = _mapper.Map<TEntity, TDto>(chunkItem.Entity)
+                }).ToList();
+
             return new PagedList<TreeItem<TDto>>
             {
-                Items = output,
-                TotalItems = totalCount == 0 ? output.Count : totalCount
-            };            
+                Items = output, TotalItems = totalCount == 0 ? output.Count : totalCount
+            };
         }
 
         /// <summary>
@@ -284,7 +282,9 @@ namespace Abitech.NextApi.Server.Entity
         /// </summary>
         /// <param name="entity">Entity instance</param>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task BeforeCreate(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
@@ -295,7 +295,9 @@ namespace Abitech.NextApi.Server.Entity
         /// case you want to work with saved entity</remarks>
         /// <param name="entity">Entity instance</param>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task AfterCreate(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
@@ -305,7 +307,9 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="entity">Original entity instance</param>
         /// <param name="patch">Patch for original entity</param>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task BeforeUpdate(TEntity entity, TDto patch)
+#pragma warning restore 1998
         {
         }
 
@@ -316,7 +320,9 @@ namespace Abitech.NextApi.Server.Entity
         /// <remarks>Should call CommitAsync in
         /// case you want to work with saved entity</remarks>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task AfterUpdate(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
@@ -325,7 +331,9 @@ namespace Abitech.NextApi.Server.Entity
         /// </summary>
         /// <param name="entity">Entity instance for delete</param>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task BeforeDelete(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
@@ -335,15 +343,19 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="entity">Deleted entity instance</param>
         /// <remarks>Should call CommitAsync in case you finalize delete operation</remarks>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task AfterDelete(TEntity entity)
+#pragma warning restore 1998
         {
         }
-        
+
         /// <summary>
         /// Hook: runs after CommitAsync is called
         /// </summary>
         /// <returns></returns>
+#pragma warning disable 1998
         protected virtual async Task AfterCommit()
+#pragma warning restore 1998
         {
         }
 
@@ -352,7 +364,9 @@ namespace Abitech.NextApi.Server.Entity
         /// </summary>
         /// <param name="query">Prepared query to repo</param>
         /// <returns>Modified query to repo</returns>
+#pragma warning disable 1998
         protected virtual async Task<IQueryable<TEntity>> BeforeGet(IQueryable<TEntity> query)
+#pragma warning restore 1998
         {
             return query;
         }
@@ -361,7 +375,9 @@ namespace Abitech.NextApi.Server.Entity
         /// Returns parent predicate usable in GetTree method
         /// </summary>
         /// <returns>Predicate for matching parent id for the entity</returns>
+#pragma warning disable 1998
         protected virtual async Task<Expression<Func<TEntity, bool>>> ParentPredicate(object parentId)
+#pragma warning restore 1998
         {
             // GetTree disabled by default
             return null;

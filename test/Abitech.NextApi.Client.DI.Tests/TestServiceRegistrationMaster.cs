@@ -64,7 +64,9 @@ namespace Abitech.NextApi.Client.DI.Tests
 
     class TestTokenProvider : INextApiAccessTokenProvider
     {
+#pragma warning disable 1998
         public async Task<string> ResolveToken()
+#pragma warning restore 1998
         {
             return "";
         }

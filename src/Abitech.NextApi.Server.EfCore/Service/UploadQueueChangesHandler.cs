@@ -6,27 +6,39 @@ namespace Abitech.NextApi.Server.EfCore.Service
     public abstract class UploadQueueChangesHandler<TEntity> : IUploadQueueChangesHandler<TEntity> 
         where TEntity : class
     {
+#pragma warning disable 1998
         public virtual async Task OnBeforeDelete(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
+#pragma warning disable 1998
         public virtual async Task OnBeforeUpdate(TEntity originalEntity, string columnName, object newValue)
+#pragma warning restore 1998
         {
         }
 
+#pragma warning disable 1998
         public virtual async Task OnBeforeCreate(TEntity entityToCreate)
+#pragma warning restore 1998
         {
         }
 
+#pragma warning disable 1998
         public virtual async Task OnAfterDelete(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
+#pragma warning disable 1998
         public virtual async Task OnAfterUpdate(TEntity originalEntity, string columnName, object newValue)
+#pragma warning restore 1998
         {
         }
 
+#pragma warning disable 1998
         public virtual async Task OnAfterCreate(TEntity entity)
+#pragma warning restore 1998
         {
         }
 
@@ -60,7 +72,9 @@ namespace Abitech.NextApi.Server.EfCore.Service
             return OnAfterCreate((TEntity)entity);
         }
 
+#pragma warning disable 1998
         public virtual async Task OnCommit()
+#pragma warning restore 1998
         {
         }
     }
