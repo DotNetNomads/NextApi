@@ -1,7 +1,7 @@
 # common
 .main-master: &main-master "master@development/common/abitech.nextapi"
 .dotnet-job: &dotnet-job
-  image: hub.abitech.kz/microsoft/dotnet:latest
+  image: mcr.microsoft.com/dotnet/core/sdk:3.1
   tags:
     - docker
 
