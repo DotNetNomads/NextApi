@@ -4,11 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Model.Abstractions;
 using Abitech.NextApi.Model.UploadQueue;
-using Abitech.NextApi.Server.EfCore.Model.Base;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Entity.Model;
 using Abitech.NextApi.Server.Service;
-using Microsoft.AspNetCore.SignalR.Internal;
 using Newtonsoft.Json;
 
 namespace Abitech.NextApi.Server.EfCore.Service
@@ -59,7 +57,7 @@ namespace Abitech.NextApi.Server.EfCore.Service
             
             var repoType = typeof(TRepository);
             
-            // NOTE: Skip this checking. Main question, what for? 
+            // NOTE: Skip this checking
 //            var genericArguments = repoType.AllBaseTypes().Concat(repoType.GetInterfaces()).SelectMany(type => type.GetGenericArguments());
 //            var notForThisRepo = genericArguments.FirstOrDefault(type => type.IsAssignableFrom(modelType)) == null;
 //            if (notForThisRepo)
