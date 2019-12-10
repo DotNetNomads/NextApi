@@ -12,13 +12,11 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class SystemTests : IClassFixture<NextApiTest>
+    public class SystemTests
     {
-        private readonly NextApiTest _nextApiTest;
 
-        public SystemTests(NextApiTest nextApiTest)
+        public SystemTests()
         {
-            _nextApiTest = nextApiTest;
         }
 
         [Theory]
@@ -26,7 +24,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task TestSupportedPermissions(NextApiTransport transport)
         {
-            var client = await _nextApiTest.GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
 
             var permissions = await client.SupportedPermissions();
             Assert.Equal(new[] {"permission1", "permission2"}, permissions);
@@ -39,20 +37,20 @@ namespace Abitech.NextApi.Server.Tests
         {
             // case: not authorized
             {
-                var client = await _nextApiTest.GetClient(transport);
+                var client = await NextApiTest.Instance().GetClient(transport);
 
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Null(userId);
             }
             // case: authorized as user 1
             {
-                var client = await _nextApiTest.GetClient(transport, "1");
+                var client = await NextApiTest.Instance().GetClient(transport, "1");
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Equal(1, userId.Value);
             }
             // case: authorized as user 2
             {
-                var client = await _nextApiTest.GetClient(transport, "2");
+                var client = await NextApiTest.Instance().GetClient(transport, "2");
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Equal(2, userId.Value);
             }

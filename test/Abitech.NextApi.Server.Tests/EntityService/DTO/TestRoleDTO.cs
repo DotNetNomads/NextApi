@@ -1,8 +1,10 @@
+using Abitech.NextApi.Server.Entity.Model;
+
 namespace Abitech.NextApi.Server.Tests.EntityService.DTO
 {
-    public class TestRoleDTO
+    public class TestRoleDTO: IEntity<int>
     {
-        public int RoleId { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
     }
 }

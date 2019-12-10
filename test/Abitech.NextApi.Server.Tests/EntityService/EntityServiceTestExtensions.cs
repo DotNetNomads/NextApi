@@ -1,3 +1,4 @@
+using System;
 using Abitech.NextApi.Server.EfCore;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using AutoMapper;
@@ -10,7 +11,10 @@ namespace Abitech.NextApi.Server.Tests.EntityService
     {
         public static void AddEntityServiceTestsInfrastructure(this IServiceCollection services)
         {
-            services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase("TestAbitechDb"));
+            var dbName = "TestAbitechDb" + Guid.NewGuid();
+//            Console.WriteLine($"Db Name: {dbName}");
+            services.AddDbContext<TestDbContext>(options =>
+                options.UseInMemoryDatabase(dbName));
             services.AddTransient<TestUserRepository>();
             services.AddTransient<TestTreeItemRepository>();
             services.AddTransient<ITestCityRepository, TestCityRepository>();

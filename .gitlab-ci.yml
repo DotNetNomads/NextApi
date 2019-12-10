@@ -28,6 +28,7 @@
 
 .nugetize: &nugetize
   stage: build
+  when: manual
   only:
     - *main-master
   <<: *dotnet-job
@@ -38,7 +39,7 @@
 
 # declaration
 variables:
-  VERSION: "1.4.6.$CI_PIPELINE_IID"
+  VERSION: "1.8.0.$CI_PIPELINE_IID"
 
 stages:
   - test
@@ -56,19 +57,24 @@ test-server-efcore:
 test-client-di:
   <<: *dotnet-test
   variables:
-    project: test/Abitech.NextApi.Client.DI.Tests
+    project: test/Abitech.NextApi.Client.Tests
 
 # build/nugetize
 nugetize-client:
   <<: *nugetize
   variables:
-    projectFolder: src/Abitech.NextApi.Client
+    projectFolder: src/client/Abitech.NextApi.Client
     projectName: Abitech.NextApi.Client
-nugetize-client-di:
+nugetize-client-autofac:
   <<: *nugetize
   variables:
-    projectFolder: src/Abitech.NextApi.Client.DI
-    projectName: Abitech.NextApi.Client.DI
+    projectFolder: src/client/Abitech.NextApi.Client.Autofac
+    projectName: Abitech.NextApi.Client.Autofac
+nugetize-client-microsoft-di:
+  <<: *nugetize
+  variables:
+    projectFolder: src/client/Abitech.NextApi.Client.MicrosoftDI
+    projectName: Abitech.NextApi.Client.MicrosoftDI
 nugetize-server:
   <<: *nugetize
   variables:
