@@ -20,7 +20,11 @@ namespace Abitech.NextApi.Server.Tests.Common
             // fake auth
             services.AddTestAuthServices();
 
-            services.AddNextApiServices(options => { options.AnonymousByDefault = true; })
+            services.AddNextApiServices(options =>
+                {
+                    options.AnonymousByDefault = true;
+                    options.MaximumReceiveMessageSize = 1000000;
+                })
                 .AddPermissionProvider<TestPermissionProvider>();
             services.AddEntityServiceTestsInfrastructure();
             services.AddTransient<IUploadQueueChangesHandler<TestCity>, TestUploadQueueChangesHandler>();

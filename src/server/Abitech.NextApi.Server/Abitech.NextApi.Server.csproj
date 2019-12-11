@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Abitech.NextApi.Server</PackageId>
+    <Authors>Abitech Team</Authors>
+    <Company>Abitech LLC</Company>
+    <Description>NextApi server-side components</Description>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2PAssets</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Abitech.NextApi.Server.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\Abitech.NextApi.Server.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
+    <PackageReference Include="MessagePack" Version="1.8.80" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <!-- SignalR for dotnet core not ships as an Nuget package. We use it from shared framework. Thanks to BrennanConroy:   
+          https://github.com/aspnet/AspNetCore/issues/17170#issuecomment-555244396 , also https://github.com/aspnet/Announcements/issues/325 -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+  <!-- workaround, thanx @daMulli, see: https://github.com/dotnet/cli/issues/3959#issuecomment-333318028 -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" PrivateAssets="All" />
+  </ItemGroup>
+
+  <Target Name="IncludeP2PAssets">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.dll" />
+      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.xml" />
+    </ItemGroup>
+  </Target>
+
+</Project>

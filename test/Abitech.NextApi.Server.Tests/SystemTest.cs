@@ -12,14 +12,19 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class SystemTests : NextApiTest
+    public class SystemTests
     {
+
+        public SystemTests()
+        {
+        }
+
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
         public async Task TestSupportedPermissions(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
 
             var permissions = await client.SupportedPermissions();
             Assert.Equal(new[] {"permission1", "permission2"}, permissions);
@@ -32,27 +37,29 @@ namespace Abitech.NextApi.Server.Tests
         {
             // case: not authorized
             {
-                var client = await GetClient(transport);
+                var client = await NextApiTest.Instance().GetClient(transport);
 
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Null(userId);
             }
             // case: authorized as user 1
             {
-                var client = await GetClient(transport, "1");
+                var client = await NextApiTest.Instance().GetClient(transport, "1");
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Equal(1, userId.Value);
             }
             // case: authorized as user 2
             {
-                var client = await GetClient(transport, "2");
+                var client = await NextApiTest.Instance().GetClient(transport, "2");
                 var userId = await client.Invoke<int?>("Test", "GetCurrentUser");
                 Assert.Equal(2, userId.Value);
             }
         }
 
         [Fact]
+#pragma warning disable 1998
         public async Task FilterTests()
+#pragma warning restore 1998
         {
             var data = TestSource.GetData();
 
@@ -129,11 +136,13 @@ namespace Abitech.NextApi.Server.Tests
                 .Build();
             var expressionEqualToDateNull = filterEqualToDateNull.ToLambdaFilter<TestModel>();
             var filteredEqualToDateNull = data.Where(expressionEqualToDateNull).ToList();
-            Assert.Equal(1, filteredEqualToDateNull.Count); //500
+            Assert.Single(filteredEqualToDateNull); //500
         }
 
         [Fact]
+#pragma warning disable 1998
         public async Task FilterIntContainsTest()
+#pragma warning restore 1998
         {
             var data = TestSource.GetData();
             var filter = new FilterBuilder()
@@ -149,7 +158,9 @@ namespace Abitech.NextApi.Server.Tests
         }
 
         [Fact]
+#pragma warning disable 1998
         public async Task FilterAnyTest()
+#pragma warning restore 1998
         {
             var items = new List<TestModel>
             {

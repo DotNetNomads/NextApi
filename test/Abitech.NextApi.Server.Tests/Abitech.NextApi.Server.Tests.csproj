@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
 
         <IsPackable>false</IsPackable>
-        <LangVersion>7.3</LangVersion>
+        <LangVersion>8</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -16,26 +16,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="8.0.0" />
-        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.0.0" />
+        <PackageReference Include="AutoMapper" Version="9.0.0" />
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
         <PackageReference Include="DeepEqual" Version="2.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.1.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.4" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
-        <PackageReference Include="Moq" Version="4.12.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+        <PackageReference Include="Moq" Version="4.13.1" />
         <PackageReference Include="xunit" Version="2.4.1" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
-      <ProjectReference Include="..\..\src\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
-      <ProjectReference Include="..\..\src\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
-      <ProjectReference Include="..\..\src\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
+      <ProjectReference Include="..\..\src\client\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
+      <ProjectReference Include="..\..\src\base\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" />
+      <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
+      <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
     </ItemGroup>
 
     <ItemGroup>

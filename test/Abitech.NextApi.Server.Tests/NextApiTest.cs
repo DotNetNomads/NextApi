@@ -9,29 +9,34 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiTest : IDisposable
+    public sealed class NextApiTest : IDisposable
     {
-        protected ServerFactory Factory;
+        public ServerFactory Factory;
 #pragma warning disable 1998
-        protected async Task<NextApiClient> GetClient(NextApiTransport transport, string token = null)
+        public async Task<NextApiClient> GetClient(NextApiTransport transport, string token = null)
 #pragma warning restore 1998
         {
-            var handler = Factory.Server.CreateHandler();
             return new NextApiClientForTests(
                 "http://localhost/nextapi",
                 token != null ? new TestTokenProvider(token) : null,
-                handler, transport);
+                Handler, transport);
         }
 
-        public NextApiTest()
+        private NextApiTest()
         {
             Factory = new ServerFactory();
             Factory.CreateClient();
+            Handler = Factory.Server.CreateHandler();
         }
+
+        public static NextApiTest Instance() => new NextApiTest();
+
+        public HttpMessageHandler Handler { get; set; }
 
         public void Dispose()
         {
             Factory?.Dispose();
+            Handler?.Dispose();
         }
     }
 
@@ -79,7 +84,9 @@ namespace Abitech.NextApi.Server.Tests
             _token = token;
         }
 
+#pragma warning disable 1998
         public async Task<string> ResolveToken()
+#pragma warning restore 1998
         {
             return _token;
         }

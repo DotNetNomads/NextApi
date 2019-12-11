@@ -22,20 +22,6 @@ namespace Abitech.NextApi.Server.Tests.Common
         {
             builder.UseContentRoot(".");
             var server = base.CreateServer(builder);
-            using (var scope = server.Host.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    HostInitializer.Init(services).Wait();
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<ServerFactory>>();
-                    logger.LogError(ex, "An error occurred seeding the DB.");
-                }
-            }
-
             return server;
         }
     }

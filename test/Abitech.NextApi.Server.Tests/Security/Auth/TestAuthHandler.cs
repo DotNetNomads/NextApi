@@ -17,7 +17,9 @@ namespace Tasks.Server.Tests.Common.Auth
         {
         }
 
+#pragma warning disable 1998
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+#pragma warning restore 1998
         {
             var headerAvailable = Request.Headers.Any(h => h.Key == "Authorization");
             if (!headerAvailable)

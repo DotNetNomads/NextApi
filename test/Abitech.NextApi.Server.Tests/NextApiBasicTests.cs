@@ -16,14 +16,15 @@ using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiBasicTests : NextApiTest
+    public class NextApiBasicTests
     {
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
         public async Task DtoTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var testSrv = NextApiTest.Instance();
+            var client = await testSrv.GetClient(transport);
             var dtoModel = new TestDTO
             {
                 IntProperty = 1,
@@ -56,7 +57,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task MethodWithoutArgsTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             var result = await client.Invoke<string>("Test", "MethodWithoutArgsTest");
             Assert.Equal("Done!", result);
         }
@@ -66,7 +67,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task ExceptionTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             Exception ex = null;
             try
             {
@@ -86,7 +87,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task SyncMethodVoidTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             await client.Invoke("Test", "SyncMethodVoidTest");
             Assert.True(true);
         }
@@ -96,7 +97,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task SyncMethodTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             const string testString = "hello";
             var result = await client.Invoke<string>("Test", "SyncMethodTest",
                 new NextApiArgument {Name = "stringArg", Value = testString});
@@ -108,7 +109,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task AsyncVoidDenied(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             try
             {
                 await client.Invoke("Test", "AsyncVoidDenied");
@@ -127,7 +128,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(true, true, NextApiTransport.SignalR)]
         public async Task BoolTest(bool? bool1, bool? bool2, NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             var result = await client.Invoke<Dictionary<string, bool?>>("Test", "BoolTest",
                 new NextApiArgument {Name = "boolArg1", Value = bool1},
                 new NextApiArgument {Name = "nullableBoolArg2", Value = bool2});
@@ -140,7 +141,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task StringTest(NextApiTransport transport)
         {
-            var clinet = await GetClient(transport);
+            var clinet = await NextApiTest.Instance().GetClient(transport);
             var str = "Hello World";
             var resultStr = await clinet.Invoke<string>("Test", "StringTest",
                 new NextApiArgument {Name = "stringArg", Value = str});
@@ -152,7 +153,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task DecimalTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             var dcm = 23m;
             var resultDcm = await client.Invoke<decimal>("Test", "DecimalTest",
                 new NextApiArgument {Name = "decimalArg1", Value = dcm});
@@ -166,7 +167,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(3, 4, NextApiTransport.SignalR)]
         public async Task IntegersTest(int? int1, int? int2, NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             var result = await client.Invoke<Dictionary<string, int?>>("Test", "IntegersTest",
                 new NextApiArgument {Name = "intArg1", Value = int1},
                 new NextApiArgument {Name = "nullableIntArg2", Value = int2});
@@ -179,7 +180,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task DtoAndOptionalArgTest(NextApiTransport transport)
         {
-            var client = await GetClient(transport);
+            var client = await NextApiTest.Instance().GetClient(transport);
             var dtoModel = new TestDTO
             {
                 IntProperty = 1,
@@ -209,7 +210,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task UploadFileAndDownloadTest()
         {
             // upload only for http
-            var client = await GetClient(NextApiTransport.Http);
+            var client = await NextApiTest.Instance().GetClient(NextApiTransport.Http);
 
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var filePath = Path.Combine(baseDir, "TestData", "белонька.jpg");
@@ -238,7 +239,7 @@ namespace Abitech.NextApi.Server.Tests
         [Fact]
         public async Task EventsTest()
         {
-            var client = await GetClient(NextApiTransport.SignalR);
+            var client = await NextApiTest.Instance().GetClient(NextApiTransport.SignalR);
 
             var textEventReceived = false;
             var referenceEventReceived = false;

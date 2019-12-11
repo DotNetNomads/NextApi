@@ -19,7 +19,9 @@ namespace Abitech.NextApi.Server.Tests.EntityService
         {
         }
 
+#pragma warning disable 1998
         protected override async Task<Expression<Func<TestTreeItem, bool>>> ParentPredicate(object parentId)
+#pragma warning restore 1998
         {
             if (parentId == null)
             {
