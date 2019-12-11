@@ -78,10 +78,10 @@ nugetize-client-microsoft-di:
 nugetize-server:
   <<: *nugetize
   variables:
-    projectFolder: src/Abitech.NextApi.Server
+    projectFolder: src/server/Abitech.NextApi.Server
     projectName: Abitech.NextApi.Server
 nugetize-server-efcore:
   <<: *nugetize
   variables:
-    projectFolder: src/Abitech.NextApi.Server.EfCore
+    projectFolder: src/server/Abitech.NextApi.Server.EfCore
     projectName: Abitech.NextApi.Server.EfCore
