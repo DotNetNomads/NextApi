@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Abitech.NextApi.Server.Entity.Model;
+using Abitech.NextApi.Common.Entity;
 
 namespace Abitech.NextApi.Server.Entity
 {
@@ -134,11 +134,12 @@ namespace Abitech.NextApi.Server.Entity
         /// </summary>
         /// <param name="entity">entity instance as object</param>
         Task DeleteAsync(object entity);
-
+        
         /// <summary>
-        /// Get entity by row guid
+        /// Returns entity by id
         /// </summary>
-        /// <param name="rowGuid">Entity row guid</param>
-        Task<object> GetByRowGuid(Guid rowGuid);
+        /// <param name="id">id</param>
+        /// <returns>entity</returns>
+        Task<object> GetByIdAsync(object id);
     }
 }

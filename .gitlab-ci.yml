@@ -39,7 +39,7 @@
 
 # declaration
 variables:
-  VERSION: "1.8.0.$CI_PIPELINE_IID"
+  VERSION: "1.9.0.$CI_PIPELINE_IID"
 
 stages:
   - test
@@ -60,11 +60,27 @@ test-client-di:
     project: test/Abitech.NextApi.Client.Tests
 
 # build/nugetize
+
+nugetize-common:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/Abitech.NextApi.Common
+    projectName: Abitech.NextApi.Common
+nugetize-common-uploadqueue:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/Abitech.NextApi.UploadQueue.Common
+    projectName: Abitech.NextApi.UploadQueue.Common
 nugetize-client:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client
     projectName: Abitech.NextApi.Client
+nugetize-client-uploadqueue:
+  <<: *nugetize
+  variables:
+    projectFolder: src/client/Abitech.NextApi.Client.UploadQueue
+    projectName: Abitech.NextApi.Client.UploadQueue
 nugetize-client-autofac:
   <<: *nugetize
   variables:
@@ -85,3 +101,8 @@ nugetize-server-efcore:
   variables:
     projectFolder: src/server/Abitech.NextApi.Server.EfCore
     projectName: Abitech.NextApi.Server.EfCore
+nugetize-server-uploadqueue:
+  <<: *nugetize
+  variables:
+    projectFolder: src/server/Abitech.NextApi.Server.UploadQueue
+    projectName: Abitech.NextApi.Server.UploadQueue

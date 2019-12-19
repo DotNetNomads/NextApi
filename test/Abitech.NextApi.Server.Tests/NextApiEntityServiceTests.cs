@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Model.Filtering;
-using Abitech.NextApi.Model.Paged;
-using Abitech.NextApi.Model.Tree;
+using Abitech.NextApi.Common.Filtering;
+using Abitech.NextApi.Common.Paged;
+using Abitech.NextApi.Common.Tree;
 using Abitech.NextApi.Server.Tests.EntityService;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.DTO;
@@ -55,7 +55,7 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(user.Name, createdUser.Name);
             if (createCity)
             {
-                Assert.True(createdUser.CityId > 0);
+                Assert.True(createdUser.CityId != null);
                 Assert.Equal(createdUser.CityId, createdUser.City.Id);
             }
             else

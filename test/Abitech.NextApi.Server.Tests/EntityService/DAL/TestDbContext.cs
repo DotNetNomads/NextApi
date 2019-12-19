@@ -1,11 +1,12 @@
 using Abitech.NextApi.Server.EfCore.DAL;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
+using Abitech.NextApi.Server.UploadQueue.DAL;
 using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.DAL
 {
-    public class TestDbContext : ColumnChangesEnabledNextApiDbContext
+    public class TestDbContext : UploadQueueDbContext
     {
         public DbSet<TestCity> Cities { get; set; }
         public DbSet<TestRole> Roles { get; set; }
@@ -30,7 +31,6 @@ namespace Abitech.NextApi.Server.Tests.EntityService.DAL
                     .HasForeignKey(t => t.ParentId)
                     .IsRequired(false);
             });
-            base.OnModelCreating(builder);
         }
 
         public TestDbContext(DbContextOptions options, INextApiUserAccessor nextApiUserAccessor) : base(options,

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Model.Filtering;
+using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.Filtering;

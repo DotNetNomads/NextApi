@@ -1,14 +1,13 @@
 using System;
-using Abitech.NextApi.Server.EfCore.Model.Base;
+using Abitech.NextApi.Common.Entity;
 using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.Entity.Model;
+using Abitech.NextApi.Server.UploadQueue.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Entity
 {
-    public class TestColumnChangesEnabledEntity: IGuidEntity<int>, IColumnLoggedEntity
+    public class TestColumnChangesEnabledEntity: IEntity<Guid>, IColumnLoggedEntity
     {
-        public int Id { get; set; }
-        public Guid RowGuid { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; } = Guid.NewGuid();
         
         public string Name { get; set; }
     }

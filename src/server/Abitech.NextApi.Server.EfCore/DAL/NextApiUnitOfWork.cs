@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model.Event.System;
+using Abitech.NextApi.Common.Event.System;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Event;
 using Microsoft.EntityFrameworkCore;

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Abitech.NextApi.Model;
-using Abitech.NextApi.Model.Filtering;
+using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Filtering;
 using Newtonsoft.Json.Linq;
 
 namespace Abitech.NextApi.Server.Entity

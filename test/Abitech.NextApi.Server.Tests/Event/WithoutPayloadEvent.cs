@@ -1,4 +1,4 @@
-using Abitech.NextApi.Model.Event;
+using Abitech.NextApi.Common.Event;
 
 namespace Abitech.NextApi.Server.Tests.Event
 {

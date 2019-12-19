@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model;
-using Abitech.NextApi.Model.Abstractions;
-using Abitech.NextApi.Model.DTO;
-using Abitech.NextApi.Model.Filtering;
-using Abitech.NextApi.Model.Paged;
-using Abitech.NextApi.Model.Tree;
+using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.DTO;
+using Abitech.NextApi.Common.Filtering;
+using Abitech.NextApi.Common.Paged;
+using Abitech.NextApi.Common.Tree;
 
 namespace Abitech.NextApi.Client
 {

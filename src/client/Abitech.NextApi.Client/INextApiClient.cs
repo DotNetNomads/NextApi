@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model;
-using Abitech.NextApi.Model.Event;
+using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Event;
 
 namespace Abitech.NextApi.Client
 {

@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Base;
 using MessagePack;

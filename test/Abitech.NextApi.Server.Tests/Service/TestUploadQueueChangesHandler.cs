@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
+using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 
 namespace Abitech.NextApi.Server.Tests.Service
 {
@@ -19,7 +19,7 @@ namespace Abitech.NextApi.Server.Tests.Service
         
         public override Task OnBeforeCreate(TestCity entityToCreate)
         {
-            if (entityToCreate.RowGuid == RejectCreateGuid)
+            if (entityToCreate.Id == RejectCreateGuid)
                 throw new Exception(RejectCreateGuidMessage);
             
             return Task.CompletedTask;
@@ -27,7 +27,7 @@ namespace Abitech.NextApi.Server.Tests.Service
 
         public override Task OnBeforeUpdate(TestCity originalEntity, string columnName, object newValue)
         {
-            if (originalEntity.RowGuid == RejectUpdateGuid)
+            if (originalEntity.Id == RejectUpdateGuid)
                 throw new Exception(RejectUpdateGuidMessage);
             
             return Task.CompletedTask;
@@ -35,7 +35,7 @@ namespace Abitech.NextApi.Server.Tests.Service
 
         public override Task OnBeforeDelete(TestCity entity)
         {
-            if (entity.RowGuid == RejectDeleteGuid)
+            if (entity.Id == RejectDeleteGuid)
                 throw new Exception(RejectDeleteGuidMessage);
             
             return Task.CompletedTask;

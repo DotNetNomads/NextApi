@@ -1,12 +1,11 @@
-using Abitech.NextApi.Server.EfCore.DAL;
-using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.Security;
+using Abitech.NextApi.Server.UploadQueue.DAL;
 using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Base
 {
-    public class TestDbContext : ColumnChangesEnabledNextApiDbContext
+    public class TestDbContext : UploadQueueDbContext
     {
 
         public DbSet<TestEntity> TestEntities { get; set; }

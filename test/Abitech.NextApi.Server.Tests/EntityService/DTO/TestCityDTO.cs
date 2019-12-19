@@ -1,10 +1,11 @@
-using Abitech.NextApi.Model.DTO;
+using System;
+using Abitech.NextApi.Common.DTO;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.DTO
 {
-    public class TestCityDTO: IEntityDto<int>
+    public class TestCityDTO: IEntityDto<Guid>
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
     }
 }

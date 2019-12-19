@@ -1,6 +1,7 @@
 using System;
 using Abitech.NextApi.Server.EfCore;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
+using Abitech.NextApi.Server.UploadQueue;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

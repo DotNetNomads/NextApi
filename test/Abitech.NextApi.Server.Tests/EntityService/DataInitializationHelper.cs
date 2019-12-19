@@ -25,7 +25,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService
             var role = CreateRole(1);
             await context.AddAsync(role);
             await context.SaveChangesAsync();
-            var city = CreateCity(1);
+            var city = CreateCity();
             await context.AddAsync(city);
             await context.SaveChangesAsync();
             for (var id = 1; id <= count; id++)
@@ -51,7 +51,7 @@ namespace Abitech.NextApi.Server.Tests.EntityService
             var (context, scope) = await testServer.ResolveDb();
             for (var id = 1; id <= count; id++)
             {
-                var city = CreateCity(id);
+                var city = CreateCity();
                 await context.AddAsync(city);
             }
 
@@ -64,11 +64,12 @@ namespace Abitech.NextApi.Server.Tests.EntityService
             return new TestRole {Name = $"roleName{roleId}", Id = roleId};
         }
 
-        private static TestCity CreateCity(int cityId)
+        private static TestCity CreateCity()
         {
             var rand = new Random();
-            var name = $"cityName{cityId}";
-            return new TestCity {Name = name, Population = rand.Next(), Demonym = name + "er", Id = cityId};
+            var guid = Guid.NewGuid();
+            var name = $"cityName{guid}";
+            return new TestCity {Name = name, Population = rand.Next(), Demonym = name + "er", Id = guid};
         }
 
         public static async Task GenerateTreeItems(this NextApiTest testServer)
