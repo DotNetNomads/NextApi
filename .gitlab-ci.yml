@@ -39,7 +39,7 @@
 
 # declaration
 variables:
-  VERSION: "1.9.0.$CI_PIPELINE_IID"
+  VERSION: "1.9.1.$CI_PIPELINE_IID"
 
 stages:
   - test

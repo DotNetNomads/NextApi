@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Request;
@@ -16,7 +17,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace Abitech.NextApi.Server.Tests.Service
 {
     [NextApiAnonymous]
-    public class TestService : NextApiService
+    public class TestService : INextApiService
     {
         private INextApiUserAccessor _nextApiUserAccessor;
         private INextApiRequest _nextApiRequest;

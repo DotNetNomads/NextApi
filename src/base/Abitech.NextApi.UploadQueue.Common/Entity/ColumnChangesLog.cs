@@ -1,7 +1,7 @@
 using System;
 using Abitech.NextApi.Common.Entity;
 
-namespace Abitech.NextApi.Server.UploadQueue.Entity
+namespace Abitech.NextApi.UploadQueue.Common.Entity
 {
     /// <summary>
     /// Column changes log item
@@ -25,7 +25,6 @@ namespace Abitech.NextApi.Server.UploadQueue.Entity
         /// Last changed on time
         /// </summary>
         public DateTimeOffset LastChangedOn { get; set; }
-        // TODO: implement in db context (when entity implements IColumnLoggedEntity write or update row in ColumnChangesLog)
         /// <inheritdoc />
         public int Id { get; set; }
     }

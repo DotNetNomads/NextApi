@@ -1,6 +1,6 @@
 using System;
 
-namespace Abitech.NextApi.Server.EfCore.Entity
+namespace Abitech.NextApi.Common.Entity
 {
     /// <summary>
     /// Interface represents entity to be logged

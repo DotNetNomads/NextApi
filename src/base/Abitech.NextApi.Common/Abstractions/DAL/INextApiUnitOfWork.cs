@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace Abitech.NextApi.Server.Entity
+namespace Abitech.NextApi.Common.Abstractions
 {
     /// <summary>
     /// Represents unit of work commit manager

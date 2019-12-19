@@ -4,9 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Entity;
-using Abitech.NextApi.Server.EfCore;
-using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.Service;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.UploadQueue.Common.Abstractions;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
@@ -19,7 +16,7 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
     /// <para>Derive from this class and register repositories in the constructor</para>
     /// <para>You must call <see cref="UploadQueueServerExtensions.AddColumnChangesLogger{TDbContext}"/></para>
     /// </summary>
-    public abstract class UploadQueueService<TUnitOfWork> : NextApiService, IUploadQueueService
+    public abstract class UploadQueueService<TUnitOfWork> : INextApiService, IUploadQueueService
         where TUnitOfWork : class, INextApiUnitOfWork
     {
         /// <summary>

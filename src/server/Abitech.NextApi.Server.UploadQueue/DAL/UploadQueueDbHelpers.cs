@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Entity;
-using Abitech.NextApi.Server.UploadQueue.Entity;
+using Abitech.NextApi.UploadQueue.Common.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 

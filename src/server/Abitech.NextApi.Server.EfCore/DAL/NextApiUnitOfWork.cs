@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Event.System;
-using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.Event;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Abitech.NextApi.Server.EfCore.DAL
 {

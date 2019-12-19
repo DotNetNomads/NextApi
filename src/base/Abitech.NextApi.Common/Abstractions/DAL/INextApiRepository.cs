@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Entity;
 
-namespace Abitech.NextApi.Server.Entity
+namespace Abitech.NextApi.Common.Abstractions
 {
     /// <summary>
     /// Base interface for entity repo

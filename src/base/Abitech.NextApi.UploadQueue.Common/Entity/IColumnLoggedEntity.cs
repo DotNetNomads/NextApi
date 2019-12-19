@@ -1,4 +1,4 @@
-namespace Abitech.NextApi.Server.UploadQueue.Entity
+namespace Abitech.NextApi.UploadQueue.Common.Entity
 {
     /// <summary>
     /// Indicates that entity should be logged in ColumnChangesLog

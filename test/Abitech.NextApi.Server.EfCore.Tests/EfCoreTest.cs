@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Event.System;
 using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Server.EfCore.Tests.Base;

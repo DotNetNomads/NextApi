@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Entity;
-using Abitech.NextApi.Server.EfCore.Entity;
-using Abitech.NextApi.Server.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.Server.EfCore.DAL

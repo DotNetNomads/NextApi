@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Entity;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.DAL
