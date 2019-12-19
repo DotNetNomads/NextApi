@@ -1,19 +1,19 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model.Event.System;
-using Abitech.NextApi.Model.Filtering;
-using Abitech.NextApi.Server.EfCore.Service;
+using Abitech.NextApi.Common.Event.System;
+using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Security;
+using Abitech.NextApi.Server.UploadQueue;
+using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using DeepEqual.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 
 namespace Abitech.NextApi.Server.EfCore.Tests
@@ -30,25 +30,22 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestEntityRepository>();
                 var unitOfWork = provider.GetService<TestUnitOfWork>();
-
+                var entityGuid = Guid.NewGuid();
+                var entityGuid2 = Guid.NewGuid();
                 // check adding 
                 {
                     var entityToAdd = new TestEntity()
                     {
-                        Name = "TestEntityToAdd",
-                        Date = new DateTime(2019, 10, 24, 4, 4, 4)
+                        Name = "TestEntityToAdd", Date = new DateTime(2019, 10, 24, 4, 4, 4), Id = entityGuid
                     };
-                    
-                    var entityToAdd1 = new TestEntity()
-                    {
-                        Name = "TestEntityToAdd"
-                    };
+
+                    var entityToAdd1 = new TestEntity() {Name = "TestEntityToAdd", Id = entityGuid2};
 
                     await repo.AddAsync(entityToAdd);
                     await repo.AddAsync(entityToAdd1);
                     await unitOfWork.CommitAsync();
                     // should contain id after commit
-                    Assert.True(entityToAdd.Id > 0);
+                    Assert.True(entityToAdd.Id != null);
                     var entityAdded = await repo.GetByIdAsync(entityToAdd.Id);
                     entityToAdd.ShouldDeepEqual(entityAdded);
                 }
@@ -62,7 +59,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                             .Build()
                             .ToLambdaFilter<TestEntity>()).ToListAsync();
                     Assert.Equal("TestEntityToAdd", filteredByDateList[0].Name);
-                    
+
                     var filteredByDateListNoOutput = await repo.GetAll().Where(
                         new FilterBuilder()
                             .EqualToDate("Date",
@@ -70,7 +67,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                             .Build()
                             .ToLambdaFilter<TestEntity>()).ToListAsync();
                     Assert.Empty(filteredByDateListNoOutput);
-                    
+
                     var filteredByDateListNoOutput1 = await repo.GetAll().Where(
                         new FilterBuilder()
                             .EqualToDate("Date",
@@ -81,7 +78,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 }
                 // check update
                 {
-                    var entityToUpdate = await repo.GetByIdAsync(1);
+                    var entityToUpdate = await repo.GetByIdAsync(entityGuid);
                     // check that previously added entity
                     Assert.Equal("TestEntityToAdd", entityToUpdate.Name);
                     var newName = "TestEntityUpdate";
@@ -94,8 +91,8 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 // check delete
                 {
                     Assert.True(await repo.GetAll().AnyAsync());
-                    await repo.DeleteAsync(e => e.Id == 1);
-                    await repo.DeleteAsync(e => e.Id == 2);
+                    await repo.DeleteAsync(e => e.Id == entityGuid);
+                    await repo.DeleteAsync(e => e.Id == entityGuid2);
                     await unitOfWork.CommitAsync();
                     Assert.False(await repo.GetAll().AnyAsync());
                 }
@@ -173,54 +170,50 @@ namespace Abitech.NextApi.Server.EfCore.Tests
         [InlineData(false)]
         public async Task CheckColumnChangesLog(bool loggingEnabled)
         {
-            using (var scope = Services)
-            {
-                var provider = scope.ServiceProvider;
-                var repo = provider.GetService<TestColumnChangesRepo>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
-                var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
+            using var scope = Services;
+            var provider = scope.ServiceProvider;
+            var repo = provider.GetService<TestColumnChangesRepo>();
+            var unitOfWork = provider.GetService<TestUnitOfWork>();
+            var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
-                // enable-or-disable logging
-                columnChangesLogger.LoggingEnabled = loggingEnabled;
+            // enable-or-disable logging
+            columnChangesLogger.LoggingEnabled = loggingEnabled;
 
-                var entity = new TestColumnChangesEnabledEntity {Name = $"testColumnLog{loggingEnabled}"};
+            var entity = new TestColumnChangesEnabledEntity {Name = $"testColumnLog{loggingEnabled}"};
 
-                await repo.AddAsync(entity);
-                await unitOfWork.CommitAsync();
+            await repo.AddAsync(entity);
+            await unitOfWork.CommitAsync();
 
-                // update
-                entity.Name = $"testColumnLogUpdated{loggingEnabled}";
-                await repo.UpdateAsync(entity);
-                await unitOfWork.CommitAsync();
-                // check log
-                var lastChangedOn =
-                    await columnChangesLogger.GetLastChange("TestColumnChangesEnabledEntity", "Name", entity.RowGuid);
-                Assert.True(loggingEnabled ? lastChangedOn.HasValue : lastChangedOn == null);
-            }
+            // update
+            entity.Name = $"testColumnLogUpdated{loggingEnabled}";
+            await repo.UpdateAsync(entity);
+            await unitOfWork.CommitAsync();
+            // check log
+            var lastChangedOn =
+                await columnChangesLogger.GetLastChange("TestColumnChangesEnabledEntity", "Name", entity.Id);
+            Assert.True(loggingEnabled ? lastChangedOn.HasValue : lastChangedOn == null);
         }
 
         [Fact]
         public async Task CheckColumnChangesLoggerDisabledForNotSupportedEntities()
         {
-            using (var scope = Services)
-            {
-                var provider = scope.ServiceProvider;
-                var repo = provider.GetService<TestEntityRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
-                var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
+            using var scope = Services;
+            var provider = scope.ServiceProvider;
+            var repo = provider.GetService<TestEntityRepository>();
+            var unitOfWork = provider.GetService<TestUnitOfWork>();
+            var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
-                var entity = new TestEntity {Name = "lolkek2222"};
+            var entity = new TestEntity {Name = "lolkek2222"};
 
-                await repo.AddAsync(entity);
-                await unitOfWork.CommitAsync();
+            await repo.AddAsync(entity);
+            await unitOfWork.CommitAsync();
 
-                entity.Name = "updatedNameFromTests";
+            entity.Name = "updatedNameFromTests";
 
-                await repo.UpdateAsync(entity);
-                await unitOfWork.CommitAsync();
+            await repo.UpdateAsync(entity);
+            await unitOfWork.CommitAsync();
 
-                Assert.Null(await columnChangesLogger.GetLastChange("TestEntity", "Name", entity.RowGuid));
-            }
+            Assert.Null(await columnChangesLogger.GetLastChange("TestEntity", "Name", entity.Id));
         }
 
         [Fact]

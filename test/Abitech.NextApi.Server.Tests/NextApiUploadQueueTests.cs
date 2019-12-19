@@ -4,13 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Model;
-using Abitech.NextApi.Model.UploadQueue;
-using Abitech.NextApi.Server.EfCore.Service;
+using Abitech.NextApi.Common;
 using Abitech.NextApi.Server.Tests.EntityService;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 using Abitech.NextApi.Server.Tests.Service;
+using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
+using Abitech.NextApi.UploadQueue.Common.UploadQueue;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Xunit;
@@ -43,7 +43,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Create,
                 EntityName = nameof(TestCity),
                 NewValue = JsonConvert.SerializeObject(newTestCity),
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             var createOp2 = new UploadQueueDto
@@ -53,7 +53,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Create,
                 EntityName = nameof(TestCity),
                 NewValue = JsonConvert.SerializeObject(newTestCity),
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             await Task.Delay(2000);
@@ -88,7 +88,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Create,
                 EntityName = nameof(TestCity),
                 NewValue = JsonConvert.SerializeObject(newTestCity),
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             await Task.Delay(2000);
@@ -110,7 +110,7 @@ namespace Abitech.NextApi.Server.Tests
                 var serviceProvider = scope.ServiceProvider;
 
                 var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
-                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                 Assert.NotNull(newTestCityFromServer);
             }
@@ -139,7 +139,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Create,
                 EntityName = nameof(TestCity),
                 NewValue = JsonConvert.SerializeObject(newTestCity),
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             await Task.Delay(2000);
@@ -153,7 +153,7 @@ namespace Abitech.NextApi.Server.Tests
                 EntityName = nameof(TestCity),
                 ColumnName = nameof(TestCity.Name),
                 NewValue = updatedName,
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             uploadQueue.Add(createOp);
@@ -173,7 +173,7 @@ namespace Abitech.NextApi.Server.Tests
             var serviceProvider = scope.ServiceProvider;
 
             var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
-            var newTestCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+            var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
             Assert.NotNull(newTestCityFromServer);
             Assert.Equal(updatedName, newTestCityFromServer.Name);
@@ -206,7 +206,7 @@ namespace Abitech.NextApi.Server.Tests
                     OperationType = OperationType.Create,
                     EntityName = nameof(TestCity),
                     NewValue = JsonConvert.SerializeObject(newTestCity),
-                    EntityRowGuid = newTestCity.RowGuid
+                    EntityRowGuid = newTestCity.Id
                 };
 
                 var updatedName = "UpdatedName" + i;
@@ -219,7 +219,7 @@ namespace Abitech.NextApi.Server.Tests
                     EntityName = nameof(TestCity),
                     ColumnName = nameof(TestCity.Name),
                     NewValue = updatedName,
-                    EntityRowGuid = newTestCity.RowGuid
+                    EntityRowGuid = newTestCity.Id
                 };
 
                 var updatedPopulation = i + 1;
@@ -232,7 +232,7 @@ namespace Abitech.NextApi.Server.Tests
                     EntityName = nameof(TestCity),
                     ColumnName = nameof(TestCity.Population),
                     NewValue = updatedPopulation,
-                    EntityRowGuid = newTestCity.RowGuid
+                    EntityRowGuid = newTestCity.Id
                 };
 
                 if (createAndUpdateInSameBatch)
@@ -272,7 +272,7 @@ namespace Abitech.NextApi.Server.Tests
 
                 foreach (var testCity in testCities)
                 {
-                    var testCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == testCity.RowGuid);
+                    var testCityFromServer = await testCityRepo.GetAsync(city => city.Id == testCity.Id);
                     Assert.NotNull(testCityFromServer);
 
                     if (!createAndUpdateInSameBatch) continue;
@@ -305,7 +305,7 @@ namespace Abitech.NextApi.Server.Tests
                 foreach (var newTestCity in testCities)
                 {
                     var newTestCityFromServer =
-                        await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+                        await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                     Assert.NotNull(newTestCityFromServer);
                     Assert.Equal(newTestCity.Name, newTestCityFromServer.Name);
@@ -335,7 +335,7 @@ namespace Abitech.NextApi.Server.Tests
                     OperationType = OperationType.Update,
                     OccuredAt = now,
                     EntityName = nameof(TestCity),
-                    EntityRowGuid = testCity.RowGuid,
+                    EntityRowGuid = testCity.Id,
                     ColumnName = nameof(TestCity.Demonym),
                     NewValue = $"{newDemonym}{testCity.Id}"
                 })
@@ -391,7 +391,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Update,
                 OccuredAt = now,
                 EntityName = entityName,
-                EntityRowGuid = testCity.RowGuid,
+                EntityRowGuid = testCity.Id,
                 ColumnName = nameof(TestCity.Demonym),
                 NewValue = newDemonym
             };
@@ -416,7 +416,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Update,
                 OccuredAt = outdatedNow,
                 EntityName = entityName,
-                EntityRowGuid = testCity.RowGuid,
+                EntityRowGuid = testCity.Id,
                 ColumnName = nameof(TestCity.Demonym),
                 NewValue = newDemonymOutdated
             };
@@ -459,7 +459,7 @@ namespace Abitech.NextApi.Server.Tests
             var serviceProvider = scope.ServiceProvider;
 
             var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
-            var testCity = await testCityRepo.GetAsync(city => city.RowGuid == update.EntityRowGuid);
+            var testCity = await testCityRepo.GetAsync(city => city.Id == update.EntityRowGuid);
             Assert.Null(testCity);
         }
 
@@ -488,7 +488,7 @@ namespace Abitech.NextApi.Server.Tests
                     OperationType = OperationType.Update,
                     OccuredAt = DateTimeOffset.Now,
                     EntityName = entityName,
-                    EntityRowGuid = testCity.RowGuid,
+                    EntityRowGuid = testCity.Id,
                     ColumnName = nameof(TestCity.Demonym),
                     NewValue = $"{newDemonym}{testCity.Id}"
                 };
@@ -567,7 +567,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Delete,
                 OccuredAt = now,
                 EntityName = entityName,
-                EntityRowGuid = testCity1.RowGuid
+                EntityRowGuid = testCity1.Id
             };
 
             var delete2 = new UploadQueueDto
@@ -576,7 +576,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Delete,
                 OccuredAt = now,
                 EntityName = entityName,
-                EntityRowGuid = testCity2.RowGuid,
+                EntityRowGuid = testCity2.Id,
             };
 
             uploadQueue.Add(delete1);
@@ -597,10 +597,10 @@ namespace Abitech.NextApi.Server.Tests
                 var serviceProvider = scope.ServiceProvider;
                 testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
 
-                var testCity1FromServer = await testCityRepo.GetAsync(city => city.RowGuid == testCity1.RowGuid);
+                var testCity1FromServer = await testCityRepo.GetAsync(city => city.Id == testCity1.Id);
                 Assert.Null(testCity1FromServer);
 
-                var testCity2FromServer = await testCityRepo.GetAsync(city => city.RowGuid == testCity2.RowGuid);
+                var testCity2FromServer = await testCityRepo.GetAsync(city => city.Id == testCity2.Id);
                 Assert.Null(testCity2FromServer);
             }
         }
@@ -617,7 +617,7 @@ namespace Abitech.NextApi.Server.Tests
                 Name = "MyNewTestCity",
                 Population = 123456,
                 Demonym = "MyTestCityDemonym",
-                RowGuid = TestUploadQueueChangesHandler.RejectCreateGuid
+                Id = TestUploadQueueChangesHandler.RejectCreateGuid
             };
 
             var createOp = new UploadQueueDto
@@ -664,10 +664,10 @@ namespace Abitech.NextApi.Server.Tests
             }
 
             {
-                newTestCity.RowGuid = TestUploadQueueChangesHandler.RejectUpdateGuid;
+                newTestCity.Id = TestUploadQueueChangesHandler.RejectUpdateGuid;
                 createOp.NewValue = JsonConvert.SerializeObject(newTestCity);
-                createOp.EntityRowGuid = newTestCity.RowGuid;
-                updateOp.EntityRowGuid = newTestCity.RowGuid;
+                createOp.EntityRowGuid = newTestCity.Id;
+                updateOp.EntityRowGuid = newTestCity.Id;
 
                 var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
                 ("TestUploadQueue", "ProcessAsync",
@@ -684,9 +684,9 @@ namespace Abitech.NextApi.Server.Tests
             }
 
             {
-                newTestCity.RowGuid = TestUploadQueueChangesHandler.RejectDeleteGuid;
+                newTestCity.Id = TestUploadQueueChangesHandler.RejectDeleteGuid;
                 createOp.NewValue = JsonConvert.SerializeObject(newTestCity);
-                createOp.EntityRowGuid = newTestCity.RowGuid;
+                createOp.EntityRowGuid = newTestCity.Id;
 
                 uploadQueue.Clear();
                 uploadQueue.Add(createOp);
@@ -742,7 +742,7 @@ namespace Abitech.NextApi.Server.Tests
                 OperationType = OperationType.Create,
                 EntityName = nameof(TestCity),
                 NewValue = JsonConvert.SerializeObject(newTestCity),
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             uploadQueue.Add(createOp);
@@ -762,7 +762,7 @@ namespace Abitech.NextApi.Server.Tests
                 var serviceProvider = scope.ServiceProvider;
 
                 var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
-                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                 Assert.NotNull(newTestCityFromServer);
                 Assert.Equal(100, newTestCityFromServer.SomeNullableInt);
@@ -776,7 +776,7 @@ namespace Abitech.NextApi.Server.Tests
                 EntityName = nameof(TestCity),
                 ColumnName = nameof(TestCity.SomeNullableInt),
                 NewValue = null,
-                EntityRowGuid = newTestCity.RowGuid
+                EntityRowGuid = newTestCity.Id
             };
 
             uploadQueue.Clear();
@@ -795,7 +795,7 @@ namespace Abitech.NextApi.Server.Tests
                 var serviceProvider = scope.ServiceProvider;
 
                 var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
-                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.RowGuid == newTestCity.RowGuid);
+                var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                 Assert.NotNull(newTestCityFromServer);
                 Assert.Null(newTestCityFromServer.SomeNullableInt);

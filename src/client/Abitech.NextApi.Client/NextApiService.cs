@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 
 namespace Abitech.NextApi.Client
 {

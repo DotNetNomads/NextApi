@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Abitech.NextApi.Model.Event;
+using Abitech.NextApi.Common.Event;
 using Abitech.NextApi.Server.Request;
 using Microsoft.AspNetCore.SignalR;
 

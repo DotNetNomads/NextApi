@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 using Abitech.NextApi.Server.Tests.Common;
 using Abitech.NextApi.Server.Tests.Event;
 using Abitech.NextApi.Server.Tests.Service;

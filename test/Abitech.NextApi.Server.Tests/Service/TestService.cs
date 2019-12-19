@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Request;

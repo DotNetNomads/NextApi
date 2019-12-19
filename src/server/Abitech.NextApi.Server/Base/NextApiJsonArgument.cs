@@ -1,4 +1,4 @@
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 using Newtonsoft.Json.Linq;
 
 namespace Abitech.NextApi.Server.Base

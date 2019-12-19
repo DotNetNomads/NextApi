@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using Abitech.NextApi.Model.DTO;
+using Abitech.NextApi.Common.DTO;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.DTO

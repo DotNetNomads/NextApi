@@ -1,7 +1,8 @@
 using System;
-using Abitech.NextApi.Server.EfCore.Service;
 using Abitech.NextApi.Server.Tests.EntityService.DAL;
 using Abitech.NextApi.Server.Tests.EntityService.Model;
+using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
+using Abitech.NextApi.Server.UploadQueue.Service;
 
 namespace Abitech.NextApi.Server.Tests.Service
 {

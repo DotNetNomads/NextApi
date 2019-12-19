@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>8</LangVersion>
+    <PackageId>Abitech.NextApi.Server.UploadQueue</PackageId>
+    <Authors>Abitech Team</Authors>
+    <Company>Abitech LLC</Company>
+    <Description>UploadQueue server-side components</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Abitech.NextApi.Server.UploadQueue.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\Abitech.NextApi.Server.UploadQueue.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\base\Abitech.NextApi.UploadQueue.Common\Abitech.NextApi.UploadQueue.Common.csproj" />
+    <ProjectReference Include="..\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
+  </ItemGroup>
+
+</Project>

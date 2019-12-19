@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;

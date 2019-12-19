@@ -1,4 +1,4 @@
-using Abitech.NextApi.Server.Entity.Model;
+using Abitech.NextApi.Common.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Entity
 {

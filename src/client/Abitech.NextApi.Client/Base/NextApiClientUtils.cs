@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Abitech.NextApi.Model;
+using Abitech.NextApi.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

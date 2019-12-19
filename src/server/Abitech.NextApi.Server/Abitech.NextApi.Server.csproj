@@ -8,7 +8,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2PAssets</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -30,16 +29,9 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
-  <!-- workaround, thanx @daMulli, see: https://github.com/dotnet/cli/issues/3959#issuecomment-333318028 -->
-  <ItemGroup>
-    <ProjectReference Include="..\..\base\Abitech.NextApi.Model\Abitech.NextApi.Model.csproj" PrivateAssets="All" />
-  </ItemGroup>
 
-  <Target Name="IncludeP2PAssets">
-    <ItemGroup>
-      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.dll" />
-      <BuildOutputInPackage Include="$(OutputPath)\Abitech.NextApi.Model.xml" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
+  </ItemGroup>
 
 </Project>

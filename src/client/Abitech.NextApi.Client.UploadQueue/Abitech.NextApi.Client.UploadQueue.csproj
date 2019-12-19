@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Abitech.NextApi.Client.UploadQueue</PackageId>
+    <Authors>Abitech Team</Authors>
+    <Company>Abitech LLC</Company>
+    <Description>Client side upload queue service implementation</Description>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Abitech.NextApi.Client.UploadQueue.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\Abitech.NextApi.Client.UploadQueue.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\base\Abitech.NextApi.UploadQueue.Common\Abitech.NextApi.UploadQueue.Common.csproj" />
+    <ProjectReference Include="..\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
+  </ItemGroup>
+
+</Project>

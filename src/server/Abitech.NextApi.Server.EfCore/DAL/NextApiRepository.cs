@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Abitech.NextApi.Server.EfCore.Model.Base;
+using Abitech.NextApi.Common.Entity;
+using Abitech.NextApi.Server.EfCore.Entity;
 using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.Entity.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.Server.EfCore.DAL
@@ -23,7 +23,6 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         private readonly TDbContext _context;
         private readonly DbSet<T> _dbset;
         private readonly bool _isSoftDeleteSupported;
-        private readonly bool _isRowGuidSupported;
 
         /// <summary>
         /// Indicates that soft-delete enabled for this repo
@@ -39,7 +38,6 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             _context = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _dbset = _context.Set<T>();
             _isSoftDeleteSupported = typeof(ISoftDeletableEntity).IsAssignableFrom(typeof(T));
-            _isRowGuidSupported = typeof(IRowGuidEnabled).IsAssignableFrom(typeof(T));
         }
 
         /// <summary>
@@ -194,32 +192,14 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// </summary>
         /// <param name="where">Filter expression</param>
         /// <returns>Filtered entity with includes</returns>
-        public async Task<T> GetAsync(Expression<Func<T, bool>> where)
-        {
-            return await GetAll().FirstOrDefaultAsync<T>(where);
-        }
+        public async Task<T> GetAsync(Expression<Func<T, bool>> where) => await GetAll().FirstOrDefaultAsync<T>(@where);
 
-        public async Task AddAsync(object entity)
-        {
-            await AddAsync((T)entity);
-        }
+        public async Task AddAsync(object entity) => await AddAsync((T)entity);
 
-        public async Task UpdateAsync(object entity)
-        {
-            await UpdateAsync((T)entity);
-        }
+        public async Task UpdateAsync(object entity) => await UpdateAsync((T)entity);
 
-        public async Task DeleteAsync(object entity)
-        {
-            await DeleteAsync((T)entity);
-        }
+        public async Task DeleteAsync(object entity) => await DeleteAsync((T)entity);
 
-        public async Task<object> GetByRowGuid(Guid rowGuid)
-        {
-            if (!_isRowGuidSupported)
-                throw new Exception("RowGuid is not supported");
-
-            return await GetAsync(arg => ((IRowGuidEnabled)arg).RowGuid == rowGuid);
-        }
+        public async Task<object> GetByIdAsync(object id) => await GetByIdAsync((TKey)id);
     }
 }

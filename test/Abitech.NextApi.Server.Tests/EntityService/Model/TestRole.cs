@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Abitech.NextApi.Server.Entity.Model;
+using Abitech.NextApi.Common.Entity;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.Model
 {

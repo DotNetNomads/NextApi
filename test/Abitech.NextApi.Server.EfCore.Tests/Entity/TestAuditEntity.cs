@@ -1,7 +1,7 @@
 using System;
-using Abitech.NextApi.Server.EfCore.Model.Base;
+using Abitech.NextApi.Common.Entity;
+using Abitech.NextApi.Server.EfCore.Entity;
 using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.Entity.Model;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Entity
 {

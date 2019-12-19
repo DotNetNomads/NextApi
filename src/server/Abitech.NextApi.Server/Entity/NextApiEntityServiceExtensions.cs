@@ -1,6 +1,6 @@
 using System;
 using System.Linq.Expressions;
-using Abitech.NextApi.Model.Filtering;
+using Abitech.NextApi.Common.Filtering;
 using AutoMapper;
 
 namespace Abitech.NextApi.Server.Entity
