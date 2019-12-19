@@ -1,4 +1,5 @@
 using System;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Tests.EntityService.Model;

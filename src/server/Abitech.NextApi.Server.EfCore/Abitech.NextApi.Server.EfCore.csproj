@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -25,7 +25,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
   </ItemGroup>
 </Project>

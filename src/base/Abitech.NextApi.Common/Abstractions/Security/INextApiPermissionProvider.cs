@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
-
-namespace Abitech.NextApi.Server.Security
+namespace Abitech.NextApi.Common.Abstractions
 {
     /// <summary>
     /// Provides information about users permissions
@@ -20,22 +19,5 @@ namespace Abitech.NextApi.Server.Security
         /// List of supported permissions
         /// </summary>
         string[] SupportedPermissions { get; }
-    }
-
-    /// <summary>
-    /// Stub for disabled permission provider
-    /// </summary>
-    public class DisabledNextApiPermissionProvider : INextApiPermissionProvider
-    {
-        /// <inheritdoc />
-#pragma warning disable 1998
-        public async Task<bool> HasPermission(ClaimsPrincipal userInfo, object permission)
-#pragma warning restore 1998
-        {
-            return true;
-        }
-
-        /// <inheritdoc />
-        public string[] SupportedPermissions { get; } = {""};
     }
 }

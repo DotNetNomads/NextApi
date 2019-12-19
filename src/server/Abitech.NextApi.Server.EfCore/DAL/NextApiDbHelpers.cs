@@ -1,5 +1,5 @@
 ﻿using System;
-using Abitech.NextApi.Server.EfCore.Entity;
+using Abitech.NextApi.Common.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 

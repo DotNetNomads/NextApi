@@ -1,4 +1,4 @@
-namespace Abitech.NextApi.Server.EfCore.Entity
+namespace Abitech.NextApi.Common.Entity
 {
     /// <summary>
     /// Interface indicates that entity can be soft deleted

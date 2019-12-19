@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Abitech.NextApi.Common.Entity;
 using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.UploadQueue.Entity;
+using Abitech.NextApi.UploadQueue.Common.Entity;
 
 namespace Abitech.NextApi.Server.Tests.EntityService.Model
 {

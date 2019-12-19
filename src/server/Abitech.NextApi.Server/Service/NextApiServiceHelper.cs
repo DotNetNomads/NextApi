@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Base;
 using MessagePack;
@@ -25,34 +26,17 @@ namespace Abitech.NextApi.Server.Service
     /// </summary>
     public static class NextApiServiceHelper
     {
-        private static List<Type> _services;
-
         /// <summary>
         /// Locate every type that extends NextApiService
         /// </summary>
+        /// <param name="assemblyWithNextApiServices"></param>
         /// <returns>Returns list of types that extends NextApiService</returns>
-        public static List<Type> FindAllServices()
+        public static IEnumerable<Type> FindAllServices(Assembly assemblyWithNextApiServices)
         {
-            if (_services != null) return _services;
-
-            var baseType = typeof(NextApiService);
-            _services = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+            var baseType = typeof(INextApiService);
+            return assemblyWithNextApiServices.GetTypes()
                 .Where(x => baseType.IsAssignableFrom(x) && !x.IsAbstract)
                 .ToList();
-            return _services;
-        }
-
-        /// <summary>
-        /// Resolves service type by name
-        /// </summary>
-        /// <param name="name">Name of service</param>
-        /// <returns>Type of service</returns>
-        /// <exception cref="ArgumentNullException">When name is null or empty</exception>
-        public static Type GetServiceType(string name)
-        {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            return FindAllServices().FirstOrDefault(t =>
-                t.Name.Equals($"{name}Service"));
         }
 
         /// <summary>
@@ -138,7 +122,7 @@ namespace Abitech.NextApi.Server.Service
         /// <param name="arguments">Method arguments</param>
         /// <returns>dynamic result of method call</returns>
         /// <remarks>Do not use <c>async void</c> for service methods. See: https://docs.microsoft.com/en-us/dotnet/csharp/async</remarks>
-        public static async Task<object> CallService(MethodInfo methodInfo, NextApiService serviceInstance,
+        public static async Task<object> CallService(MethodInfo methodInfo, INextApiService serviceInstance,
             object[] arguments)
         {
             var returnType = methodInfo.ReturnType;

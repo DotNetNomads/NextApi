@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.Service;
@@ -20,6 +21,7 @@ namespace Abitech.NextApi.Server.Base
         private readonly IServiceProvider _serviceProvider;
         private readonly INextApiPermissionProvider _permissionProvider;
         private readonly ILogger<NextApiHandler> _logger;
+        private readonly NextApiServiceRegistry _serviceRegistry;
 
         /// <summary>
         /// 
@@ -29,14 +31,17 @@ namespace Abitech.NextApi.Server.Base
         /// <param name="serviceProvider"></param>
         /// <param name="permissionProvider"></param>
         /// <param name="logger">Logger</param>
+        /// <param name="serviceRegistry"></param>
         public NextApiHandler(NextApiServicesOptions options, INextApiUserAccessor nextApiUserAccessor,
-            IServiceProvider serviceProvider, INextApiPermissionProvider permissionProvider, ILogger<NextApiHandler> logger)
+            IServiceProvider serviceProvider, INextApiPermissionProvider permissionProvider,
+            ILogger<NextApiHandler> logger, NextApiServiceRegistry serviceRegistry)
         {
             _options = options;
             _nextApiUserAccessor = nextApiUserAccessor;
             _serviceProvider = serviceProvider;
             _permissionProvider = permissionProvider;
             _logger = logger;
+            _serviceRegistry = serviceRegistry;
         }
 
         /// <summary>
@@ -61,7 +66,7 @@ namespace Abitech.NextApi.Server.Base
                 return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotFound,
                     "Operation name is not provided");
 
-            var serviceType = NextApiServiceHelper.GetServiceType(command.Service);
+            var serviceType = _serviceRegistry.ResolveNextApiServiceType(command.Service);
             if (serviceType == null)
             {
                 _logger.LogDebug($"NextApi/Result: service is not found.");
@@ -124,7 +129,7 @@ namespace Abitech.NextApi.Server.Base
                     $"Error when parsing arguments for method. Please send correct arguments.");
             }
 
-            var serviceInstance = (NextApiService)_serviceProvider.GetService(serviceType);
+            var serviceInstance = (INextApiService)_serviceProvider.GetService(serviceType);
             try
             {
                 var result = await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParameters);

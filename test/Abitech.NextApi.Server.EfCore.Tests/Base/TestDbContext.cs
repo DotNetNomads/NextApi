@@ -1,3 +1,4 @@
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.UploadQueue.DAL;

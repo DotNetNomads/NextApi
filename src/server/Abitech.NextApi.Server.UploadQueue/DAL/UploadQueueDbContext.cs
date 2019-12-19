@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.EfCore.DAL;
-using Abitech.NextApi.Server.Security;
-using Abitech.NextApi.Server.UploadQueue.Entity;
+using Abitech.NextApi.UploadQueue.Common.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Abstractions;
 
 namespace Abitech.NextApi.Client
 {
@@ -47,13 +48,5 @@ namespace Abitech.NextApi.Client
         {
             await Client.Invoke(ServiceName, method, arguments);
         }
-    }
-
-    /// <summary>
-    /// Base interface for NextApi service-proxy
-    /// </summary>
-    public interface INextApiService
-    {
-        
     }
 }
