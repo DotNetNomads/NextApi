@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Local": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:11000"
+    }
+  }
+}
