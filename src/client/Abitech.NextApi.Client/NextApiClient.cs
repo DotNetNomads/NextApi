@@ -26,6 +26,11 @@ namespace Abitech.NextApi.Client
     public class NextApiClient : INextApiClient
     {
         /// <summary>
+        /// Can be used in integration test purposes
+        /// </summary>
+        public HttpMessageHandler MessageHandler { get; set; }
+
+        /// <summary>
         /// Transport type for NextApi requests
         /// </summary>
         protected NextApiTransport TransportType { get; }
@@ -115,9 +120,7 @@ namespace Abitech.NextApi.Client
             {
                 TEvent eventHandler;
                 if (_eventRegistry.ContainsKey(eventName))
-                {
                     eventHandler = (TEvent)_eventRegistry[eventName];
-                }
                 else
                 {
                     eventHandler = new TEvent();
@@ -194,9 +197,7 @@ namespace Abitech.NextApi.Client
             }
 
             if (response.Error != null)
-            {
                 throw NextApiClientUtils.NextApiException(response.Error);
-            }
 
             return (T)response.Data;
         }
@@ -207,10 +208,9 @@ namespace Abitech.NextApi.Client
         /// <param name="options"></param>
         protected virtual void ConnectionOptionsConfig(HttpConnectionOptions options)
         {
-            if (TokenProvider != null)
-            {
-                options.AccessTokenProvider = TokenProvider.ResolveToken;
-            }
+            if (MessageHandler != null) options.HttpMessageHandlerFactory = _ => MessageHandler;
+
+            if (TokenProvider != null) options.AccessTokenProvider = TokenProvider.ResolveToken;
         }
 
         /// <summary>
@@ -220,15 +220,10 @@ namespace Abitech.NextApi.Client
         /// <exception cref="Exception"></exception>
         protected async Task<HubConnection> GetConnection()
         {
-            if (_connection == null)
-            {
-                _connection = InitializeClientSignalR();
-            }
+            if (_connection == null) _connection = InitializeClientSignalR();
 
             if (_connection.State != HubConnectionState.Disconnected)
-            {
                 return _connection;
-            }
 
             try
             {
@@ -248,12 +243,9 @@ namespace Abitech.NextApi.Client
 
         private async Task<string[]> GetPermissionsHttp()
         {
-            HttpResponseMessage response;
-            using (var client = await GetHttpClient())
-            {
-                response = await client.GetAsync($"{Url}/http/permissions");
-                response.EnsureSuccessStatusCode();
-            }
+            using var client = await GetHttpClient();
+            var response = await client.GetAsync($"{Url}/http/permissions");
+            response.EnsureSuccessStatusCode();
 
             var stringResp = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<string[]>(stringResp, NextApiClientUtils.GetJsonConfig());
@@ -265,11 +257,9 @@ namespace Abitech.NextApi.Client
         /// <returns></returns>
         protected virtual async Task<HttpClient> GetHttpClient()
         {
-            var client = new HttpClient();
+            var client = new HttpClient(MessageHandler ?? new HttpClientHandler());
             if (TokenProvider == null)
-            {
                 return client;
-            }
 
             var token = await TokenProvider.ResolveToken();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
@@ -283,11 +273,9 @@ namespace Abitech.NextApi.Client
             HttpResponseMessage response;
             try
             {
-                using (var client = await GetHttpClient())
-                {
-                    response = await client.PostAsync($"{Url}/http", form);
-                    response.EnsureSuccessStatusCode();
-                }
+                using var client = await GetHttpClient();
+                response = await client.PostAsync($"{Url}/http", form);
+                response.EnsureSuccessStatusCode();
             }
             catch (Exception ex)
             {
@@ -298,12 +286,10 @@ namespace Abitech.NextApi.Client
             if (!response.Content.Headers.ContentType.MediaType.Contains("application/json"))
             {
                 if (typeof(T) != typeof(NextApiFileResponse))
-                {
                     throw new NextApiException(
                         NextApiErrorCode.IncorrectRequest,
                         "Please specify correct return type for this request. Use NextApiFileResponse."
                     );
-                }
 
                 try
                 {
@@ -320,9 +306,7 @@ namespace Abitech.NextApi.Client
             var result =
                 JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, NextApiClientUtils.GetJsonConfig());
             if (!result.Success)
-            {
                 throw NextApiClientUtils.NextApiException(result.Error);
-            }
 
             return result.Data;
         }
@@ -336,14 +320,6 @@ namespace Abitech.NextApi.Client
             return new NextApiFileResponse(fileName, stream, mimeType);
         }
 
-        private JsonSerializerSettings GetJsonConfig()
-        {
-            return new JsonSerializerSettings
-            {
-                Converters = new JsonConverter[] {new StringEnumConverter()}
-            };
-        }
-
         #endregion
 
 
@@ -353,9 +329,7 @@ namespace Abitech.NextApi.Client
             var command = NextApiClientUtils.PrepareCommand(serviceName, serviceMethod, arguments);
             if (TransportType == NextApiTransport.Http || arguments.Any(a => a is NextApiFileArgument) ||
                 typeof(T) == typeof(NextApiFileResponse))
-            {
                 return await InvokeHttp<T>(command);
-            }
 
             return await InvokeSignalR<T>(command);
         }
@@ -375,9 +349,6 @@ namespace Abitech.NextApi.Client
         }
 
         /// <inheritdoc />
-        public TEvent GetEvent<TEvent>() where TEvent : INextApiEvent, new()
-        {
-            return GetEventInternal<TEvent>();
-        }
+        public TEvent GetEvent<TEvent>() where TEvent : INextApiEvent, new() => GetEventInternal<TEvent>();
     }
 }

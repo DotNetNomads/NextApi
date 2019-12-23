@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <LangVersion>8</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
+      <ProjectReference Include="..\..\src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj" />
+      <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
+      <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.UploadQueue\Abitech.NextApi.Server.UploadQueue.csproj" />
+      <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.0" />
+    </ItemGroup>
+
+</Project>

@@ -34,110 +34,80 @@ namespace Abitech.NextApi.Client
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        protected NextApiArgument KeyArgument(TKey key)
-        {
-            return new NextApiArgument {Name = "key", Value = key};
-        }
+        protected NextApiArgument KeyArgument(TKey key) => new NextApiArgument {Name = "key", Value = key};
 
         /// <inheritdoc />
-        public async Task<TEntity> Create(TEntity entity)
-        {
-            return await InvokeService<TEntity>("Create", new NextApiArgument {Name = "entity", Value = entity});
-        }
+        public async Task<TEntity> Create(TEntity entity) =>
+            await InvokeService<TEntity>("Create", new NextApiArgument {Name = "entity", Value = entity});
 
         /// <inheritdoc />
-        public async Task Delete(TKey key)
-        {
-            await InvokeService("Delete", KeyArgument(key));
-        }
+        public async Task Delete(TKey key) => await InvokeService("Delete", KeyArgument(key));
 
         /// <inheritdoc />
-        public async Task<TEntity> Update(TKey key, TEntity patch)
-        {
-            return await InvokeService<TEntity>(
+        public async Task<TEntity> Update(TKey key, TEntity patch) =>
+            await InvokeService<TEntity>(
                 "Update",
                 KeyArgument(key),
                 new NextApiArgument {Name = "patch", Value = patch}
             );
-        }
 
         /// <inheritdoc />
-        public async Task<object> Create(object entity)
-        {
-            return await Create((TEntity)entity);
-        }
+        public async Task<object> Create(object entity) => await Create((TEntity)entity);
 
         /// <inheritdoc />
-        public async Task Delete(object key)
-        {
-            await Delete((TKey)key);
-        }
+        public async Task Delete(object key) => await Delete((TKey)key);
 
         /// <inheritdoc />
-        public async Task<object> Update(object key, object patch)
-        {
-            return await Update((TKey)key, (TEntity)patch);
-        }
+        public async Task<object> Update(object key, object patch) => await Update((TKey)key, (TEntity)patch);
 
         /// <inheritdoc />
-        public async Task<object> GetByIdNonGeneric(object key, string[] expand = null)
-        {
-            return await GetById((TKey)key, expand);
-        }
+        public async Task<object> GetByIdNonGeneric(object key, string[] expand = null) =>
+            await GetById((TKey)key, expand);
 
         /// <inheritdoc />
-        public async Task<object[]> GetByIdsNonGeneric(object[] keys, string[] expand = null)
-        {
-            return await GetByIds(keys.Cast<TKey>().ToArray(), expand);
-        }
-        
+        public async Task<object[]> GetByIdsNonGeneric(object[] keys, string[] expand = null) =>
+            await GetByIds(keys.Cast<TKey>().ToArray(), expand);
+
         /// <inheritdoc />
-        public async Task<PagedList<TEntity>> GetPaged(PagedRequest request)
-        {
-            return await InvokeService<PagedList<TEntity>>("GetPaged",
+        public async Task<PagedList<TEntity>> GetPaged(PagedRequest request) =>
+            await InvokeService<PagedList<TEntity>>("GetPaged",
                 new NextApiArgument() {Name = "request", Value = request});
-        }
 
 
         /// <inheritdoc />
-        public async Task<TEntity> GetById(TKey key, string[] expand = null)
-        {
-            return await InvokeService<TEntity>("GetById", KeyArgument(key),
+        public async Task<TEntity> GetById(TKey key, string[] expand = null) =>
+            await InvokeService<TEntity>("GetById", KeyArgument(key),
                 new NextApiArgument() {Name = "expand", Value = expand});
-        }
 
 
         /// <inheritdoc />
-        public async Task<TEntity[]> GetByIds(TKey[] keys, string[] expand = null)
-        {
-            return await InvokeService<TEntity[]>("GetByIds", new NextApiArgument() {Name = "keys", Value = keys},
+        public async Task<TEntity[]> GetByIds(TKey[] keys, string[] expand = null) =>
+            await InvokeService<TEntity[]>("GetByIds", new NextApiArgument() {Name = "keys", Value = keys},
                 new NextApiArgument() {Name = "expand", Value = expand});
+
+        /// <inheritdoc />
+        public async Task<int> Count(Filter filter = null) =>
+            await InvokeService<int>(nameof(Count), new NextApiArgument(nameof(filter), filter));
+
+        /// <inheritdoc />
+        public async Task<bool> Any(Filter filter = null) =>
+            await InvokeService<bool>(nameof(Any), new NextApiArgument(nameof(filter), filter));
+
+        async Task<object[]> INextApiEntityService.GetIdsByFilter(Filter filter)
+        {
+            return (await GetIdsByFilter(filter))
+                .Cast<object>()
+                .ToArray();
         }
 
         /// <inheritdoc />
-        public async Task<int> Count(Filter filter = null)
-        {
-            return await InvokeService<int>(nameof(Count), new NextApiArgument(nameof(filter), filter));
-        }
-        
-        /// <inheritdoc />
-        public async Task<bool> Any(Filter filter = null)
-        {
-            return await InvokeService<bool>(nameof(Any), new NextApiArgument(nameof(filter), filter));
-        }
+        public async Task<TKey[]> GetIdsByFilter(Filter filter = null) =>
+            await InvokeService<TKey[]>(nameof(GetIdsByFilter), new NextApiArgument(nameof(filter), filter));
 
         /// <inheritdoc />
-        public async Task<int[]> GetIdsByFilter(Filter filter = null)
-        {
-            return await InvokeService<int[]>(nameof(GetIdsByFilter), new NextApiArgument(nameof(filter), filter));
-        }
-
-        /// <inheritdoc />
-        public async Task<PagedList<TreeItem<TEntity>>> GetTree(TreeRequest request)
-        {
-            return await InvokeService<PagedList<TreeItem<TEntity>>>(nameof(GetTree),
+        public async Task<PagedList<TreeItem<TEntity>>> GetTree(TreeRequest request) =>
+            await InvokeService<PagedList<TreeItem<TEntity>>>(nameof(GetTree),
                 new NextApiArgument(nameof(request), request));
-        }
     }
 
     /// <summary>
@@ -187,8 +157,8 @@ namespace Abitech.NextApi.Client
         Task<int> Count(Filter filter = null);
 
         Task<bool> Any(Filter filter = null);
-        
-        Task<int[]> GetIdsByFilter(Filter filter = null);
+
+        Task<object[]> GetIdsByFilter(Filter filter = null);
 #pragma warning restore 1591
     }
 }

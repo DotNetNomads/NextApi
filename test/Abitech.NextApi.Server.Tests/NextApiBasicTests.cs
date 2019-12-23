@@ -1,30 +1,26 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common;
-using Abitech.NextApi.Server.Tests.Common;
-using Abitech.NextApi.Server.Tests.Event;
-using Abitech.NextApi.Server.Tests.Service;
+using Abitech.NextApi.TestClient;
+using Abitech.NextApi.TestServer.DTO;
+using Abitech.NextApi.TestServer.Event;
+using Abitech.NextApi.TestServerCore;
 using DeepEqual.Syntax;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiBasicTests
+    public class NextApiBasicTests : NextApiTest<TestApplication, INextApiClient>
     {
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
         public async Task DtoTest(NextApiTransport transport)
         {
-            var testSrv = NextApiTest.Instance();
-            var client = await testSrv.GetClient(transport);
+            var service = App.ResolveService<ITestService>(null, transport);
+            var client = App.ResolveClient(null, transport);
             var dtoModel = new TestDTO
             {
                 IntProperty = 1,
@@ -35,8 +31,7 @@ namespace Abitech.NextApi.Server.Tests
                 NullableBoolProperty = null
             };
 
-            var resultDto = await client.Invoke<TestDTO>("Test", "DtoTest",
-                new NextApiArgument {Name = "model", Value = dtoModel});
+            var resultDto = await service.DtoTest(dtoModel);
             resultDto.IsDeepEqual(dtoModel);
 
             // incorrect call
@@ -57,8 +52,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task MethodWithoutArgsTest(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
-            var result = await client.Invoke<string>("Test", "MethodWithoutArgsTest");
+            var result = await App.ResolveService<ITestService>(null, transport).MethodWithoutArgsTest();
             Assert.Equal("Done!", result);
         }
 
@@ -67,11 +61,10 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task ExceptionTest(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
             Exception ex = null;
             try
             {
-                await client.Invoke("Test", "ExceptionTest");
+                await App.ResolveService<ITestService>(null, transport).ExceptionTest();
             }
             catch (Exception e)
             {
@@ -85,22 +78,19 @@ namespace Abitech.NextApi.Server.Tests
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
-        public async Task SyncMethodVoidTest(NextApiTransport transport)
+        public void SyncMethodVoidTest(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
-            await client.Invoke("Test", "SyncMethodVoidTest");
+            App.ResolveService<ITestService>(null, transport).SyncMethodVoidTest();
             Assert.True(true);
         }
 
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
-        public async Task SyncMethodTest(NextApiTransport transport)
+        public void SyncMethodTest(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
             const string testString = "hello";
-            var result = await client.Invoke<string>("Test", "SyncMethodTest",
-                new NextApiArgument {Name = "stringArg", Value = testString});
+            var result = App.ResolveService<ITestService>(null, transport).SyncMethodTest(testString);
             Assert.Equal(testString, result);
         }
 
@@ -109,10 +99,9 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task AsyncVoidDenied(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
             try
             {
-                await client.Invoke("Test", "AsyncVoidDenied");
+                await App.ResolveService<ITestService>(null, transport).AsyncVoidDenied();
                 Assert.False(true, "should threw exception if invoking method has 'async void' definition");
             }
             catch (Exception ex)
@@ -126,12 +115,9 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(true, true, NextApiTransport.Http)]
         [InlineData(true, null, NextApiTransport.SignalR)]
         [InlineData(true, true, NextApiTransport.SignalR)]
-        public async Task BoolTest(bool? bool1, bool? bool2, NextApiTransport transport)
+        public async Task BoolTest(bool bool1, bool? bool2, NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
-            var result = await client.Invoke<Dictionary<string, bool?>>("Test", "BoolTest",
-                new NextApiArgument {Name = "boolArg1", Value = bool1},
-                new NextApiArgument {Name = "nullableBoolArg2", Value = bool2});
+            var result = await App.ResolveService<ITestService>(null, transport).BoolTest(bool1, bool2);
             Assert.Equal(result["boolArg1"], bool1);
             Assert.Equal(result["nullableBoolArg2"], bool2);
         }
@@ -141,10 +127,8 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task StringTest(NextApiTransport transport)
         {
-            var clinet = await NextApiTest.Instance().GetClient(transport);
-            var str = "Hello World";
-            var resultStr = await clinet.Invoke<string>("Test", "StringTest",
-                new NextApiArgument {Name = "stringArg", Value = str});
+            const string str = "Hello World";
+            var resultStr = await App.ResolveService<ITestService>(null, transport).StringTest(str);
             Assert.Equal(str, resultStr);
         }
 
@@ -153,10 +137,8 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task DecimalTest(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
-            var dcm = 23m;
-            var resultDcm = await client.Invoke<decimal>("Test", "DecimalTest",
-                new NextApiArgument {Name = "decimalArg1", Value = dcm});
+            const decimal dcm = 23m;
+            var resultDcm = await App.ResolveService<ITestService>(null, transport).DecimalTest(dcm);
             Assert.Equal(dcm, resultDcm);
         }
 
@@ -167,10 +149,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(3, 4, NextApiTransport.SignalR)]
         public async Task IntegersTest(int? int1, int? int2, NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
-            var result = await client.Invoke<Dictionary<string, int?>>("Test", "IntegersTest",
-                new NextApiArgument {Name = "intArg1", Value = int1},
-                new NextApiArgument {Name = "nullableIntArg2", Value = int2});
+            var result = await App.ResolveService<ITestService>(null, transport).IntegersTest(int1.Value, int2);
             Assert.Equal(result["intArg1"], int1);
             Assert.Equal(result["nullableIntArg2"], int2);
         }
@@ -180,7 +159,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task DtoAndOptionalArgTest(NextApiTransport transport)
         {
-            var client = await NextApiTest.Instance().GetClient(transport);
+            var client = App.ResolveClient(null, transport);
             var dtoModel = new TestDTO
             {
                 IntProperty = 1,
@@ -190,7 +169,7 @@ namespace Abitech.NextApi.Server.Tests
                 NullableIntProperty = null,
                 NullableBoolProperty = null
             };
-            var defaultStringValue = "optionalString";
+            const string defaultStringValue = "optionalString";
             // optional string
             var resultString = await client.Invoke<string>("Test", "DtoAndOptionalArgTest",
                 new NextApiArgument {Name = "model", Value = dtoModel}
@@ -198,7 +177,7 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(defaultStringValue, resultString);
 
             // override default string arg
-            var newArg = "newString";
+            const string newArg = "newString";
             var newResult = await client.Invoke<string>("Test", "DtoAndOptionalArgTest",
                 new NextApiArgument {Name = "model", Value = dtoModel},
                 new NextApiArgument() {Name = "optionalString", Value = newArg}
@@ -210,19 +189,16 @@ namespace Abitech.NextApi.Server.Tests
         public async Task UploadFileAndDownloadTest()
         {
             // upload only for http
-            var client = await NextApiTest.Instance().GetClient(NextApiTransport.Http);
+            var service = App.ResolveService<ITestService>();
 
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var filePath = Path.Combine(baseDir, "TestData", "белонька.jpg");
             var originalBytes = File.ReadAllBytes(filePath);
 
-            var resultFilePath = await client.Invoke<string>("Test", "UploadFile",
-                new NextApiFileArgument("belloni", filePath));
+            var resultFilePath = await service.UploadFile(new MemoryStream(originalBytes), "белонька.jpg");
 
             // download and check
-            var fileResponse =
-                await client.Invoke<NextApiFileResponse>("Test", "GetFile",
-                    new NextApiArgument("path", resultFilePath));
+            var fileResponse = await service.GetFile(resultFilePath);
 
             var bytes = await fileResponse.GetBytes();
 
@@ -231,15 +207,15 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal("белонька.jpg", fileResponse.FileName);
 
             // download mime typed
-            var typed = await client.Invoke<NextApiFileResponse>("Test", "GetFileMimeTyped",
-                new NextApiArgument("path", resultFilePath));
+            var typed = await service.GetFileMimeTyped(resultFilePath);
             Assert.Equal("image/jpeg", typed.MimeType);
         }
 
         [Fact]
         public async Task EventsTest()
         {
-            var client = await NextApiTest.Instance().GetClient(NextApiTransport.SignalR);
+            // only signalr
+            var client = App.ResolveClient();
 
             var textEventReceived = false;
             var referenceEventReceived = false;
@@ -263,11 +239,11 @@ namespace Abitech.NextApi.Server.Tests
             // we should ask server to raise events to client :)
             await client.Invoke("Test", "RaiseEvents");
 
-            Func<bool> allEventsIsNotReceived =
-                () => !textEventReceived || !referenceEventReceived || !withoutPayloadEventReceived;
+            bool AllEventsIsNotReceived() =>
+                !textEventReceived || !referenceEventReceived || !withoutPayloadEventReceived;
 
             var maxTries = 10;
-            while (allEventsIsNotReceived())
+            while (AllEventsIsNotReceived())
             {
                 if (maxTries == 0)
                 {

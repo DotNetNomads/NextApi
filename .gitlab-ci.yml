@@ -61,6 +61,11 @@ test-client-di:
 
 # build/nugetize
 
+nugetize-testing:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/Abitech.NextApi.Testing
+    projectName: Abitech.NextApi.Testing
 nugetize-common:
   <<: *nugetize
   variables:

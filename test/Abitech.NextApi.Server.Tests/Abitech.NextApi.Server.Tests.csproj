@@ -28,14 +28,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj" />
       <ProjectReference Include="..\..\src\client\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
       <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
       <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.UploadQueue\Abitech.NextApi.Server.UploadQueue.csproj" />
       <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Security" />
+      <ProjectReference Include="..\Abitech.NextApi.TestClient\Abitech.NextApi.TestClient.csproj" />
+      <ProjectReference Include="..\Abitech.NextApi.TestServer\Abitech.NextApi.TestServer.csproj" />
     </ItemGroup>
 
     <ItemGroup>

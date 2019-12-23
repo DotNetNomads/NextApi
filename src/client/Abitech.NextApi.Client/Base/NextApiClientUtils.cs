@@ -32,13 +32,9 @@ namespace Abitech.NextApi.Client.Base
         /// Get default JSON serializer settings
         /// </summary>
         /// <returns></returns>
-        public static JsonSerializerSettings GetJsonConfig()
-        {
-            return new JsonSerializerSettings
-            {
-                Converters = new JsonConverter[] {new StringEnumConverter()}
-            };
-        }
+        public static JsonSerializerSettings GetJsonConfig() =>
+            new JsonSerializerSettings {Converters = new JsonConverter[] {new StringEnumConverter()}};
+
         /// <summary>
         /// Prepare multipart form for sending via HTTP
         /// </summary>
@@ -67,7 +63,7 @@ namespace Abitech.NextApi.Client.Base
 
             return form;
         }
-        
+
 
         /// <summary>
         /// Prepare NextApiCommand for sending
@@ -76,11 +72,10 @@ namespace Abitech.NextApi.Client.Base
         /// <param name="serviceMethod"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
-        public static NextApiCommand PrepareCommand(string serviceName, string serviceMethod, INextApiArgument[] arguments)
-        {
-            return new NextApiCommand {Args = arguments, Method = serviceMethod, Service = serviceName};
-        }
-        
+        public static NextApiCommand PrepareCommand(string serviceName, string serviceMethod,
+            INextApiArgument[] arguments) =>
+            new NextApiCommand {Args = arguments, Method = serviceMethod, Service = serviceName};
+
         /// <summary>
         /// Parse NextApiException from NextApiError
         /// </summary>

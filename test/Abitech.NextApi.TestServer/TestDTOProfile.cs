@@ -3,7 +3,7 @@ using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Model;
 using AutoMapper;
 
-namespace Abitech.NextApi.TestServer.Service
+namespace Abitech.NextApi.TestServer
 {
     public class TestDTOProfile: Profile
     {

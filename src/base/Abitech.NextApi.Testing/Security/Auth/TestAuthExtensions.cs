@@ -1,12 +1,18 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Tasks.Server.Tests.Common.Auth;
 
-namespace Abitech.NextApi.Server.Tests.Security.Auth
+namespace Abitech.NextApi.Testing.Security.Auth
 {
+    /// <summary>
+    /// Fake-auth extensions
+    /// </summary>
     public static class TestAuthExtensions
     {
-        public static void AddTestAuthServices(this IServiceCollection services)
+        /// <summary>
+        /// Add fake auth services
+        /// </summary>
+        /// <param name="services"></param>
+        public static void AddFakeAuthServices(this IServiceCollection services)
         {
             services.AddMvcCore();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

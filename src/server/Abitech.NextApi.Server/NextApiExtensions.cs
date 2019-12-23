@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -107,8 +108,10 @@ namespace Abitech.NextApi.Server
         /// <param name="path"></param>
         public static void UseNextApiServices(this IApplicationBuilder builder, string path = "/nextApi")
         {
+            builder.UseTokenQueryToHeaderFormatter();
             RegisterHttp(builder, path);
             RegisterSignalR(builder, path);
+            Console.WriteLine("NextApi Server initialized!");
         }
 
         private static void RegisterHttp(IApplicationBuilder builder, string path)

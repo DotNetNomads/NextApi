@@ -1,6 +1,6 @@
 using Abitech.NextApi.Server;
-using Abitech.NextApi.Server.Tests.Security.Auth;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
+using Abitech.NextApi.Testing.Security.Auth;
 using Abitech.NextApi.TestServer.Model;
 using Abitech.NextApi.TestServer.UploadQueueHandlers;
 using Microsoft.AspNetCore.Builder;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
 
 namespace Abitech.NextApi.UploadQueue.Common.Abstractions
@@ -8,7 +9,7 @@ namespace Abitech.NextApi.UploadQueue.Common.Abstractions
     /// <summary>
     /// Upload queue service
     /// </summary>
-    public interface IUploadQueueService
+    public interface IUploadQueueService: INextApiService
     {
         /// <summary>
         /// Process queue and return result

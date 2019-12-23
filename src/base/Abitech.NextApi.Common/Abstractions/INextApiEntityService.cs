@@ -11,7 +11,7 @@ namespace Abitech.NextApi.Common.Abstractions
     /// </summary>
     /// <typeparam name="TDto"></typeparam>
     /// <typeparam name="TKey"></typeparam>
-    public interface INextApiEntityService<TDto, TKey> where TDto : class, IEntityDto<TKey>
+    public interface INextApiEntityService<TDto, TKey> : INextApiService where TDto : class, IEntityDto<TKey>
     {
         /// <summary>
         /// Creates an entity from dto and saves it
@@ -80,5 +80,12 @@ namespace Abitech.NextApi.Common.Abstractions
         /// <param name="request"></param>
         /// <returns></returns>
         Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request);
+
+        /// <summary>
+        /// Get entities identifiers by filter
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        Task<TKey[]> GetIdsByFilter(Filter filter = null);
     }
 }

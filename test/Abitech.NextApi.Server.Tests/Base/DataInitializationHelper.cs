@@ -2,23 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using Abitech.NextApi.TestServerCore.DAL;
-using Abitech.NextApi.TestServerCore.Model;
+using Abitech.NextApi.Testing;
+using Abitech.NextApi.TestServer.DAL;
+using Abitech.NextApi.TestServer.Model;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Abitech.NextApi.TestServerCore
 {
     public static class DataInitializationHelper
     {
-        public static async Task<(TestDbContext context, IServiceScope scope)> ResolveDb(this NextApiContext contextServer)
+        public static async Task<(TestDbContext context, IServiceScope scope)> ResolveDb(
+            this INextApiApplication contextServer)
         {
-            var scope = contextServer.Factory.Services.CreateScope();
+            var scope = contextServer.ServerServices.CreateScope();
             var context = scope.ServiceProvider.GetService<TestDbContext>();
             await context.Database.EnsureCreatedAsync();
             return (context, scope);
         }
 
-        public static async Task GenerateUsers(this NextApiContext contextServer, int count = 15)
+        public static async Task GenerateUsers(this INextApiApplication contextServer, int count = 15)
         {
             var (context, scope) = await contextServer.ResolveDb();
             var role = CreateRole(1);
@@ -45,7 +47,7 @@ namespace Abitech.NextApi.TestServerCore
             scope.Dispose();
         }
 
-        public static async Task GenerateCities(this NextApiContext contextServer, int count = 10)
+        public static async Task GenerateCities(this INextApiApplication contextServer, int count = 10)
         {
             var (context, scope) = await contextServer.ResolveDb();
             for (var id = 1; id <= count; id++)
@@ -71,7 +73,7 @@ namespace Abitech.NextApi.TestServerCore
             return new TestCity {Name = name, Population = rand.Next(), Demonym = name + "er", Id = guid};
         }
 
-        public static async Task GenerateTreeItems(this NextApiContext contextServer)
+        public static async Task GenerateTreeItems(this INextApiApplication contextServer)
         {
             var (context, scope) = await contextServer.ResolveDb();
             var mainTree = new TestTreeItem

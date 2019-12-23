@@ -1,12 +1,12 @@
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.TestServer.DTO;
 
-namespace Abitech.NextApi.TestServer.Service
+namespace Abitech.NextApi.TestClient
 {
     public interface ITestService : INextApiService
     {
@@ -20,9 +20,9 @@ namespace Abitech.NextApi.TestServer.Service
         Task<Dictionary<string, bool?>> BoolTest(bool boolArg1, bool? nullableBoolArg2);
         Task<string> MethodWithoutArgsTest();
         Task ExceptionTest();
-        void AsyncVoidDenied();
+        Task AsyncVoidDenied();
         int? GetCurrentUser();
-        Task<string> UploadFile();
+        Task<string> UploadFile(Stream fileStream, string fileName);
         Task<NextApiFileResponse> GetFile(string path);
         Task<NextApiFileResponse> GetFileMimeTyped(string path);
         Task RaiseEvents();
@@ -54,54 +54,29 @@ namespace Abitech.NextApi.TestServer.Service
         public string SyncMethodTest(string stringArg) => InvokeService<string>(nameof(SyncMethodTest),
             new NextApiArgument(nameof(stringArg), stringArg)).Result;
 
-        public void SyncMethodVoidTest()
-        {
-            throw new System.NotImplementedException();
-        }
+        public void SyncMethodVoidTest() => InvokeService(nameof(SyncMethodVoidTest));
 
-        public Task<Dictionary<string, bool?>> BoolTest(bool boolArg1, bool? nullableBoolArg2)
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<Dictionary<string, bool?>> BoolTest(bool boolArg1, bool? nullableBoolArg2) =>
+            InvokeService<Dictionary<string, bool?>>(nameof(BoolTest), new NextApiArgument(nameof(boolArg1), boolArg1),
+                new NextApiArgument(nameof(nullableBoolArg2), nullableBoolArg2));
 
-        public Task<string> MethodWithoutArgsTest()
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<string> MethodWithoutArgsTest() => InvokeService<string>(nameof(MethodWithoutArgsTest));
 
-        public Task ExceptionTest()
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task ExceptionTest() => InvokeService(nameof(ExceptionTest));
 
-        public void AsyncVoidDenied()
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task AsyncVoidDenied() => InvokeService(nameof(AsyncVoidDenied));
 
-        public int? GetCurrentUser()
-        {
-            throw new System.NotImplementedException();
-        }
+        public int? GetCurrentUser() => InvokeService<int?>(nameof(GetCurrentUser)).Result;
 
-        public Task<string> UploadFile()
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<string> UploadFile(Stream fileStream, string fileName) =>
+            InvokeService<string>(nameof(UploadFile), new NextApiFileArgument("belloni", fileName, fileStream));
 
-        public Task<NextApiFileResponse> GetFile(string path)
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<NextApiFileResponse> GetFile(string path) =>
+            InvokeService<NextApiFileResponse>(nameof(GetFile), new NextApiArgument(nameof(path), path));
 
-        public Task<NextApiFileResponse> GetFileMimeTyped(string path)
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<NextApiFileResponse> GetFileMimeTyped(string path) =>
+            InvokeService<NextApiFileResponse>(nameof(GetFileMimeTyped), new NextApiArgument(nameof(path), path));
 
-        public Task RaiseEvents()
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task RaiseEvents() => InvokeService(nameof(RaiseEvents));
     }
 }

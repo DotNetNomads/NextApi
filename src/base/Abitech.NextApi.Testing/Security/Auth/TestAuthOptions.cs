@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authentication;
 
-namespace Abitech.NextApi.Server.Tests.Security.Auth
+namespace Abitech.NextApi.Testing.Security.Auth
 {
+    /// <inheritdoc />
     public class TestAuthOptions: AuthenticationSchemeOptions
     {
         

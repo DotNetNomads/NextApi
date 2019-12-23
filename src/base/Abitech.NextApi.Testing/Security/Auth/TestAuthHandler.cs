@@ -3,21 +3,23 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Abitech.NextApi.Server.Tests.Security.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Tasks.Server.Tests.Common.Auth
+namespace Abitech.NextApi.Testing.Security.Auth
 {
+    /// <inheritdoc />
     public class TestAuthHandler : AuthenticationHandler<TestAuthOptions>
     {
+        /// <inheritdoc />
         public TestAuthHandler(IOptionsMonitor<TestAuthOptions> options, ILoggerFactory logger, UrlEncoder encoder,
             ISystemClock clock) : base(options, logger, encoder, clock)
         {
         }
 
 #pragma warning disable 1998
+        /// <inheritdoc />
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
 #pragma warning restore 1998
         {
