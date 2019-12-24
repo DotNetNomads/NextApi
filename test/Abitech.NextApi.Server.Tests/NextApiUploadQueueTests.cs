@@ -10,7 +10,6 @@ using Abitech.NextApi.TestClient;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.Model;
 using Abitech.NextApi.TestServer.UploadQueueHandlers;
-using Abitech.NextApi.TestServerCore;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;

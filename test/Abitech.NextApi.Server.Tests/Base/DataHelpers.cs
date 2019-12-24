@@ -3,33 +3,23 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Abitech.NextApi.Testing;
+using Abitech.NextApi.Testing.Data;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.Model;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace Abitech.NextApi.TestServerCore
+namespace Abitech.NextApi.Server.Tests.Base
 {
-    public static class DataInitializationHelper
+    public static class DataHelpers
     {
-        public static async Task<(ITestDbContext context, IServiceScope scope)> ResolveDb(
-            this INextApiApplication contextServer)
+        public static async Task GenerateUsers(this INextApiApplication application, int count = 15)
         {
-            var scope = contextServer.ServerServices.CreateScope();
-            var context = scope.ServiceProvider.GetService<ITestDbContext>();
-            await ((DbContext)context).Database.EnsureCreatedAsync();
-            return (context, scope);
-        }
-
-        public static async Task GenerateUsers(this INextApiApplication contextServer, int count = 15)
-        {
-            var (context, scope) = await contextServer.ResolveDb();
+            using var db = await application.ResolveDbContext<ITestDbContext>();
             var role = CreateRole(1);
-            await context.Roles.AddAsync(role);
-            await context.SaveChangesAsync();
+            await db.Context.Roles.AddAsync(role);
+            await db.Context.SaveChangesAsync();
             var city = CreateCity();
-            await context.Cities.AddAsync(city);
-            await context.SaveChangesAsync();
+            await db.Context.Cities.AddAsync(city);
+            await db.Context.SaveChangesAsync();
             for (var id = 1; id <= count; id++)
             {
                 var user = new TestUser
@@ -41,24 +31,22 @@ namespace Abitech.NextApi.TestServerCore
                     City = city,
                     Role = role
                 };
-                await context.Users.AddAsync(user);
+                await db.Context.Users.AddAsync(user);
             }
 
-            await context.SaveChangesAsync();
-            scope.Dispose();
+            await db.Context.SaveChangesAsync();
         }
 
-        public static async Task GenerateCities(this INextApiApplication contextServer, int count = 10)
+        public static async Task GenerateCities(this INextApiApplication application, int count = 10)
         {
-            var (context, scope) = await contextServer.ResolveDb();
+            using var db = await application.ResolveDbContext<ITestDbContext>();
             for (var id = 1; id <= count; id++)
             {
                 var city = CreateCity();
-                await context.Cities.AddAsync(city);
+                await db.Context.Cities.AddAsync(city);
             }
 
-            await context.SaveChangesAsync();
-            scope.Dispose();
+            await db.Context.SaveChangesAsync();
         }
 
         private static TestRole CreateRole(int roleId)
@@ -74,9 +62,9 @@ namespace Abitech.NextApi.TestServerCore
             return new TestCity {Name = name, Population = rand.Next(), Demonym = name + "er", Id = guid};
         }
 
-        public static async Task GenerateTreeItems(this INextApiApplication contextServer)
+        public static async Task GenerateTreeItems(this INextApiApplication application)
         {
-            var (context, scope) = await contextServer.ResolveDb();
+            using var db = await application.ResolveDbContext<ITestDbContext>();
             var mainTree = new TestTreeItem
             {
                 Id = 1,
@@ -122,10 +110,9 @@ namespace Abitech.NextApi.TestServerCore
                 sampleTestTreeItems.Add(new TestTreeItem {Id = i, Name = $"Node{i}"});
             }
 
-            await context.TestTreeItems.AddAsync(mainTree);
-            await context.TestTreeItems.AddRangeAsync(sampleTestTreeItems);
-            await context.SaveChangesAsync();
-            scope.Dispose();
+            await db.Context.TestTreeItems.AddAsync(mainTree);
+            await db.Context.TestTreeItems.AddRangeAsync(sampleTestTreeItems);
+            await db.Context.SaveChangesAsync();
         }
     }
 }

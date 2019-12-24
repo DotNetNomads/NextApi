@@ -1,9 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Abitech.NextApi.Testing
+namespace Abitech.NextApi.Testing.Data
 {
     /// <summary>
     /// Extensions for DbContext's
@@ -23,6 +24,22 @@ namespace Abitech.NextApi.Testing
             var dbName = "TestNextApiDb" + Guid.NewGuid();
             services.AddDbContext<TInterface, TImplementation>(options =>
                 options.UseInMemoryDatabase(dbName));
+        }
+
+        /// <summary>
+        /// Resolve DbContext for NextApi application
+        /// </summary>
+        /// <param name="application"></param>
+        /// <typeparam name="TDbContext">Type of DbContext</typeparam>
+        /// <returns>DisposableDbContext for specific DbContext (should be used with "using" keyword. cause db context
+        /// is scoped by default)</returns>
+        public static async Task<DisposableDbContext<TDbContext>> ResolveDbContext<TDbContext>(
+            this INextApiApplication application) where TDbContext : INextApiDbContext
+        {
+            var scope = application.ServerServices.CreateScope();
+            var dbContext = scope.ServiceProvider.GetService<TDbContext>();
+            await (dbContext as DbContext).Database.EnsureCreatedAsync();
+            return new DisposableDbContext<TDbContext>(scope, dbContext);
         }
     }
 }
