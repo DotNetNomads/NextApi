@@ -39,11 +39,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.Server.Uplo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.Testing", "src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj", "{544333CE-2A6A-4002-9001-4B85B68D5260}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.TestServer", "test\Abitech.NextApi.TestServer\Abitech.NextApi.TestServer.csproj", "{7011F204-ED7B-4D9D-AC7D-B83969BCA6F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.TestServer", "test\test-server\Abitech.NextApi.TestServer\Abitech.NextApi.TestServer.csproj", "{7011F204-ED7B-4D9D-AC7D-B83969BCA6F5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "server", "server", "{0B7089EC-5579-4BB1-858D-211B1C12F5EB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test-server", "test-server", "{0B7089EC-5579-4BB1-858D-211B1C12F5EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.TestClient", "test\Abitech.NextApi.TestClient\Abitech.NextApi.TestClient.csproj", "{2BFC4A8C-2704-4058-8320-FF818C568396}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abitech.NextApi.TestClient", "test\test-server\Abitech.NextApi.TestClient\Abitech.NextApi.TestClient.csproj", "{2BFC4A8C-2704-4058-8320-FF818C568396}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

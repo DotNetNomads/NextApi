@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
+using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.TestServer.DAL;
@@ -118,10 +119,8 @@ namespace Abitech.NextApi.Server.Tests
             Assert.Equal(UploadQueueError.EntityAlreadyExists, res.Error);
         }
 
-        private ITestUploadQueueService ResolveQueueService(NextApiTransport transport)
-        {
-            return App.ResolveService<ITestUploadQueueService>(null, transport);
-        }
+        private ITestUploadQueueService ResolveQueueService(NextApiTransport transport) =>
+            App.ResolveService<ITestUploadQueueService>(null, transport);
 
         [Theory]
         [InlineData(NextApiTransport.Http)]

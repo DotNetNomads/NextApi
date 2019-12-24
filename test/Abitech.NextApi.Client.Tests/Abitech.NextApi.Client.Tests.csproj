@@ -17,7 +17,6 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\client\Abitech.NextApi.Client.Autofac\Abitech.NextApi.Client.Autofac.csproj" />
       <ProjectReference Include="..\..\src\client\Abitech.NextApi.Client.MicrosoftDI\Abitech.NextApi.Client.MicrosoftDI.csproj" />
-      <ProjectReference Include="..\..\src\client\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
     </ItemGroup>
 
 </Project>

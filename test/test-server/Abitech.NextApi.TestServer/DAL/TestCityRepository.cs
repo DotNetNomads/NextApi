@@ -5,9 +5,9 @@ using Abitech.NextApi.TestServer.Model;
 
 namespace Abitech.NextApi.TestServer.DAL
 {
-    public class TestCityRepository : NextApiRepository<TestCity, Guid, TestDbContext>, ITestCityRepository
+    public class TestCityRepository : NextApiRepository<TestCity, Guid, ITestDbContext>, ITestCityRepository
     {
-        public TestCityRepository(TestDbContext dbContext) : base(dbContext)
+        public TestCityRepository(ITestDbContext dbContext) : base(dbContext)
         {
         }
     }

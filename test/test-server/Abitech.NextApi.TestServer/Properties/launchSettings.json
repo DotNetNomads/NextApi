@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Local": {
+    "Abitech.NextApi.TestServer": {
       "commandName": "Project",
       "launchBrowser": false,
       "applicationUrl": "http://localhost:11000"

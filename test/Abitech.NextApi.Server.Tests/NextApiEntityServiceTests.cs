@@ -4,6 +4,7 @@ using Abitech.NextApi.Client;
 using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Common.Paged;
 using Abitech.NextApi.Common.Tree;
+using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.DTO;
@@ -29,7 +30,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(true, true, NextApiTransport.SignalR)]
         public async Task Create(bool createCity, bool createRole, NextApiTransport transport)
         {
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             var userName = $"createUser_role_{createRole}_city_{createCity}";
             var user = new TestUserDTO
             {
@@ -71,6 +72,9 @@ namespace Abitech.NextApi.Server.Tests
             }
         }
 
+        private ITestUserService ResolveUserService(NextApiTransport transport = NextApiTransport.SignalR) =>
+            App.ResolveService<ITestUserService>(null, transport);
+
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
@@ -90,7 +94,7 @@ namespace Abitech.NextApi.Server.Tests
             var userExists = await repo.GetAll()
                 .AnyAsync(u => u.Id == createdUser.Id);
             Assert.True(userExists);
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             await userService.Delete(createdUser.Id);
             var userExistsAfterDelete = await repo.GetAll()
                 .AnyAsync(u => u.Id == createdUser.Id);
@@ -109,7 +113,7 @@ namespace Abitech.NextApi.Server.Tests
             var services = scope.ServiceProvider;
             var repo = services.GetService<TestUserRepository>();
             var mapper = services.GetService<IMapper>();
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             // data from db
             var user = await repo.GetByIdAsync(14);
             var userDto = mapper.Map<TestUser, TestUserDTO>(user);
@@ -141,7 +145,7 @@ namespace Abitech.NextApi.Server.Tests
         {
             await App.GenerateUsers();
             var request = new PagedRequest {Skip = skip, Take = take, Expand = expand};
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             var result = await userService.GetPaged(request);
             Assert.Equal(15, result.TotalItems);
             if (take.HasValue) Assert.Equal(5, result.Items.Count);
@@ -172,7 +176,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task GetById(NextApiTransport transport, params string[] expand)
         {
             await App.GenerateUsers();
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             var user = await userService.GetById(14, expand.Contains("") ? null : expand);
             Assert.Equal(14, user.Id);
             if (expand.Contains("City"))
@@ -197,7 +201,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR, "Role", "City")]
         public async Task GetByIds(NextApiTransport transport, params string[] expand)
         {
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
 
             var idArray = new[] {14, 12, 13};
 
@@ -227,7 +231,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task GetPagedFiltered(NextApiTransport transport)
         {
             await App.GenerateUsers();
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             // filter:
             // entity => entity.Enabled == true &&
             //          (new [] {5,10,23}).Contains(entity.Id) &&
@@ -260,7 +264,7 @@ namespace Abitech.NextApi.Server.Tests
             int shouldReturnCount)
         {
             await App.GenerateUsers();
-            var userService = App.ResolveService<ITestUserService>(null, transport);
+            var userService = ResolveUserService(transport);
             Filter filter = null;
             if (enableFilter)
             {
@@ -282,7 +286,7 @@ namespace Abitech.NextApi.Server.Tests
             bool shouldReturnAny)
         {
             await App.GenerateUsers();
-            var client = App.ResolveService<ITestUserService>(null, transport);
+            var client = ResolveUserService(transport);
             Filter filter = null;
             if (enableFilter)
             {
@@ -302,7 +306,7 @@ namespace Abitech.NextApi.Server.Tests
             int[] shouldReturnIds)
         {
             await App.GenerateUsers();
-            var userService = App.ResolveService<ITestUserService>();
+            var userService = ResolveUserService(transport);
             Filter filter = null;
             if (enableFilter)
             {

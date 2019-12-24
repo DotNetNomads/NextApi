@@ -5,18 +5,19 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.Model;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Abitech.NextApi.TestServerCore
 {
     public static class DataInitializationHelper
     {
-        public static async Task<(TestDbContext context, IServiceScope scope)> ResolveDb(
+        public static async Task<(ITestDbContext context, IServiceScope scope)> ResolveDb(
             this INextApiApplication contextServer)
         {
             var scope = contextServer.ServerServices.CreateScope();
-            var context = scope.ServiceProvider.GetService<TestDbContext>();
-            await context.Database.EnsureCreatedAsync();
+            var context = scope.ServiceProvider.GetService<ITestDbContext>();
+            await ((DbContext)context).Database.EnsureCreatedAsync();
             return (context, scope);
         }
 
@@ -24,10 +25,10 @@ namespace Abitech.NextApi.TestServerCore
         {
             var (context, scope) = await contextServer.ResolveDb();
             var role = CreateRole(1);
-            await context.AddAsync(role);
+            await context.Roles.AddAsync(role);
             await context.SaveChangesAsync();
             var city = CreateCity();
-            await context.AddAsync(city);
+            await context.Cities.AddAsync(city);
             await context.SaveChangesAsync();
             for (var id = 1; id <= count; id++)
             {
@@ -40,7 +41,7 @@ namespace Abitech.NextApi.TestServerCore
                     City = city,
                     Role = role
                 };
-                await context.AddAsync(user);
+                await context.Users.AddAsync(user);
             }
 
             await context.SaveChangesAsync();
@@ -53,7 +54,7 @@ namespace Abitech.NextApi.TestServerCore
             for (var id = 1; id <= count; id++)
             {
                 var city = CreateCity();
-                await context.AddAsync(city);
+                await context.Cities.AddAsync(city);
             }
 
             await context.SaveChangesAsync();

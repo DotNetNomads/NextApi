@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Event;
@@ -19,7 +20,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task DtoTest(NextApiTransport transport)
         {
-            var service = App.ResolveService<ITestService>(null, transport);
+            var service = ResolveTestService(transport);
             var client = App.ResolveClient(null, transport);
             var dtoModel = new TestDTO
             {
@@ -52,7 +53,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task MethodWithoutArgsTest(NextApiTransport transport)
         {
-            var result = await App.ResolveService<ITestService>(null, transport).MethodWithoutArgsTest();
+            var result = await ResolveTestService(transport).MethodWithoutArgsTest();
             Assert.Equal("Done!", result);
         }
 
@@ -64,7 +65,7 @@ namespace Abitech.NextApi.Server.Tests
             Exception ex = null;
             try
             {
-                await App.ResolveService<ITestService>(null, transport).ExceptionTest();
+                await ResolveTestService(transport).ExceptionTest();
             }
             catch (Exception e)
             {
@@ -80,9 +81,12 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public void SyncMethodVoidTest(NextApiTransport transport)
         {
-            App.ResolveService<ITestService>(null, transport).SyncMethodVoidTest();
+            ResolveTestService(transport).SyncMethodVoidTest();
             Assert.True(true);
         }
+
+        private ITestService ResolveTestService(NextApiTransport transport = NextApiTransport.Http) =>
+            App.ResolveService<ITestService>(null, transport);
 
         [Theory]
         [InlineData(NextApiTransport.Http)]
@@ -90,7 +94,7 @@ namespace Abitech.NextApi.Server.Tests
         public void SyncMethodTest(NextApiTransport transport)
         {
             const string testString = "hello";
-            var result = App.ResolveService<ITestService>(null, transport).SyncMethodTest(testString);
+            var result = ResolveTestService(transport).SyncMethodTest(testString);
             Assert.Equal(testString, result);
         }
 
@@ -101,7 +105,7 @@ namespace Abitech.NextApi.Server.Tests
         {
             try
             {
-                await App.ResolveService<ITestService>(null, transport).AsyncVoidDenied();
+                await ResolveTestService(transport).AsyncVoidDenied();
                 Assert.False(true, "should threw exception if invoking method has 'async void' definition");
             }
             catch (Exception ex)
@@ -117,7 +121,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(true, true, NextApiTransport.SignalR)]
         public async Task BoolTest(bool bool1, bool? bool2, NextApiTransport transport)
         {
-            var result = await App.ResolveService<ITestService>(null, transport).BoolTest(bool1, bool2);
+            var result = await ResolveTestService(transport).BoolTest(bool1, bool2);
             Assert.Equal(result["boolArg1"], bool1);
             Assert.Equal(result["nullableBoolArg2"], bool2);
         }
@@ -128,7 +132,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task StringTest(NextApiTransport transport)
         {
             const string str = "Hello World";
-            var resultStr = await App.ResolveService<ITestService>(null, transport).StringTest(str);
+            var resultStr = await ResolveTestService(transport).StringTest(str);
             Assert.Equal(str, resultStr);
         }
 
@@ -138,7 +142,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task DecimalTest(NextApiTransport transport)
         {
             const decimal dcm = 23m;
-            var resultDcm = await App.ResolveService<ITestService>(null, transport).DecimalTest(dcm);
+            var resultDcm = await ResolveTestService(transport).DecimalTest(dcm);
             Assert.Equal(dcm, resultDcm);
         }
 
@@ -149,7 +153,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(3, 4, NextApiTransport.SignalR)]
         public async Task IntegersTest(int? int1, int? int2, NextApiTransport transport)
         {
-            var result = await App.ResolveService<ITestService>(null, transport).IntegersTest(int1.Value, int2);
+            var result = await ResolveTestService(transport).IntegersTest(int1.Value, int2);
             Assert.Equal(result["intArg1"], int1);
             Assert.Equal(result["nullableIntArg2"], int2);
         }
@@ -189,7 +193,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task UploadFileAndDownloadTest()
         {
             // upload only for http
-            var service = App.ResolveService<ITestService>();
+            var service = ResolveTestService();
 
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var filePath = Path.Combine(baseDir, "TestData", "белонька.jpg");

@@ -17,7 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
       <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server.UploadQueue\Abitech.NextApi.Server.UploadQueue.csproj" />
       <ProjectReference Include="..\..\src\server\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
     </ItemGroup>

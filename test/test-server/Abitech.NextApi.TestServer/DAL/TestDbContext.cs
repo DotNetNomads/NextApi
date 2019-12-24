@@ -5,7 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.TestServer.DAL
 {
-    public class TestDbContext : UploadQueueDbContext
+    public interface ITestDbContext: IUploadQueueDbContext
+    {
+        DbSet<TestCity> Cities { get; set; }
+        DbSet<TestRole> Roles { get; set; }
+        DbSet<TestUser> Users { get; set; }
+        DbSet<TestTreeItem> TestTreeItems { get; set; }
+    }
+
+    public class TestDbContext : UploadQueueDbContext, ITestDbContext
     {
         public DbSet<TestCity> Cities { get; set; }
         public DbSet<TestRole> Roles { get; set; }

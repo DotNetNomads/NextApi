@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common.Abstractions;
@@ -37,11 +38,13 @@ namespace Abitech.NextApi.Testing
                 .ConfigureLogging(l => l.SetMinimumLevel(LogLevel));
 
         /// <inheritdoc />
-        protected override TestServer CreateServer(IWebHostBuilder builder)
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseContentRoot(".");
-            return base.CreateServer(builder);
+            builder
+                .UseContentRoot(".");
+            base.ConfigureWebHost(builder);
         }
+
 
         /// <summary>
         /// Get all registered NextApi client-side services

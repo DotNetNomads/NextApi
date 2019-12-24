@@ -14,16 +14,12 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Common\ServerFactory.cs" />
-      <Compile Remove="NextApiTestContext.cs" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\client\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
-      <ProjectReference Include="..\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
+      <ProjectReference Include="..\..\server\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
     </ItemGroup>
 
 </Project>

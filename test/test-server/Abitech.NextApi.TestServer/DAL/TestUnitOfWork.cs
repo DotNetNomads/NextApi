@@ -6,9 +6,9 @@ namespace Abitech.NextApi.TestServer.DAL
 {
     public class TestUnitOfWork : INextApiUnitOfWork
     {
-        private readonly TestDbContext _context;
+        private readonly ITestDbContext _context;
 
-        public TestUnitOfWork(TestDbContext context)
+        public TestUnitOfWork(ITestDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }

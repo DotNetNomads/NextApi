@@ -1,11 +1,11 @@
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Server.Tests;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer;
 
-namespace Abitech.NextApi.TestServerCore
+namespace Abitech.NextApi.Server.Tests.Base
 {
+
     public class TestApplication : NextApiApplication<Startup, INextApiClient>
     {
         protected override ServiceRegistrationMaster GetClientServiceRegistry() =>
