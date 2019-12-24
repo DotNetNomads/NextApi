@@ -24,7 +24,7 @@
   script:
     - cd $project
     - *dotnet-restore
-    - dotnet test -v d
+    - dotnet test -v m 
 
 .nugetize: &nugetize
   stage: build
