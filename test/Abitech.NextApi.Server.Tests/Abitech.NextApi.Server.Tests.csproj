@@ -2,27 +2,27 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
     <IsPackable>false</IsPackable>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DeepEqual" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0"/>
-    <PackageReference Include="Moq" Version="4.13.1"/>
-    <PackageReference Include="xunit" Version="2.4.1"/>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1"/>
+    <PackageReference Include="DeepEqual" Version="2.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+    <PackageReference Include="Moq" Version="4.13.1" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj"/>
-    <ProjectReference Include="..\test-server\Abitech.NextApi.TestClient\Abitech.NextApi.TestClient.csproj"/>
+    <ProjectReference Include="..\..\src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj" />
+    <ProjectReference Include="..\test-server\Abitech.NextApi.TestClient\Abitech.NextApi.TestClient.csproj" />
+    <ProjectReference Include="..\test-server\Abitech.NextApi.TestServer\Abitech.NextApi.TestServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="TestData\белонька.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

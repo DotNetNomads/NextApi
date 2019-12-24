@@ -113,7 +113,6 @@ namespace Abitech.NextApi.Server
             builder.UseTokenQueryToHeaderFormatter();
             RegisterHttp(builder, path);
             RegisterSignalR(builder, path);
-            Console.WriteLine("NextApi Server initialized!");
         }
 
         private static void RegisterHttp(IApplicationBuilder builder, string path)

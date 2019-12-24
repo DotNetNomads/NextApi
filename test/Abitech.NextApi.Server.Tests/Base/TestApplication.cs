@@ -2,12 +2,21 @@ using Abitech.NextApi.Client;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer;
+using Microsoft.Extensions.Logging;
 
 namespace Abitech.NextApi.Server.Tests.Base
 {
-
-    public class TestApplication : NextApiApplication<Startup, INextApiClient>
+    public class FakeStartup : Startup
     {
+    }
+
+    public class TestApplication : NextApiApplication<FakeStartup, INextApiClient>
+    {
+        public TestApplication()
+        {
+            LogLevel = LogLevel.Critical;
+        }
+
         protected override ServiceRegistrationMaster GetClientServiceRegistry() =>
             new ServiceRegistrationMaster()
                 .Add<ITestService, TestService>()
