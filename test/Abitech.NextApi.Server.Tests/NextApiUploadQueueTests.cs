@@ -4,12 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Common;
-using Abitech.NextApi.Server.Tests.EntityService;
-using Abitech.NextApi.Server.Tests.EntityService.DAL;
-using Abitech.NextApi.Server.Tests.EntityService.Model;
-using Abitech.NextApi.Server.Tests.Service;
+using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
+using Abitech.NextApi.TestClient;
+using Abitech.NextApi.TestServer.DAL;
+using Abitech.NextApi.TestServer.Model;
+using Abitech.NextApi.TestServer.UploadQueueHandlers;
+using Abitech.NextApi.TestServerCore;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -18,7 +19,7 @@ using Xunit.Abstractions;
 
 namespace Abitech.NextApi.Server.Tests
 {
-    public class NextApiUploadQueueTests
+    public class NextApiUploadQueueTests : NextApiTest<TestApplication, INextApiClient>
     {
         private readonly ITestOutputHelper _output;
 
@@ -61,10 +62,9 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(createOp1);
             uploadQueue.Add(createOp2);
 
-            var client = await NextApiTest.Instance().GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
             Assert.Equal(uploadQueue.Count, resultDict.Count);
             Assert.Contains(resultDict, pair => pair.Value.Error == UploadQueueError.NoError);
@@ -76,7 +76,6 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task CreateTwiceTest(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
             var uploadQueue = new List<UploadQueueDto>();
 
             var newTestCity = new TestCity {Name = "MyNewTestCity", Population = 123456, Demonym = "MyTestCityDemonym"};
@@ -95,17 +94,16 @@ namespace Abitech.NextApi.Server.Tests
 
             uploadQueue.Add(createOp);
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
             foreach (var keyValuePair in resultDict)
             {
                 Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
             }
 
-            using (var scope = testServer.Factory.Server.Host.Services.CreateScope())
+            using (var scope = App.ServerServices.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
 
@@ -115,19 +113,20 @@ namespace Abitech.NextApi.Server.Tests
                 Assert.NotNull(newTestCityFromServer);
             }
 
-            resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            resultDict = await service.ProcessAsync(uploadQueue);
 
             var res = resultDict[createOp.Id];
             Assert.Equal(UploadQueueError.EntityAlreadyExists, res.Error);
         }
+
+        private ITestUploadQueueService ResolveQueueService(NextApiTransport transport) =>
+            App.ResolveService<ITestUploadQueueService>(null, transport);
 
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
         public async Task CreateAndUpdateTest(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
             var uploadQueue = new List<UploadQueueDto>();
 
             var newTestCity = new TestCity {Name = "MyNewTestCity", Population = 123456, Demonym = "MyTestCityDemonym"};
@@ -159,17 +158,16 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(createOp);
             uploadQueue.Add(updateOp);
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
             foreach (var keyValuePair in resultDict)
             {
                 Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
             }
 
-            using var scope = testServer.Factory.Server.Host.Services.CreateScope();
+            using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
             var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
@@ -186,7 +184,6 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(false, NextApiTransport.SignalR)]
         public async Task CreateAndUpdateStressTest(bool createAndUpdateInSameBatch, NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
             var createUploadQueue = new List<UploadQueueDto>();
             var updateUploadQueue = new List<UploadQueueDto>();
             var testCities = new List<TestCity>();
@@ -249,22 +246,17 @@ namespace Abitech.NextApi.Server.Tests
                 }
             }
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
             var sw = new Stopwatch();
             sw.Start();
-            var resultDict1 = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-            ("TestUploadQueue", "ProcessAsync",
-                new NextApiArgument {Name = "uploadQueue", Value = createUploadQueue});
+            var resultDict1 = await service.ProcessAsync(createUploadQueue);
             _output.WriteLine(
                 $"Uploading createUploadQueue took {sw.Elapsed}, {nameof(createAndUpdateInSameBatch)}: {createAndUpdateInSameBatch}");
 
-            foreach (var keyValuePair in resultDict1)
-            {
-                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
+            foreach (var keyValuePair in resultDict1) Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
 
-            using (var scope = testServer.Factory.Server.Host.Services.CreateScope())
+            using (var scope = App.ServerServices.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
 
@@ -286,17 +278,12 @@ namespace Abitech.NextApi.Server.Tests
                 return;
 
             sw.Restart();
-            var resultDict2 = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-            ("TestUploadQueue", "ProcessAsync",
-                new NextApiArgument {Name = "uploadQueue", Value = updateUploadQueue});
+            var resultDict2 = await service.ProcessAsync(updateUploadQueue);
             _output.WriteLine($"Uploading updateUploadQueue took {sw.Elapsed}");
 
-            foreach (var keyValuePair in resultDict2)
-            {
-                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
+            foreach (var keyValuePair in resultDict2) Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
 
-            using (var scope = testServer.Factory.Server.Host.Services.CreateScope())
+            using (var scope = App.ServerServices.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
 
@@ -319,12 +306,14 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task UpdateTest(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
-            await testServer.GenerateCities();
-            var testCityRepo = (ITestCityRepository)testServer.Factory.Server.Host.Services
-                .GetService(typeof(ITestCityRepository));
+            await App.GenerateCities();
+            List<TestCity> all;
+            using (var serviceScope = App.ServerServices.CreateScope())
+            {
+                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                all = testCityRepo.GetAll().ToList();
+            }
 
-            var all = testCityRepo.GetAll().ToList();
             Assert.NotEmpty(all);
 
             var now = DateTimeOffset.Now;
@@ -341,21 +330,17 @@ namespace Abitech.NextApi.Server.Tests
                 })
                 .ToList();
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
-            foreach (var keyValuePair in resultDict)
-            {
-                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
+            foreach (var keyValuePair in resultDict) Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
 
-            using var scope = testServer.Factory.Server.Host.Services.CreateScope();
+            using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
-            testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
-            all = testCityRepo.GetAll().ToList();
+            var cityRepo = serviceProvider.GetService<ITestCityRepository>();
+            all = cityRepo.GetAll().ToList();
             foreach (var testCity in all)
             {
                 Assert.Equal($"{newDemonym}{testCity.Id}", testCity.Demonym);
@@ -367,13 +352,15 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task OutdatedUpdateTest(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
-            await testServer.GenerateCities();
-            var testCityRepo =
-                (ITestCityRepository)testServer.Factory.Server.Host.Services
-                    .GetService(typeof(ITestCityRepository));
+            await App.GenerateCities();
 
-            var all = testCityRepo.GetAll().ToList();
+            List<TestCity> all;
+            using (var serviceScope = App.ServerServices.CreateScope())
+            {
+                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                all = testCityRepo.GetAll().ToList();
+            }
+
             Assert.NotEmpty(all);
 
             var now = DateTimeOffset.Now;
@@ -398,10 +385,9 @@ namespace Abitech.NextApi.Server.Tests
 
             var uploadQueue = new List<UploadQueueDto> {update};
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
             Assert.Equal(UploadQueueError.NoError, resultDict[update.Id].Error);
 
@@ -422,9 +408,7 @@ namespace Abitech.NextApi.Server.Tests
             };
             uploadQueue.Add(outdatedUpdate);
 
-            resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>("TestUploadQueue",
-                "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
-
+            resultDict = await service.ProcessAsync(uploadQueue);
             Assert.Equal(UploadQueueError.OutdatedChange, resultDict[outdatedUpdate.Id].Error);
         }
 
@@ -448,14 +432,13 @@ namespace Abitech.NextApi.Server.Tests
             };
             uploadQueue.Add(update);
 
-            var client = await NextApiTest.Instance().GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
             Assert.Equal(UploadQueueError.EntityDoesNotExist, resultDict[update.Id].Error);
 
-            using var scope = NextApiTest.Instance().Factory.Server.Host.Services.CreateScope();
+            using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
             var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
@@ -468,12 +451,14 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task CheckLastChangeTest(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
-            await testServer.GenerateCities();
-            var testCityRepo =
-                (ITestCityRepository)testServer.Factory.Server.Host.Services.GetService(typeof(ITestCityRepository));
+            await App.GenerateCities();
+            List<TestCity> some;
+            using (var serviceScope = App.ServerServices.CreateScope())
+            {
+                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                some = testCityRepo.GetAll().Take(10).ToList();
+            }
 
-            var some = testCityRepo.GetAll().Take(10).ToList();
             Assert.NotEmpty(some);
 
             var uploadQueue = new List<UploadQueueDto>();
@@ -495,21 +480,16 @@ namespace Abitech.NextApi.Server.Tests
                 uploadQueue.Add(u);
             }
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
-            foreach (var keyValuePair in resultDict)
-            {
-                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
+            foreach (var keyValuePair in resultDict) Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
 
-            using var scope = testServer.Factory.Server.Host.Services.CreateScope();
+            using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
-            var columnChangesLogger =
-                (IColumnChangesLogger)serviceProvider.GetService(typeof(IColumnChangesLogger));
+            var columnChangesLogger = serviceProvider.GetService<IColumnChangesLogger>();
 
             foreach (var uploadQueueDto in uploadQueue)
             {
@@ -525,12 +505,14 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task DeleteTest(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
-            await testServer.GenerateCities();
-            var testCityRepo =
-                (ITestCityRepository)testServer.Factory.Server.Host.Services.GetService(typeof(ITestCityRepository));
+            await App.GenerateCities();
+            List<TestCity> all;
+            using (var serviceScope = App.ServerServices.CreateScope())
+            {
+                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                all = testCityRepo.GetAll().ToList();
+            }
 
-            var all = testCityRepo.GetAll().ToList();
             Assert.NotEmpty(all);
 
             var rand = new Random();
@@ -582,27 +564,21 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(delete1);
             uploadQueue.Add(delete2);
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDict = await service.ProcessAsync(uploadQueue);
 
-            foreach (var keyValuePair in resultDict)
-            {
-                Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
+            foreach (var keyValuePair in resultDict) Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
 
-            using (var scope = testServer.Factory.Server.Host.Services.CreateScope())
-            {
-                var serviceProvider = scope.ServiceProvider;
-                testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+            using var scope = App.ServerServices.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var cityRepo = serviceProvider.GetService<ITestCityRepository>();
 
-                var testCity1FromServer = await testCityRepo.GetAsync(city => city.Id == testCity1.Id);
-                Assert.Null(testCity1FromServer);
+            var testCity1FromServer = await cityRepo.GetAsync(city => city.Id == testCity1.Id);
+            Assert.Null(testCity1FromServer);
 
-                var testCity2FromServer = await testCityRepo.GetAsync(city => city.Id == testCity2.Id);
-                Assert.Null(testCity2FromServer);
-            }
+            var testCity2FromServer = await cityRepo.GetAsync(city => city.Id == testCity2.Id);
+            Assert.Null(testCity2FromServer);
         }
 
         [Theory]
@@ -646,12 +622,9 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Add(createOp);
             uploadQueue.Add(updateOp);
 
-            var client = await NextApiTest.Instance().GetClient(transport);
-
+            var service = ResolveQueueService(transport);
             {
-                var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync",
-                    new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+                var resultDict = await service.ProcessAsync(uploadQueue);
 
                 Assert.Equal(uploadQueue.Count, resultDict.Count);
                 var createOpResult = resultDict[createOp.Id];
@@ -669,9 +642,7 @@ namespace Abitech.NextApi.Server.Tests
                 createOp.EntityRowGuid = newTestCity.Id;
                 updateOp.EntityRowGuid = newTestCity.Id;
 
-                var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync",
-                    new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+                var resultDict = await service.ProcessAsync(uploadQueue);
 
                 Assert.Equal(uploadQueue.Count, resultDict.Count);
                 var createOpResult = resultDict[createOp.Id];
@@ -691,9 +662,7 @@ namespace Abitech.NextApi.Server.Tests
                 uploadQueue.Clear();
                 uploadQueue.Add(createOp);
 
-                var resultDictCreate = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync",
-                    new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+                var resultDictCreate = await service.ProcessAsync(uploadQueue);
 
                 Assert.Equal(uploadQueue.Count, resultDictCreate.Count);
                 var createOpResult = resultDictCreate[createOp.Id];
@@ -710,9 +679,7 @@ namespace Abitech.NextApi.Server.Tests
                 uploadQueue.Clear();
                 uploadQueue.Add(deleteOp);
 
-                var resultDict = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync",
-                    new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+                var resultDict = await service.ProcessAsync(uploadQueue);
 
                 Assert.Equal(uploadQueue.Count, resultDict.Count);
                 var deleteOpResult = resultDict[deleteOp.Id];
@@ -727,7 +694,6 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR)]
         public async Task UploadNullValues(NextApiTransport transport)
         {
-            var testServer = NextApiTest.Instance();
             var uploadQueue = new List<UploadQueueDto>();
 
             var newTestCity = new TestCity
@@ -747,17 +713,14 @@ namespace Abitech.NextApi.Server.Tests
 
             uploadQueue.Add(createOp);
 
-            var client = await testServer.GetClient(transport);
+            var service = ResolveQueueService(transport);
 
-            var resultDictCreate = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDictCreate = await service.ProcessAsync(uploadQueue);
 
             foreach (var keyValuePair in resultDictCreate)
-            {
                 Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
 
-            using (var scope = testServer.Factory.Server.Host.Services.CreateScope())
+            using (var scope = App.ServerServices.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
 
@@ -782,15 +745,12 @@ namespace Abitech.NextApi.Server.Tests
             uploadQueue.Clear();
             uploadQueue.Add(updateOp);
 
-            var resultDictUpdate = await client.Invoke<Dictionary<Guid, UploadQueueResult>>
-                ("TestUploadQueue", "ProcessAsync", new NextApiArgument {Name = "uploadQueue", Value = uploadQueue});
+            var resultDictUpdate = await service.ProcessAsync(uploadQueue);
 
             foreach (var keyValuePair in resultDictUpdate)
-            {
                 Assert.Equal(UploadQueueError.NoError, keyValuePair.Value.Error);
-            }
 
-            using (var scope = testServer.Factory.Server.Host.Services.CreateScope())
+            using (var scope = App.ServerServices.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
 

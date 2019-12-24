@@ -24,8 +24,7 @@ namespace Abitech.NextApi.Server.Entity
     /// <typeparam name="TKey">Type of entity key</typeparam>
     /// <typeparam name="TUnitOfWork">Type of unit of work</typeparam>
     /// <typeparam name="TRepo"></typeparam>
-    public abstract class NextApiEntityService<TDto, TEntity, TKey, TRepo, TUnitOfWork> : INextApiService,
-        INextApiEntityService<TDto, TKey>
+    public abstract class NextApiEntityService<TDto, TEntity, TKey, TRepo, TUnitOfWork> : INextApiEntityService<TDto, TKey>
         where TDto : class, IEntityDto<TKey>
         where TEntity : class, IEntity<TKey>
         where TRepo : class, INextApiRepository<TEntity, TKey>

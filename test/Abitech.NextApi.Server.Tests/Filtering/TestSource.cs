@@ -10,7 +10,7 @@ namespace Abitech.NextApi.Server.Tests.Filtering
         {
             var list = new List<TestModel>();
 
-            for (int i = 0; i < 500; i++)
+            for (var i = 0; i < 500; i++)
             {
                 list.Add(new TestModel()
                 {

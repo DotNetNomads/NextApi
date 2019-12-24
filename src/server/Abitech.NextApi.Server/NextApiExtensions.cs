@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ namespace Abitech.NextApi.Server
         /// <summary>
         /// Used to initialize NextApi services
         /// <param name="options">NextApi configuration action</param>
+        /// <param name="serviceCollection">Service collection instance</param>
         /// </summary>
         public static IServiceCollection AddNextApiServices(this IServiceCollection serviceCollection,
             Action<NextApiServicesOptions> options = null) =>
@@ -35,6 +37,7 @@ namespace Abitech.NextApi.Server
         /// Used to initialize NextApi services
         /// <param name="assemblyWithNextApiServices">Assembly that contains NextApi services implementations</param>
         /// <param name="options">NextApi configuration action</param>
+        /// <param name="serviceCollection">Service collection instance</param>
         /// <remarks>If assemblyWithNextApiServices is null. NextApi uses calling assembly (in other words assembly of Startup.cs)</remarks>
         /// </summary>
         public static IServiceCollection AddNextApiServices(this IServiceCollection serviceCollection,
@@ -107,6 +110,7 @@ namespace Abitech.NextApi.Server
         /// <param name="path"></param>
         public static void UseNextApiServices(this IApplicationBuilder builder, string path = "/nextApi")
         {
+            builder.UseTokenQueryToHeaderFormatter();
             RegisterHttp(builder, path);
             RegisterSignalR(builder, path);
         }

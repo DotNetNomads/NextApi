@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Event;
@@ -39,5 +40,10 @@ namespace Abitech.NextApi.Client
         /// </summary>
         /// <typeparam name="TEvent"></typeparam>
         TEvent GetEvent<TEvent>() where TEvent : INextApiEvent, new();
+
+        /// <summary>
+        /// Can be used in integration test purposes
+        /// </summary>
+        HttpMessageHandler MessageHandler { get; set; }
     }
 }
