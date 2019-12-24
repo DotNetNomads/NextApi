@@ -7,7 +7,6 @@ using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Event;
-using Abitech.NextApi.TestServerCore;
 using DeepEqual.Syntax;
 using Xunit;
 

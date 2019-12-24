@@ -9,7 +9,6 @@ using Abitech.NextApi.TestClient;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Model;
-using Abitech.NextApi.TestServerCore;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
-using Abitech.NextApi.TestServerCore;
 using Xunit;
 
 namespace Abitech.NextApi.Server.Tests
