@@ -19,7 +19,7 @@ namespace Abitech.NextApi.Testing.Data
         /// <typeparam name="TInterface">DbContext interface</typeparam>
         /// <typeparam name="TImplementation">DbContext implementation</typeparam>
         public static void AddFakeDbContext<TInterface, TImplementation>(this IServiceCollection services)
-            where TInterface : class, INextApiDbContext
+            where TInterface : INextApiDbContext
             where TImplementation : DbContext, TInterface
         {
             var dbName = "TestNextApiDb" + Guid.NewGuid();
