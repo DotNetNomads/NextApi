@@ -4,9 +4,9 @@ using Abitech.NextApi.Server.EfCore.Tests.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Repository
 {
-    public class TestAuditEntityRepository: NextApiRepository<TestAuditEntity, int, TestDbContext>
+    public class TestAuditEntityRepository: NextApiRepository<TestAuditEntity, int>
     {
-        public TestAuditEntityRepository(TestDbContext dbContext) : base(dbContext)
+        public TestAuditEntityRepository(INextApiDbContext dbContext) : base(dbContext)
         {
         }
     }

@@ -4,12 +4,11 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Event.System;
 using Abitech.NextApi.Common.Filtering;
+using Abitech.NextApi.Server.EfCore.DAL;
 using Abitech.NextApi.Server.EfCore.Tests.Base;
 using Abitech.NextApi.Server.EfCore.Tests.Entity;
 using Abitech.NextApi.Server.EfCore.Tests.Repository;
 using Abitech.NextApi.Server.Entity;
-using Abitech.NextApi.Server.Event;
-using Abitech.NextApi.Server.Security;
 using Abitech.NextApi.Server.UploadQueue;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using DeepEqual.Syntax;
@@ -30,7 +29,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             {
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestEntityRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
                 var entityGuid = Guid.NewGuid();
                 var entityGuid2 = Guid.NewGuid();
                 // check adding 
@@ -107,7 +106,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             {
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestSoftDeletableRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
 
                 var createdEntity1 = new TestSoftDeletableEntity() {Name = "name1"};
                 var createdEntity2 = new TestSoftDeletableEntity() {Name = "name2"};
@@ -143,7 +142,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             {
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestAuditEntityRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
 
                 var entity1 = new TestAuditEntity() {Name = "name1"};
 
@@ -174,7 +173,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             using var scope = Services;
             var provider = scope.ServiceProvider;
             var repo = provider.GetService<TestColumnChangesRepo>();
-            var unitOfWork = provider.GetService<TestUnitOfWork>();
+            var unitOfWork = provider.GetService<INextApiUnitOfWork>();
             var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
             // enable-or-disable logging
@@ -201,7 +200,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             using var scope = Services;
             var provider = scope.ServiceProvider;
             var repo = provider.GetService<TestEntityRepository>();
-            var unitOfWork = provider.GetService<TestUnitOfWork>();
+            var unitOfWork = provider.GetService<INextApiUnitOfWork>();
             var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
             var entity = new TestEntity {Name = "lolkek2222"};
@@ -225,7 +224,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 var provider = scope.ServiceProvider;
                 var repoTestEntity = provider.GetService<TestEntityRepository>();
                 var repoSoftRemoveEntity = provider.GetService<TestSoftDeletableRepository>();
-                var unitOfWork = provider.GetService<TestUnitOfWork>();
+                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
                 var eventManager = (TestEventManager)provider.GetService<INextApiEventManager>();
                 var eventOccured = false;
                 eventManager.EventOccured += (type, o) =>
@@ -253,13 +252,14 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             var builder = new ServiceCollection();
             builder.AddScoped<INextApiUserAccessor, TestNextApiUserAccessor>();
             builder.AddDbContext<TestDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); });
+            builder.AddScoped<INextApiDbContext>(c => c.GetService<TestDbContext>());
             builder.AddColumnChangesLogger<TestDbContext>();
             builder.AddTransient<TestEntityRepository>();
             builder.AddTransient<TestSoftDeletableRepository>();
             builder.AddTransient<TestEntityPredicatesRepository>();
             builder.AddTransient<TestAuditEntityRepository>();
             builder.AddTransient<TestColumnChangesRepo>();
-            builder.AddTransient<TestUnitOfWork>();
+            builder.AddDefaultUnitOfWork();
             builder.AddScoped<INextApiEventManager, TestEventManager>();
             _services = builder.BuildServiceProvider();
 

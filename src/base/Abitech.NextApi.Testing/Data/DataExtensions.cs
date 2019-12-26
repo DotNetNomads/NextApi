@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Abitech.NextApi.Server.EfCore;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,11 +19,11 @@ namespace Abitech.NextApi.Testing.Data
         /// <typeparam name="TInterface">DbContext interface</typeparam>
         /// <typeparam name="TImplementation">DbContext implementation</typeparam>
         public static void AddFakeDbContext<TInterface, TImplementation>(this IServiceCollection services)
-            where TInterface : INextApiDbContext
+            where TInterface : class, INextApiDbContext
             where TImplementation : DbContext, TInterface
         {
             var dbName = "TestNextApiDb" + Guid.NewGuid();
-            services.AddDbContext<TInterface, TImplementation>(options =>
+            services.AddNextApiDbContext<TInterface, TImplementation>(options =>
                 options.UseInMemoryDatabase(dbName));
         }
 

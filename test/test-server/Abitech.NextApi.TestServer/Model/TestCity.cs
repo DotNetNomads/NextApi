@@ -5,7 +5,7 @@ using Abitech.NextApi.UploadQueue.Common.Entity;
 
 namespace Abitech.NextApi.TestServer.Model
 {
-    public class TestCity : IColumnLoggedEntity, IEntity<Guid>
+    public class TestCity : IUploadQueueEntity
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();

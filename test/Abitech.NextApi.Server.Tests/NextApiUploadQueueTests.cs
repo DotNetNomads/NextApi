@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.TestClient;
-using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.Model;
 using Abitech.NextApi.TestServer.UploadQueueHandlers;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
@@ -106,7 +106,7 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var serviceProvider = scope.ServiceProvider;
 
-                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                 Assert.NotNull(newTestCityFromServer);
@@ -169,7 +169,7 @@ namespace Abitech.NextApi.Server.Tests
             using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
-            var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+            var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
             var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
             Assert.NotNull(newTestCityFromServer);
@@ -259,7 +259,7 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var serviceProvider = scope.ServiceProvider;
 
-                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
 
                 foreach (var testCity in testCities)
                 {
@@ -286,7 +286,7 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var serviceProvider = scope.ServiceProvider;
 
-                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
 
                 foreach (var newTestCity in testCities)
                 {
@@ -309,7 +309,7 @@ namespace Abitech.NextApi.Server.Tests
             List<TestCity> all;
             using (var serviceScope = App.ServerServices.CreateScope())
             {
-                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                var testCityRepo = serviceScope.ServiceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 all = testCityRepo.GetAll().ToList();
             }
 
@@ -338,7 +338,7 @@ namespace Abitech.NextApi.Server.Tests
             using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
-            var cityRepo = serviceProvider.GetService<ITestCityRepository>();
+            var cityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
             all = cityRepo.GetAll().ToList();
             foreach (var testCity in all)
             {
@@ -356,7 +356,7 @@ namespace Abitech.NextApi.Server.Tests
             List<TestCity> all;
             using (var serviceScope = App.ServerServices.CreateScope())
             {
-                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                var testCityRepo = serviceScope.ServiceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 all = testCityRepo.GetAll().ToList();
             }
 
@@ -440,7 +440,7 @@ namespace Abitech.NextApi.Server.Tests
             using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
 
-            var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+            var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
             var testCity = await testCityRepo.GetAsync(city => city.Id == update.EntityRowGuid);
             Assert.Null(testCity);
         }
@@ -454,7 +454,7 @@ namespace Abitech.NextApi.Server.Tests
             List<TestCity> some;
             using (var serviceScope = App.ServerServices.CreateScope())
             {
-                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                var testCityRepo = serviceScope.ServiceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 some = testCityRepo.GetAll().Take(10).ToList();
             }
 
@@ -508,7 +508,7 @@ namespace Abitech.NextApi.Server.Tests
             List<TestCity> all;
             using (var serviceScope = App.ServerServices.CreateScope())
             {
-                var testCityRepo = serviceScope.ServiceProvider.GetService<ITestCityRepository>();
+                var testCityRepo = serviceScope.ServiceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 all = testCityRepo.GetAll().ToList();
             }
 
@@ -571,7 +571,7 @@ namespace Abitech.NextApi.Server.Tests
 
             using var scope = App.ServerServices.CreateScope();
             var serviceProvider = scope.ServiceProvider;
-            var cityRepo = serviceProvider.GetService<ITestCityRepository>();
+            var cityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
 
             var testCity1FromServer = await cityRepo.GetAsync(city => city.Id == testCity1.Id);
             Assert.Null(testCity1FromServer);
@@ -723,7 +723,7 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var serviceProvider = scope.ServiceProvider;
 
-                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                 Assert.NotNull(newTestCityFromServer);
@@ -753,7 +753,7 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var serviceProvider = scope.ServiceProvider;
 
-                var testCityRepo = (ITestCityRepository)serviceProvider.GetService(typeof(ITestCityRepository));
+                var testCityRepo = serviceProvider.GetService<INextApiRepository<TestCity, Guid>>();
                 var newTestCityFromServer = await testCityRepo.GetAsync(city => city.Id == newTestCity.Id);
 
                 Assert.NotNull(newTestCityFromServer);

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
-using Abitech.NextApi.Common.Entity;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.UploadQueue.Common.Abstractions;
+using Abitech.NextApi.UploadQueue.Common.Entity;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
 using Newtonsoft.Json;
 
@@ -16,52 +16,68 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
     /// <para>Derive from this class and register repositories in the constructor</para>
     /// <para>You must call <see cref="UploadQueueServerExtensions.AddColumnChangesLogger{TDbContext}"/></para>
     /// </summary>
-    public abstract class UploadQueueService<TUnitOfWork> : INextApiService, IUploadQueueService
-        where TUnitOfWork : class, INextApiUnitOfWork
+    public abstract class UploadQueueService : IUploadQueueService
     {
-        /// <summary>
-        /// List with all repositories connected to UploadQueue service
-        /// </summary>
-        private static readonly List<(Type modelType, Type repoType)> RepositoryList =
-            new List<(Type modelType, Type repoType)>();
-
         private readonly IColumnChangesLogger _columnChangesLogger;
-        private readonly TUnitOfWork _unitOfWork;
+        private readonly INextApiUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
+
+        /// <summary>
+        /// Assembly that contains UploadQueue models (should be implemented)
+        /// </summary>
+        protected abstract string UploadQueueModelsAssemblyName { get; }
+
+        private static IDictionary<string, (Type entityType, Type repoType)> _wellKnownUploadQueueRepoTypes;
 
         private readonly List<IUploadQueueChangesHandler> _changesHandlers = new List<IUploadQueueChangesHandler>();
 
         /// <inheritdoc />
         protected UploadQueueService(
             IColumnChangesLogger columnChangesLogger,
-            TUnitOfWork unitOfWork,
+            INextApiUnitOfWork unitOfWork,
             IServiceProvider serviceProvider)
         {
             _columnChangesLogger = columnChangesLogger;
             _unitOfWork = unitOfWork;
             _serviceProvider = serviceProvider;
+            // collect information about UploadQueue model types
+            CollectUploadQueueEntitiesInfo();
         }
 
-        /// <summary>
-        /// Use this method to register repositories (that implement INextApiRepository) allowed in UploadQueue process
-        /// </summary>
-        /// <typeparam name="TModel">Model type for this repository</typeparam>
-        /// <typeparam name="TRepository">Repository type</typeparam>
-        /// <exception cref="ArgumentNullException">If modelName is null or whitespace</exception>
-        /// <exception cref="ArgumentException">If repository type does not implement INextApiRepository</exception>
-        protected void RegisterRepository<TModel, TRepository>()
-            where TModel : class, IEntity<Guid>
-            where TRepository : class, INextApiRepository<TModel, Guid>, INextApiRepository
+        private void CollectUploadQueueEntitiesInfo()
         {
-            var modelType = typeof(TModel);
-
-            var alreadyAdded = RepositoryList.Any(tuple =>
-                tuple.modelType.FullName == modelType.FullName);
-            if (alreadyAdded)
+            if (_wellKnownUploadQueueRepoTypes != null)
                 return;
 
-            var repoType = typeof(TRepository);
-            RepositoryList.Add((modelType, repoType));
+            if (string.IsNullOrWhiteSpace(UploadQueueModelsAssemblyName))
+                throw new ArgumentNullException(
+                    $"You should implement {nameof(UploadQueueModelsAssemblyName)} correctly!");
+            var uploadQueueModelsAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name == UploadQueueModelsAssemblyName);
+            if (uploadQueueModelsAssembly == null)
+                throw new InvalidOperationException(
+                    $@"Assembly with name: {UploadQueueModelsAssemblyName} is not found in the current AppDomain. 
+Please specify correct assembly name!");
+
+            var baseInterfaceType = typeof(IUploadQueueEntity);
+            var baseRepoType = typeof(INextApiRepository<,>);
+            _wellKnownUploadQueueRepoTypes = uploadQueueModelsAssembly.GetTypes()
+                .Where(t => baseInterfaceType.IsAssignableFrom(t))
+                .Select(entityType =>
+                {
+                    var repositoryType = baseRepoType.MakeGenericType(entityType, typeof(Guid));
+                    return (entityType.Name, entityType, repositoryType);
+                }).ToDictionary(k => k.Name, v => (v.entityType, v.repositoryType));
+        }
+
+        private (Type entityType, Type repoType) ResolveEntityTypeInfoByName(string entityName)
+        {
+            if (string.IsNullOrWhiteSpace(entityName))
+                throw new ArgumentNullException(nameof(entityName));
+            // Resolve info
+            if (!_wellKnownUploadQueueRepoTypes.TryGetValue(entityName, out var info))
+                throw new Exception($"No information about repo and type for {entityName}");
+            return info;
         }
 
         /// <inheritdoc />
@@ -71,22 +87,21 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
 
             var resultDict = new Dictionary<Guid, (UploadQueueDto, UploadQueueResult)>();
 
-            foreach (var (modelType, _) in RepositoryList)
+            var entitiesGroups = from queueList in uploadQueue.AsQueryable()
+                group queueList by queueList.EntityName
+                into entityGroup
+                select new {EntityName = entityGroup.Key, Items = entityGroup.ToList()};
+            foreach (var entityGroup in entitiesGroups)
             {
-                var entityName = modelType.Name;
-                if (uploadQueue.All(dto => dto.EntityName != entityName)) continue;
-
-                var entityNameGroupingList = uploadQueue.Where(dto => dto.EntityName == entityName).ToList();
-
                 try
                 {
-                    await ProcessByEntityName(resultDict, entityName, entityNameGroupingList);
+                    await ProcessByEntityName(resultDict, entityGroup.EntityName, entityGroup.Items);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                     var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
-                    foreach (var operation in entityNameGroupingList)
+                    foreach (var operation in entityGroup.Items)
                     {
                         AddOrUpdate(resultDict, operation, result);
                     }
@@ -115,19 +130,11 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
             string entityName,
             IList<UploadQueueDto> entityNameGroupingList)
         {
-            if (string.IsNullOrWhiteSpace(entityName))
-                throw new ArgumentNullException(entityName);
-
-            // Resolve repo
-            var (modelType, repoType) = RepositoryList.FirstOrDefault(tuple => tuple.modelType.Name == entityName);
-            if (repoType == null)
-                throw new Exception($"No repo for {entityName}");
-
+            var (entityType, repoType) = ResolveEntityTypeInfoByName(entityName);
             var repoInstance = (INextApiRepository)_serviceProvider.GetService(repoType);
-
             // Resolve changes handler
             var changesHandlerType = typeof(IUploadQueueChangesHandler<>);
-            var genericChangesHandlerType = changesHandlerType.MakeGenericType(modelType);
+            var genericChangesHandlerType = changesHandlerType.MakeGenericType(entityType);
             var changesHandlerInstance =
                 (IUploadQueueChangesHandler)_serviceProvider.GetService(genericChangesHandlerType);
             if (changesHandlerInstance != null)
@@ -184,7 +191,7 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
                 {
                     // result of get method - entity instance
                     var result = await repoInstance.GetByIdAsync(rowGuid);
-                    entityInstance = Convert.ChangeType(result, modelType);
+                    entityInstance = Convert.ChangeType(result, entityType);
                 }
                 catch
                 {
@@ -271,7 +278,7 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
                         if (entityInstance == null)
                         {
                             entityInstance =
-                                JsonConvert.DeserializeObject((string)firstCreateOperation.NewValue, modelType);
+                                JsonConvert.DeserializeObject((string)firstCreateOperation.NewValue, entityType);
 
                             // Create entity, if only create operation is in the batch
                             if (!createAndUpdateInSameBatch)

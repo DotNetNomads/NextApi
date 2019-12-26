@@ -22,9 +22,8 @@ namespace Abitech.NextApi.Server.UploadQueue.DAL
             EntityEntry entityEntry)
         {
             if (context.ColumnChangesLogEnabled &&
-                entityEntry.Entity is IColumnLoggedEntity &&
-                entityEntry.State == EntityState.Modified &&
-                entityEntry.Entity is IEntity<Guid> entity)
+                entityEntry.Entity is IUploadQueueEntity entity &&
+                entityEntry.State == EntityState.Modified)
             {
                 var id = entity.Id;
                 var mapping = context.Model.FindEntityType(

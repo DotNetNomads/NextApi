@@ -7,13 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj"/>
-    <ProjectReference Include="..\..\..\src\server\Abitech.NextApi.Server.UploadQueue\Abitech.NextApi.Server.UploadQueue.csproj"/>
-    <ProjectReference Include="..\..\..\src\server\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj"/>
+    <ProjectReference Include="..\..\..\src\base\Abitech.NextApi.Testing\Abitech.NextApi.Testing.csproj" />
+    <ProjectReference Include="..\..\..\src\server\Abitech.NextApi.Server.UploadQueue\Abitech.NextApi.Server.UploadQueue.csproj" />
+    <ProjectReference Include="..\..\..\src\server\Abitech.NextApi.Server\Abitech.NextApi.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0"/>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
   </ItemGroup>
 
 </Project>
