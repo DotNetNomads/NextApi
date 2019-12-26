@@ -1,11 +1,16 @@
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Abitech.NextApi.TestServer.Model;
 
 namespace Abitech.NextApi.TestServer.DAL
 {
-    public class TestUserRepository : NextApiRepository<TestUser, int, ITestDbContext>
+    public interface ITestUserRepository : INextApiRepository<TestUser, int>
     {
-        public TestUserRepository(ITestDbContext dbContext) : base(dbContext)
+        
+    }
+    public class TestUserRepository : NextApiRepository<TestUser, int>, ITestUserRepository
+    {
+        public TestUserRepository(INextApiDbContext dbContext) : base(dbContext)
         {
         }
     }

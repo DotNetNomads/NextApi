@@ -5,7 +5,7 @@ using Abitech.NextApi.UploadQueue.Common.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Entity
 {
-    public class TestColumnChangesEnabledEntity: IEntity<Guid>, IColumnLoggedEntity
+    public class TestColumnChangesEnabledEntity: IUploadQueueEntity
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         

@@ -22,16 +22,12 @@ namespace Abitech.NextApi.Server.Entity
     /// <typeparam name="TDto">Type of dto</typeparam>
     /// <typeparam name="TEntity">Type of entity</typeparam>
     /// <typeparam name="TKey">Type of entity key</typeparam>
-    /// <typeparam name="TUnitOfWork">Type of unit of work</typeparam>
-    /// <typeparam name="TRepo"></typeparam>
-    public abstract class NextApiEntityService<TDto, TEntity, TKey, TRepo, TUnitOfWork> : INextApiEntityService<TDto, TKey>
+    public abstract class NextApiEntityService<TDto, TEntity, TKey> : INextApiEntityService<TDto, TKey>
         where TDto : class, IEntityDto<TKey>
         where TEntity : class, IEntity<TKey>
-        where TRepo : class, INextApiRepository<TEntity, TKey>
-        where TUnitOfWork : class, INextApiUnitOfWork
     {
-        private readonly TUnitOfWork _unitOfWork;
-        private readonly TRepo _repository;
+        private readonly INextApiUnitOfWork _unitOfWork;
+        private readonly INextApiRepository<TEntity, TKey> _repository;
         private readonly IMapper _mapper;
 
         /// <summary>
@@ -45,8 +41,8 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="unitOfWork">Unit of work, used when saving data</param>
         /// <param name="mapper">Used for mapping operations</param>
         /// <param name="repository">Used for data access</param>
-        protected NextApiEntityService(TUnitOfWork unitOfWork, IMapper mapper,
-            TRepo repository)
+        protected NextApiEntityService(INextApiUnitOfWork unitOfWork, IMapper mapper,
+            INextApiRepository<TEntity, TKey> repository)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));

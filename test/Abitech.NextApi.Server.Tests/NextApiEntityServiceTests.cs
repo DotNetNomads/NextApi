@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Common.Paged;
 using Abitech.NextApi.Common.Tree;
@@ -81,8 +82,8 @@ namespace Abitech.NextApi.Server.Tests
         {
             using var scope = App.ServerServices.CreateScope();
             var services = scope.ServiceProvider;
-            var repo = services.GetService<TestUserRepository>();
-            var unitOfWork = services.GetService<TestUnitOfWork>();
+            var repo = services.GetService<ITestUserRepository>();
+            var unitOfWork = services.GetService<INextApiUnitOfWork>();
             var createdUser = new TestUser()
             {
                 Name = "petyaTest", Email = "petya@mail.ru", Enabled = true, Surname = "Ivanov"
@@ -110,7 +111,7 @@ namespace Abitech.NextApi.Server.Tests
             await App.GenerateUsers();
             using var scope = App.ServerServices.CreateScope();
             var services = scope.ServiceProvider;
-            var repo = services.GetService<TestUserRepository>();
+            var repo = services.GetService<ITestUserRepository>();
             var mapper = services.GetService<IMapper>();
             var userService = ResolveUserService(transport);
             // data from db

@@ -11,26 +11,25 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// <summary>
     /// Unit for work implementation
     /// </summary>
-    public abstract class NextApiUnitOfWork<TDbContext> : INextApiUnitOfWork
-        where TDbContext : class, INextApiDbContext
+    public class NextApiUnitOfWork : INextApiUnitOfWork
     {
         /// <summary>
         /// Accessor to DbContext
         /// </summary>
-        protected readonly TDbContext Context;
+        private readonly INextApiDbContext _сontext;
 
         /// <summary>
         /// Indicates that repository sends DbTablesUpdatedEvent after commit 
         /// </summary>
         public bool SendUpdateEventAfterCommit { get; set; } = true;
 
-        private INextApiEventManager _eventManager;
+        private readonly INextApiEventManager _eventManager;
 
 
         /// <inheritdoc />
-        protected NextApiUnitOfWork(TDbContext context, INextApiEventManager eventManager)
+        public NextApiUnitOfWork(INextApiDbContext context, INextApiEventManager eventManager)
         {
-            Context = context ?? throw new ArgumentNullException(nameof(context));
+            _сontext = context ?? throw new ArgumentNullException(nameof(context));
             _eventManager = eventManager;
         }
 
@@ -44,7 +43,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
             if (SendUpdateEventAfterCommit)
                 changedTables = CollectChanges();
 
-            await Context.SaveChangesAsync();
+            await _сontext.SaveChangesAsync();
 
             if (SendUpdateEventAfterCommit)
                 await RaiseUpdateEvent(changedTables);
@@ -52,7 +51,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
 
         private string[] CollectChanges()
         {
-            if (!(Context is DbContext db))
+            if (!(_сontext is DbContext db))
                 throw new InvalidOperationException("Context should be based on DbContext");
 
             return db.ChangeTracker.Entries()

@@ -1,4 +1,5 @@
 using System;
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.Server.UploadQueue.Service;
 using Abitech.NextApi.TestServer.DAL;
@@ -6,14 +7,15 @@ using Abitech.NextApi.TestServer.Model;
 
 namespace Abitech.NextApi.TestServer.Service
 {
-    public class TestUploadQueueService : UploadQueueService<TestUnitOfWork>
+    public class TestUploadQueueService : UploadQueueService
     {
         public TestUploadQueueService(
-            IColumnChangesLogger columnChangesLogger, 
-            TestUnitOfWork unitOfWork, 
+            IColumnChangesLogger columnChangesLogger,
+            INextApiUnitOfWork unitOfWork,
             IServiceProvider serviceProvider) : base(columnChangesLogger, unitOfWork, serviceProvider)
         {
-            RegisterRepository<TestCity, ITestCityRepository>();
         }
+
+        protected override string UploadQueueModelsAssemblyName { get; } = "Abitech.NextApi.TestServer";
     }
 }

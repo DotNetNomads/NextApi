@@ -1,3 +1,4 @@
+using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.DTO;
@@ -6,9 +7,10 @@ using AutoMapper;
 
 namespace Abitech.NextApi.TestServer.Service
 {
-    public class TestUserService : NextApiEntityService<TestUserDTO, TestUser, int, TestUserRepository, TestUnitOfWork>
+    public class TestUserService : NextApiEntityService<TestUserDTO, TestUser, int>
     {
-        public TestUserService(TestUnitOfWork unitOfWork, IMapper mapper, TestUserRepository repository) : base(
+        public TestUserService(INextApiUnitOfWork unitOfWork, IMapper mapper,
+            INextApiRepository<TestUser, int> repository) : base(
             unitOfWork, mapper, repository)
         {
         }

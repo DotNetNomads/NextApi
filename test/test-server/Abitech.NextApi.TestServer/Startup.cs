@@ -1,4 +1,6 @@
+using System;
 using Abitech.NextApi.Server;
+using Abitech.NextApi.Server.EfCore;
 using Abitech.NextApi.Server.UploadQueue;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.Testing;
@@ -27,11 +29,11 @@ namespace Abitech.NextApi.TestServer
                 })
                 .AddPermissionProvider<TestPermissionProvider>();
             services.AddFakeDbContext<ITestDbContext, TestDbContext>();
+            services.AddDefaultUnitOfWork();
             services.AddTransient<IUploadQueueChangesHandler<TestCity>, TestUploadQueueChangesHandler>();
-            services.AddTransient<TestUserRepository>();
-            services.AddTransient<TestTreeItemRepository>();
-            services.AddTransient<ITestCityRepository, TestCityRepository>();
-            services.AddTransient<TestUnitOfWork>();
+            services.AddCustomRepo<TestUser, int, ITestUserRepository, TestUserRepository>();
+            services.AddDefaultRepo<TestTreeItem, int>();
+            services.AddDefaultRepo<TestCity, Guid>();
             services.AddAutoMapper(typeof(TestDTOProfile));
             services.AddColumnChangesLogger<ITestDbContext>();
         }

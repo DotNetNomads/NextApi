@@ -14,12 +14,10 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// </summary>
     /// <typeparam name="T">Entity type</typeparam>
     /// <typeparam name="TKey">Entity key type</typeparam>
-    /// <typeparam name="TDbContext">DbContext type</typeparam>
-    public abstract class NextApiRepository<T, TKey, TDbContext> : INextApiRepository<T, TKey>
+    public class NextApiRepository<T, TKey> : INextApiRepository<T, TKey>
         where T : class, IEntity<TKey>
-        where TDbContext : class, INextApiDbContext
     {
-        private readonly TDbContext _context;
+        private readonly INextApiDbContext _context;
         private readonly DbSet<T> _dbset;
         private readonly bool _isSoftDeleteSupported;
 
@@ -32,7 +30,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// 
         /// </summary>
         /// <param name="dbContext"></param>
-        protected NextApiRepository(TDbContext dbContext)
+        public NextApiRepository(INextApiDbContext dbContext)
         {
             _context = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _dbset = _context.Set<T>();
