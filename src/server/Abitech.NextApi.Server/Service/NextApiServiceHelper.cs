@@ -2,21 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
-using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Base;
-using MessagePack;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace Abitech.NextApi.Server.Service
@@ -27,19 +19,6 @@ namespace Abitech.NextApi.Server.Service
     public static class NextApiServiceHelper
     {
         /// <summary>
-        /// Locate every type that extends NextApiService
-        /// </summary>
-        /// <param name="assemblyWithNextApiServices"></param>
-        /// <returns>Returns list of types that extends NextApiService</returns>
-        public static IEnumerable<Type> FindAllServices(Assembly assemblyWithNextApiServices)
-        {
-            var baseType = typeof(INextApiService);
-            return assemblyWithNextApiServices.GetTypes()
-                .Where(x => baseType.IsAssignableFrom(x) && !x.IsAbstract)
-                .ToList();
-        }
-
-        /// <summary>
         /// Resolves service method for service type
         /// </summary>
         /// <param name="serviceType">Type of service</param>
@@ -49,19 +28,11 @@ namespace Abitech.NextApi.Server.Service
         {
             var methods = serviceType.GetMethods();
             return methods.FirstOrDefault(m =>
-                m.Name.Equals(methodName) &&
+                m.Name.ToLower().Equals(methodName) &&
                 m.MemberType == MemberTypes.Method &&
                 m.IsPublic &&
                 !m.IsStatic);
         }
-
-        /// <summary>
-        /// Checks the service for NextApiAnonymousAttribute
-        /// </summary>
-        /// <param name="serviceType">Type of service</param>
-        /// <returns>Returns <c>true</c> if the service contains anonymous attribute</returns>
-        public static bool IsServiceOnlyForAnonymous(Type serviceType) => serviceType.GetCustomAttributes()
-            .Any(a => a.GetType() == typeof(NextApiAnonymousAttribute));
 
         /// <summary>
         /// Resolves parameters for method call from NextApiCommand
