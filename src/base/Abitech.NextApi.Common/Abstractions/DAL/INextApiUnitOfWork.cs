@@ -5,7 +5,7 @@ namespace Abitech.NextApi.Common.Abstractions
     /// <summary>
     /// Represents unit of work commit manager
     /// </summary>
-    public interface INextApiUnitOfWork
+    public interface IUnitOfWork
     {
         /// <summary>
         /// Commits changes into db

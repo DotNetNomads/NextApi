@@ -11,7 +11,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// <summary>
     /// Unit for work implementation
     /// </summary>
-    public class NextApiUnitOfWork : INextApiUnitOfWork
+    public class EfCoreUnitOfWork : IUnitOfWork
     {
         /// <summary>
         /// Accessor to DbContext
@@ -27,7 +27,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
 
 
         /// <inheritdoc />
-        public NextApiUnitOfWork(INextApiDbContext context, INextApiEventManager eventManager)
+        public EfCoreUnitOfWork(INextApiDbContext context, INextApiEventManager eventManager)
         {
             _сontext = context ?? throw new ArgumentNullException(nameof(context));
             _eventManager = eventManager;

@@ -1,5 +1,6 @@
 using System;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Abstractions.DAL;
 using Abitech.NextApi.Common.Entity;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +37,7 @@ namespace Abitech.NextApi.Server.EfCore
         /// <param name="serviceCollection"></param>
         /// <returns></returns>
         public static IServiceCollection AddDefaultUnitOfWork(this IServiceCollection serviceCollection) =>
-            serviceCollection.AddTransient<INextApiUnitOfWork, NextApiUnitOfWork>();
+            serviceCollection.AddTransient<IUnitOfWork, EfCoreUnitOfWork>();
 
         /// <summary>
         /// Add custom implementation of the UnitOfWork for EF Core
@@ -45,8 +46,8 @@ namespace Abitech.NextApi.Server.EfCore
         /// <typeparam name="TUnitOfWork">The UnitOfWork implementation type</typeparam>
         /// <returns></returns>
         public static IServiceCollection AddCustomUnitOfWork<TUnitOfWork>(this IServiceCollection serviceCollection)
-            where TUnitOfWork : class, INextApiUnitOfWork =>
-            serviceCollection.AddTransient<INextApiUnitOfWork, TUnitOfWork>();
+            where TUnitOfWork : class, IUnitOfWork =>
+            serviceCollection.AddTransient<IUnitOfWork, TUnitOfWork>();
 
         /// <summary>
         /// Add default repository for a Entity type
@@ -57,7 +58,7 @@ namespace Abitech.NextApi.Server.EfCore
         /// <returns></returns>
         public static IServiceCollection AddDefaultRepo<TEntity, TKey>(this IServiceCollection serviceCollection)
             where TEntity : class, IEntity<TKey> => serviceCollection
-            .AddTransient<INextApiRepository<TEntity, TKey>, NextApiRepository<TEntity, TKey>>();
+            .AddTransient<IRepo<TEntity, TKey>, EfCoreRepository<TEntity, TKey>>();
 
         /// <summary>
         /// Add custom repository for a Entity type
@@ -69,9 +70,9 @@ namespace Abitech.NextApi.Server.EfCore
         /// <returns></returns>
         public static IServiceCollection AddCustomRepo<TEntity, TKey, TImplementation>(
             this IServiceCollection serviceCollection)
-            where TEntity : class, IEntity<TKey> where TImplementation : class, INextApiRepository<TEntity, TKey> =>
+            where TEntity : class, IEntity<TKey> where TImplementation : class, IRepo<TEntity, TKey> =>
             serviceCollection
-                .AddTransient<INextApiRepository<TEntity, TKey>, TImplementation>();
+                .AddTransient<IRepo<TEntity, TKey>, TImplementation>();
 
         /// <summary>
         /// Add custom repository for a Entity type
@@ -86,7 +87,7 @@ namespace Abitech.NextApi.Server.EfCore
             this IServiceCollection serviceCollection)
             where TEntity : class, IEntity<TKey>
             where TImplementation : class, TInterface
-            where TInterface : class, INextApiRepository<TEntity, TKey> =>
+            where TInterface : class, IRepo<TEntity, TKey> =>
             serviceCollection
                 .AddCustomRepo<TEntity, TKey, TImplementation>()
                 .AddTransient<TInterface, TImplementation>();

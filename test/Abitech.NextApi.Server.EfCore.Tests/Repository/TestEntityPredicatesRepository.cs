@@ -4,7 +4,7 @@ using Abitech.NextApi.Server.EfCore.Tests.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Repository
 {
-    public class TestEntityPredicatesRepository: NextApiRepository<TestEntityKeyPredicate, string>
+    public class TestEntityPredicatesRepository: EfCoreRepository<TestEntityKeyPredicate, string>
     {
         public TestEntityPredicatesRepository(INextApiDbContext dbContext) : base(dbContext)
         {

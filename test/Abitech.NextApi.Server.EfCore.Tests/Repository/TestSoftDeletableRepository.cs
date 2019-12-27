@@ -4,7 +4,7 @@ using Abitech.NextApi.Server.EfCore.Tests.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Repository
 {
-    public class TestSoftDeletableRepository : NextApiRepository<TestSoftDeletableEntity, int>
+    public class TestSoftDeletableRepository : EfCoreRepository<TestSoftDeletableEntity, int>
     {
         public TestSoftDeletableRepository(INextApiDbContext dbContext) : base(dbContext)
         {

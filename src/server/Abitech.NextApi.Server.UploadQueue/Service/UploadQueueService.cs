@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Abstractions.DAL;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.UploadQueue.Common.Abstractions;
 using Abitech.NextApi.UploadQueue.Common.Entity;
@@ -19,7 +20,7 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
     public abstract class UploadQueueService : IUploadQueueService
     {
         private readonly IColumnChangesLogger _columnChangesLogger;
-        private readonly INextApiUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
 
         /// <summary>
@@ -34,7 +35,7 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
         /// <inheritdoc />
         protected UploadQueueService(
             IColumnChangesLogger columnChangesLogger,
-            INextApiUnitOfWork unitOfWork,
+            IUnitOfWork unitOfWork,
             IServiceProvider serviceProvider)
         {
             _columnChangesLogger = columnChangesLogger;
@@ -60,7 +61,7 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
 Please specify correct assembly name!");
 
             var baseInterfaceType = typeof(IUploadQueueEntity);
-            var baseRepoType = typeof(INextApiRepository<,>);
+            var baseRepoType = typeof(IRepo<,>);
             _wellKnownUploadQueueRepoTypes = uploadQueueModelsAssembly.GetTypes()
                 .Where(t => baseInterfaceType.IsAssignableFrom(t))
                 .Select(entityType =>
@@ -131,7 +132,7 @@ Please specify correct assembly name!");
             IList<UploadQueueDto> entityNameGroupingList)
         {
             var (entityType, repoType) = ResolveEntityTypeInfoByName(entityName);
-            var repoInstance = (INextApiRepository)_serviceProvider.GetService(repoType);
+            var repoInstance = (IRepo)_serviceProvider.GetService(repoType);
             // Resolve changes handler
             var changesHandlerType = typeof(IUploadQueueChangesHandler<>);
             var genericChangesHandlerType = changesHandlerType.MakeGenericType(entityType);
