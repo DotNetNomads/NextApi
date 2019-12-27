@@ -83,7 +83,7 @@ namespace Abitech.NextApi.Server.Tests
             using var scope = App.ServerServices.CreateScope();
             var services = scope.ServiceProvider;
             var repo = services.GetService<ITestUserRepository>();
-            var unitOfWork = services.GetService<INextApiUnitOfWork>();
+            var unitOfWork = services.GetService<IUnitOfWork>();
             var createdUser = new TestUser()
             {
                 Name = "petyaTest", Email = "petya@mail.ru", Enabled = true, Surname = "Ivanov"

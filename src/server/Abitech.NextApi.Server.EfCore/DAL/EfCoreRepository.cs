@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Abstractions.DAL;
 using Abitech.NextApi.Common.Entity;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +14,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
     /// </summary>
     /// <typeparam name="T">Entity type</typeparam>
     /// <typeparam name="TKey">Entity key type</typeparam>
-    public class NextApiRepository<T, TKey> : INextApiRepository<T, TKey>
+    public class EfCoreRepository<T, TKey> : IRepo<T, TKey>
         where T : class, IEntity<TKey>
     {
         private readonly INextApiDbContext _context;
@@ -30,7 +30,7 @@ namespace Abitech.NextApi.Server.EfCore.DAL
         /// 
         /// </summary>
         /// <param name="dbContext"></param>
-        public NextApiRepository(INextApiDbContext dbContext)
+        public EfCoreRepository(INextApiDbContext dbContext)
         {
             _context = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _dbset = _context.Set<T>();

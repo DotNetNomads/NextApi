@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Abstractions.DAL;
 using Abitech.NextApi.Common.Tree;
 using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.TestServer.DAL;
@@ -14,8 +15,8 @@ namespace Abitech.NextApi.TestServer.Service
 {
     public class TestTreeItemService : NextApiEntityService<TestTreeItemDto, TestTreeItem, int>
     {
-        public TestTreeItemService(INextApiUnitOfWork unitOfWork, IMapper mapper,
-            INextApiRepository<TestTreeItem, int> repository) : base(
+        public TestTreeItemService(IUnitOfWork unitOfWork, IMapper mapper,
+            IRepo<TestTreeItem, int> repository) : base(
             unitOfWork, mapper, repository)
         {
         }

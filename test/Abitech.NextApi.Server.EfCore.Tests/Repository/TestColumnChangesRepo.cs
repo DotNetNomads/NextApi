@@ -5,7 +5,7 @@ using Abitech.NextApi.Server.EfCore.Tests.Entity;
 
 namespace Abitech.NextApi.Server.EfCore.Tests.Repository
 {
-    public class TestColumnChangesRepo: NextApiRepository<TestColumnChangesEnabledEntity, Guid>
+    public class TestColumnChangesRepo: EfCoreRepository<TestColumnChangesEnabledEntity, Guid>
     {
         public TestColumnChangesRepo(INextApiDbContext dbContext) : base(dbContext)
         {

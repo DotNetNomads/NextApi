@@ -5,14 +5,14 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Entity;
 
-namespace Abitech.NextApi.Common.Abstractions
+namespace Abitech.NextApi.Common.Abstractions.DAL
 {
     /// <summary>
     /// Base interface for entity repo
     /// </summary>
     /// <typeparam name="T">Entity type</typeparam>
     /// <typeparam name="TKey">Entity key type</typeparam>
-    public interface INextApiRepository<T, TKey> : INextApiRepository where T : class, IEntity<TKey>
+    public interface IRepo<T, TKey> : IRepo where T : class, IEntity<TKey>
     {
         /// <summary>
         /// Adds entity to dbset
@@ -112,9 +112,9 @@ namespace Abitech.NextApi.Common.Abstractions
     }
 
     /// <summary>
-    /// Base interface for INextApiRepository repo (used generally in non-generic code)
+    /// Base interface for IRepo repo (used generally in non-generic code)
     /// </summary>
-    public interface INextApiRepository
+    public interface IRepo
     {
         /// <summary>
         /// Adds entity to dbset

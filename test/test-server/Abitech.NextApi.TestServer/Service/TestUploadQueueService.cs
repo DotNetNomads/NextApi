@@ -11,7 +11,7 @@ namespace Abitech.NextApi.TestServer.Service
     {
         public TestUploadQueueService(
             IColumnChangesLogger columnChangesLogger,
-            INextApiUnitOfWork unitOfWork,
+            IUnitOfWork unitOfWork,
             IServiceProvider serviceProvider) : base(columnChangesLogger, unitOfWork, serviceProvider)
         {
         }

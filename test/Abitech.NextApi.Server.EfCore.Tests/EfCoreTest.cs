@@ -29,7 +29,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             {
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestEntityRepository>();
-                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
+                var unitOfWork = provider.GetService<IUnitOfWork>();
                 var entityGuid = Guid.NewGuid();
                 var entityGuid2 = Guid.NewGuid();
                 // check adding 
@@ -106,7 +106,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             {
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestSoftDeletableRepository>();
-                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
+                var unitOfWork = provider.GetService<IUnitOfWork>();
 
                 var createdEntity1 = new TestSoftDeletableEntity() {Name = "name1"};
                 var createdEntity2 = new TestSoftDeletableEntity() {Name = "name2"};
@@ -142,7 +142,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             {
                 var provider = scope.ServiceProvider;
                 var repo = provider.GetService<TestAuditEntityRepository>();
-                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
+                var unitOfWork = provider.GetService<IUnitOfWork>();
 
                 var entity1 = new TestAuditEntity() {Name = "name1"};
 
@@ -173,7 +173,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             using var scope = Services;
             var provider = scope.ServiceProvider;
             var repo = provider.GetService<TestColumnChangesRepo>();
-            var unitOfWork = provider.GetService<INextApiUnitOfWork>();
+            var unitOfWork = provider.GetService<IUnitOfWork>();
             var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
             // enable-or-disable logging
@@ -200,7 +200,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
             using var scope = Services;
             var provider = scope.ServiceProvider;
             var repo = provider.GetService<TestEntityRepository>();
-            var unitOfWork = provider.GetService<INextApiUnitOfWork>();
+            var unitOfWork = provider.GetService<IUnitOfWork>();
             var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
             var entity = new TestEntity {Name = "lolkek2222"};
@@ -224,7 +224,7 @@ namespace Abitech.NextApi.Server.EfCore.Tests
                 var provider = scope.ServiceProvider;
                 var repoTestEntity = provider.GetService<TestEntityRepository>();
                 var repoSoftRemoveEntity = provider.GetService<TestSoftDeletableRepository>();
-                var unitOfWork = provider.GetService<INextApiUnitOfWork>();
+                var unitOfWork = provider.GetService<IUnitOfWork>();
                 var eventManager = (TestEventManager)provider.GetService<INextApiEventManager>();
                 var eventOccured = false;
                 eventManager.EventOccured += (type, o) =>

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Abstractions.DAL;
 using Abitech.NextApi.Common.DTO;
 using Abitech.NextApi.Common.Entity;
 using Abitech.NextApi.Common.Filtering;
@@ -26,8 +27,8 @@ namespace Abitech.NextApi.Server.Entity
         where TDto : class, IEntityDto<TKey>
         where TEntity : class, IEntity<TKey>
     {
-        private readonly INextApiUnitOfWork _unitOfWork;
-        private readonly INextApiRepository<TEntity, TKey> _repository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IRepo<TEntity, TKey> _repository;
         private readonly IMapper _mapper;
 
         /// <summary>
@@ -41,8 +42,8 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="unitOfWork">Unit of work, used when saving data</param>
         /// <param name="mapper">Used for mapping operations</param>
         /// <param name="repository">Used for data access</param>
-        protected NextApiEntityService(INextApiUnitOfWork unitOfWork, IMapper mapper,
-            INextApiRepository<TEntity, TKey> repository)
+        protected NextApiEntityService(IUnitOfWork unitOfWork, IMapper mapper,
+            IRepo<TEntity, TKey> repository)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
