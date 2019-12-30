@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
-using Abitech.NextApi.Server.Attributes;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Event;
@@ -12,7 +11,6 @@ using Abitech.NextApi.TestServer.Event;
 #pragma warning disable 1998
 namespace Abitech.NextApi.TestServer.Service
 {
-    [NextApiAnonymous]
     public class TestService : INextApiService
     {
         private INextApiUserAccessor _nextApiUserAccessor;

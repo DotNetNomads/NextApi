@@ -1,3 +1,5 @@
+using System;
+
 namespace Abitech.NextApi.Common.Entity
 {
     /// <summary>

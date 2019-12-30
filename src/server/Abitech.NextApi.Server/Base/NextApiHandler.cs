@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Server.Common;
 using Abitech.NextApi.Server.Service;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -27,7 +28,7 @@ namespace Abitech.NextApi.Server.Base
         /// <param name="permissionProvider"></param>
         /// <param name="logger">Logger</param>
         /// <param name="serviceRegistry"></param>
-        public NextApiHandler(NextApiServerBuilder options, INextApiUserAccessor nextApiUserAccessor,
+        public NextApiHandler(INextApiUserAccessor nextApiUserAccessor,
             IServiceProvider serviceProvider, INextApiPermissionProvider permissionProvider,
             ILogger<NextApiHandler> logger, NextApiServiceRegistry serviceRegistry)
         {

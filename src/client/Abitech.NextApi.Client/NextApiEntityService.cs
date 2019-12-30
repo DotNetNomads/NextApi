@@ -5,7 +5,6 @@ using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.DTO;
 using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Common.Paged;
-using Abitech.NextApi.Common.Tree;
 
 namespace Abitech.NextApi.Client
 {
@@ -103,11 +102,6 @@ namespace Abitech.NextApi.Client
         /// <inheritdoc />
         public async Task<TKey[]> GetIdsByFilter(Filter filter = null) =>
             await InvokeService<TKey[]>(nameof(GetIdsByFilter), new NextApiArgument(nameof(filter), filter));
-
-        /// <inheritdoc />
-        public async Task<PagedList<TreeItem<TEntity>>> GetTree(TreeRequest request) =>
-            await InvokeService<PagedList<TreeItem<TEntity>>>(nameof(GetTree),
-                new NextApiArgument(nameof(request), request));
     }
 
     /// <summary>

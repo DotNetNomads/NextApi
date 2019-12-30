@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Server.Common;
 
 namespace Abitech.NextApi.Server.Service
 {
@@ -30,33 +32,5 @@ namespace Abitech.NextApi.Server.Service
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
             return _registeredServices.TryGetValue(name, out serviceInfo);
         }
-    }
-
-    /// <summary>
-    /// Information about NextApiService implementation
-    /// </summary>
-    public class ServiceInformation
-    {
-
-        /// <summary>
-        /// System type for service
-        /// </summary>
-        public Type ServiceType { get; }
-
-        /// <summary>
-        /// Indicates that service requires authorized user
-        /// </summary>
-        public bool RequiresAuthorization { get; set; } = true;
-
-        /// <summary>
-        /// Indicates that service allows execution without checking permissions
-        /// (by default, if method doesn't have defined permissions)
-        /// </summary>
-        public bool AllowByDefault { get; set; } = true;
-
-        /// <summary>
-        /// Information about per-method permissions
-        /// </summary>
-        public Dictionary<string, object> MethodsPermissionInfo { get; }
     }
 }

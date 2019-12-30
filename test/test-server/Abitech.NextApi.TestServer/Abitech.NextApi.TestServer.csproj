@@ -16,4 +16,8 @@
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Service\TestTreeItemService.cs" />
+  </ItemGroup>
+
 </Project>
