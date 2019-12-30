@@ -65,8 +65,9 @@ namespace Abitech.NextApi.Server.Entity
             var ctorTreeItem = Expression.New(treeItemType);
             var entityPropertyAssigment = Expression.Bind(propertyEntity, mainParameter);
             var queryConst = Expression.Constant(query);
+            var generatedCountMethod = _countWithPredicate.MakeGenericMethod(entityType);
             var childrenCountAssigment = Expression.Bind(propertyChildrenCount,
-                Expression.Call(_countWithPredicate, queryConst, ParentPredicateCount(mainParameter)));
+                Expression.Call(generatedCountMethod, queryConst, ParentPredicateCount(mainParameter)));
 
             return Expression.Lambda<Func<TEntity, TreeItem<TEntity>>>(
                 Expression.MemberInit(ctorTreeItem, entityPropertyAssigment, childrenCountAssigment), mainParameter);
@@ -91,6 +92,8 @@ namespace Abitech.NextApi.Server.Entity
         {
             var parameter = Expression.Parameter(typeof(TEntity), "entity");
             var parentIdProperty = ExpandNullableProperty(parameter, "ParentId", out var valueType);
+            // FIXME: 
+//            valueType.IsAssignableFrom(parentId)
             var rightValue = Expression.Constant(parentId, valueType);
             var predicateExpression = Expression.Equal(parentIdProperty, rightValue);
             return Expression.Lambda<Func<TEntity, bool>>(predicateExpression, parameter);
