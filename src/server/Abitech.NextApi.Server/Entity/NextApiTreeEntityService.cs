@@ -73,13 +73,16 @@ namespace Abitech.NextApi.Server.Entity
                 Expression.MemberInit(ctorTreeItem, entityPropertyAssigment, childrenCountAssigment), mainParameter);
         }
 
-        private static MemberExpression ExpandNullableProperty(Expression parameter, string propertyName,
-            out Type valueType)
+        private static MemberExpression GetMemberWithInformation(Expression parameter, string propertyName,
+            out Type underlyingType, out bool isNullableType)
         {
             var property = Expression.Property(parameter, propertyName);
-            valueType = Nullable.GetUnderlyingType(property.Type) != null
-                ? typeof(Nullable<>).MakeGenericType(typeof(TKey))
-                : typeof(TKey);
+            underlyingType = Nullable.GetUnderlyingType(property.Type);
+            isNullableType = underlyingType != null;
+            if (!isNullableType)
+            {
+                underlyingType = typeof(TKey);
+            }
 
             return property;
         }
@@ -91,12 +94,26 @@ namespace Abitech.NextApi.Server.Entity
         protected virtual Expression<Func<TEntity, bool>> ParentPredicate(object parentId)
         {
             var parameter = Expression.Parameter(typeof(TEntity), "entity");
-            var parentIdProperty = ExpandNullableProperty(parameter, "ParentId", out var valueType);
-            // FIXME: 
-//            valueType.IsAssignableFrom(parentId)
-            var rightValue = Expression.Constant(parentId, valueType);
-            var predicateExpression = Expression.Equal(parentIdProperty, rightValue);
+            var parentIdProperty =
+                GetMemberWithInformation(parameter, "ParentId", out var underlyingType, out var isNullableType);
+            var parentIdValueConstant =
+                ResolveParentIdConstant(parentId, underlyingType, isNullableType);
+            var predicateExpression = Expression.Equal(parentIdProperty, parentIdValueConstant);
             return Expression.Lambda<Func<TEntity, bool>>(predicateExpression, parameter);
+        }
+
+        private ConstantExpression ResolveParentIdConstant(object parentId, Type underlyingType, in bool isNullableType)
+        {
+            var constantValueType =
+                isNullableType ? typeof(Nullable<>).MakeGenericType(underlyingType) : underlyingType;
+            var currentValueType = parentId?.GetType();
+            if (currentValueType == null || currentValueType == constantValueType || currentValueType == underlyingType)
+            {
+                return Expression.Constant(parentId, constantValueType);
+            }
+
+            var convertedValue = Convert.ChangeType(parentId, underlyingType);
+            return Expression.Constant(convertedValue, constantValueType);
         }
 
         /// <summary>
@@ -107,11 +124,14 @@ namespace Abitech.NextApi.Server.Entity
         protected virtual Expression<Func<TEntity, bool>> ParentPredicateCount(ParameterExpression parentParameter)
         {
             var parameter = Expression.Parameter(typeof(TEntity), "childrenEntity");
-            var parentIdProperty = ExpandNullableProperty(parameter, "ParentId", out var valueType);
-
+            var parentIdProperty =
+                GetMemberWithInformation(parameter, "ParentId", out var underlyingType, out var isNullableType);
+            var rightPropertyInfo = Expression.Property(parentParameter, "Id");
+            var rightProperty = isNullableType
+                ? (Expression)Expression.Convert(rightPropertyInfo, typeof(Nullable<>).MakeGenericType(underlyingType))
+                : rightPropertyInfo;
             var predicateExpression =
-                Expression.Equal(parentIdProperty,
-                    Expression.Convert(Expression.Property(parentParameter, "Id"), valueType));
+                Expression.Equal(parentIdProperty, rightProperty);
             return Expression.Lambda<Func<TEntity, bool>>(predicateExpression, parameter);
         }
 
