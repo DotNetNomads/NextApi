@@ -10,7 +10,7 @@ namespace Abitech.NextApi.TestClient
 
     public class TestUploadQueueService : UploadQueueService<INextApiClient>, ITestUploadQueueService
     {
-        public TestUploadQueueService(INextApiClient client) : base(client, "TestUploadQueue")
+        public TestUploadQueueService(INextApiClient client) : base(client, "UploadQueue")
         {
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Abitech.NextApi.Common.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -46,17 +47,16 @@ namespace Abitech.NextApi.Server.Common
         /// </summary>
         /// <param name="serviceName">Name for service</param>
         /// <param name="automaticallyRegister">Register service in DI automatically</param>
-        public NextApiServiceBuilder AddService<TServiceType>(string serviceName, bool automaticallyRegister = true)
+        public NextApiServiceBuilder AddService<TServiceType>(string serviceName = null,
+            bool automaticallyRegister = true)
             where TServiceType : class, INextApiService
         {
-            if (string.IsNullOrWhiteSpace(serviceName))
-                throw new InvalidOperationException("Please provide name for service");
-
-            var toLowerServiceName = serviceName.ToLower();
+            var serviceType = typeof(TServiceType);
+            var toLowerServiceName = serviceName?.ToLower() ?? ResolveServiceName(serviceType);
             if (_serviceRegistry.ContainsKey(toLowerServiceName))
                 throw new InvalidOperationException(
                     $"Service with name {toLowerServiceName} already added to NextApi server");
-            var info = new ServiceInformation {ServiceType = typeof(TServiceType)};
+            var info = new ServiceInformation {ServiceType = serviceType};
             _serviceRegistry.Add(toLowerServiceName, info);
             if (automaticallyRegister)
             {
@@ -64,6 +64,19 @@ namespace Abitech.NextApi.Server.Common
             }
 
             return new NextApiServiceBuilder(info);
+        }
+
+        private static string ResolveServiceName(MemberInfo serviceType)
+        {
+            var typeName = serviceType.Name;
+            if (!typeName.EndsWith("Service"))
+            {
+                throw new Exception(
+                    @"The Dynamic Service Name Resolver requires a class that has name ending with `Service`.
+                Please correct the class name or set service name manually.");
+            }
+
+            return typeName.Substring(0, typeName.Length - 7).ToLower();
         }
     }
 }

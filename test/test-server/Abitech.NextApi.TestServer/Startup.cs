@@ -28,10 +28,10 @@ namespace Abitech.NextApi.TestServer
                 {
                     options.MaximumReceiveMessageSize = 1000000;
                     options.AddEntityService<TestUserDTO, TestUser, int>().AllowToGuests();
-                    options.AddUploadQueueService("TestUploadQueue", "Abitech.NextApi.TestServer")
+                    options.AddUploadQueueService("Abitech.NextApi.TestServer")
                         .AllowToGuests();
                     options.AddTreeEntityService<TestTreeItemDto, TestTreeItem, int>();
-                    options.AddService<TestService>("Test").AllowToGuests();
+                    options.AddService<TestService>().AllowToGuests();
                 })
                 .AddPermissionProvider<TestPermissionProvider>();
             services.AddFakeDbContext<ITestDbContext, TestDbContext>();

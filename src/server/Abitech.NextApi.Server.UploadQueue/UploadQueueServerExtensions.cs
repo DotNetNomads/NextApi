@@ -33,8 +33,8 @@ namespace Abitech.NextApi.Server.UploadQueue
         /// <param name="serviceName"></param>
         /// <param name="uploadQueueModelsAssemblyName"></param>
         /// <returns></returns>
-        public static NextApiServiceBuilder AddUploadQueueService(this NextApiBuilder serverBuilder, string serviceName,
-            string uploadQueueModelsAssemblyName)
+        public static NextApiServiceBuilder AddUploadQueueService(this NextApiBuilder serverBuilder,
+            string uploadQueueModelsAssemblyName, string serviceName = null)
         {
             serverBuilder.ServiceCollection.AddTransient(c =>
                 new UploadQueueService(
