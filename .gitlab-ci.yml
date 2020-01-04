@@ -71,6 +71,11 @@ nugetize-common:
   variables:
     projectFolder: src/base/Abitech.NextApi.Common
     projectName: Abitech.NextApi.Common
+nugetize-common-server:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/Abitech.NextApi.Server.Common
+    projectName: Abitech.NextApi.Server.Common
 nugetize-common-uploadqueue:
   <<: *nugetize
   variables:
