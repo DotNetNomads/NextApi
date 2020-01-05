@@ -42,7 +42,7 @@ namespace Abitech.NextApi.Server.Common
             Methods methodType,
             object permission)
         {
-            _serviceInformation.MethodsPermissionInfo.Add(methodType.ToString(), permission);
+            _serviceInformation.MethodsPermissionInfo.Add(methodType.ToString().ToLower(), permission);
             return this;
         }
 
@@ -56,7 +56,7 @@ namespace Abitech.NextApi.Server.Common
             string methodName,
             object permission)
         {
-            _serviceInformation.MethodsPermissionInfo.Add(methodName, permission);
+            _serviceInformation.MethodsPermissionInfo.Add(methodName.ToLower(), permission);
             return this;
         }
     }
