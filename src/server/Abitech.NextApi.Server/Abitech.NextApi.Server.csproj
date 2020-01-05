@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Server.Common\Abitech.NextApi.Server.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -325,7 +325,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task TestTree(NextApiTransport transport, int? parentId, int shouldReturnCount)
         {
             await App.GenerateTreeItems();
-            var service = App.ResolveService<ITestTreeItemService>(null, transport);
+            var service = App.ResolveService<ITestTreeItemService>("1", transport);
 
             var request = new TreeRequest() {ParentId = parentId};
             //Expand = new[] {"Children"}};
@@ -341,7 +341,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task TestTreeWithFilters(NextApiTransport transport)
         {
             await App.GenerateTreeItems();
-            var service = App.ResolveService<ITestTreeItemService>(null, transport);
+            var service = App.ResolveService<ITestTreeItemService>("1", transport);
 
             var request = new TreeRequest()
             {

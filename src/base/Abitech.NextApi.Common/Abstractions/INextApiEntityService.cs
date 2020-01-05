@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Common.DTO;
 using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Common.Paged;
-using Abitech.NextApi.Common.Tree;
 
 namespace Abitech.NextApi.Common.Abstractions
 {
@@ -73,13 +72,6 @@ namespace Abitech.NextApi.Common.Abstractions
         /// <returns>Boolean value</returns>
         /// <remarks>When filter is null, all items are eligible to be determined as existent</remarks>
         Task<bool> Any(Filter filter = null);
-
-        /// <summary>
-        /// Get entity tree by specific request
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request);
 
         /// <summary>
         /// Get entities identifiers by filter

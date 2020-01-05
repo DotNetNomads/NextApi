@@ -1,10 +1,8 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
-using Abitech.NextApi.Server.Attributes;
-using Abitech.NextApi.Server.Security;
+using Abitech.NextApi.Server.Common;
 using Abitech.NextApi.Server.Service;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,7 +14,6 @@ namespace Abitech.NextApi.Server.Base
     /// </summary>
     public class NextApiHandler
     {
-        private readonly NextApiServicesOptions _options;
         private readonly INextApiUserAccessor _nextApiUserAccessor;
         private readonly IServiceProvider _serviceProvider;
         private readonly INextApiPermissionProvider _permissionProvider;
@@ -26,17 +23,15 @@ namespace Abitech.NextApi.Server.Base
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="options">NextApi options</param>
         /// <param name="nextApiUserAccessor">Accessor to User information</param>
         /// <param name="serviceProvider"></param>
         /// <param name="permissionProvider"></param>
         /// <param name="logger">Logger</param>
         /// <param name="serviceRegistry"></param>
-        public NextApiHandler(NextApiServicesOptions options, INextApiUserAccessor nextApiUserAccessor,
+        public NextApiHandler(INextApiUserAccessor nextApiUserAccessor,
             IServiceProvider serviceProvider, INextApiPermissionProvider permissionProvider,
             ILogger<NextApiHandler> logger, NextApiServiceRegistry serviceRegistry)
         {
-            _options = options;
             _nextApiUserAccessor = nextApiUserAccessor;
             _serviceProvider = serviceProvider;
             _permissionProvider = permissionProvider;
@@ -66,8 +61,11 @@ namespace Abitech.NextApi.Server.Base
                 return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotFound,
                     "Operation name is not provided");
 
-            var serviceType = _serviceRegistry.ResolveNextApiServiceType(command.Service);
-            if (serviceType == null)
+            // translating all to lower case
+            command.Service = command.Service.ToLower();
+            command.Method = command.Method.ToLower();
+
+            if (!_serviceRegistry.TryResolveServiceInfo(command.Service, out var serviceInfo))
             {
                 _logger.LogDebug($"NextApi/Result: service is not found.");
                 return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsNotFound,
@@ -75,17 +73,15 @@ namespace Abitech.NextApi.Server.Base
             }
 
             // service access validation
-            var isAnonymousService = _options.AnonymousByDefault ||
-                                     NextApiServiceHelper.IsServiceOnlyForAnonymous(serviceType);
             var userAuthorized = _nextApiUserAccessor.User.Identity.IsAuthenticated;
-            if (!isAnonymousService && !userAuthorized)
+            if (serviceInfo.RequiresAuthorization && !userAuthorized)
             {
                 _logger.LogDebug($"NextApi/Result: service available only for authorized users.");
                 return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.ServiceIsOnlyForAuthorized,
                     "This service available only for authorized users");
             }
 
-            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceType, command.Method);
+            var methodInfo = NextApiServiceHelper.GetServiceMethod(serviceInfo.ServiceType, command.Method);
             if (methodInfo == null)
             {
                 _logger.LogDebug($"NextApi/Result: method is not found.");
@@ -94,27 +90,26 @@ namespace Abitech.NextApi.Server.Base
             }
 
             // method access validation
-            var attribute = methodInfo.GetCustomAttributes(typeof(NextApiAuthorizeAttribute), false)
-                .FirstOrDefault();
-            if (attribute is NextApiAuthorizeAttribute permissionAuthorizeAttribute)
+            var hasPermission = false;
+            if (serviceInfo.MethodsPermissionInfo.TryGetValue(command.Method, out var permissionName))
             {
-                var hasPermission = false;
                 try
                 {
-                    hasPermission = await _permissionProvider.HasPermission(_nextApiUserAccessor.User,
-                        permissionAuthorizeAttribute.Permission);
+                    hasPermission = await _permissionProvider.HasPermission(_nextApiUserAccessor.User, permissionName);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError($"NextApi/Error: when checking permissions. {ex.Message}", ex);
+                    return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.Unknown,
+                        $"Error when checking permissions. {ex.Message}");
                 }
+            }
 
-                if (!hasPermission)
-                {
-                    _logger.LogDebug("NextApi/Result: method is not allowed for current user.");
-                    return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotAllowed,
-                        "This operation is not allowed for current user");
-                }
+            if (!hasPermission && !serviceInfo.AllowByDefault)
+            {
+                _logger.LogDebug("NextApi/Result: method is not allowed for current user.");
+                return NextApiServiceHelper.CreateNextApiErrorResponse(NextApiErrorCode.OperationIsNotAllowed,
+                    "This operation is not allowed for current user");
             }
 
             object[] methodParameters;
@@ -129,7 +124,7 @@ namespace Abitech.NextApi.Server.Base
                     $"Error when parsing arguments for method. Please send correct arguments.");
             }
 
-            var serviceInstance = (INextApiService)_serviceProvider.GetService(serviceType);
+            var serviceInstance = (INextApiService)_serviceProvider.GetService(serviceInfo.ServiceType);
             try
             {
                 var result = await NextApiServiceHelper.CallService(methodInfo, serviceInstance, methodParameters);

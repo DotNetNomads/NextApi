@@ -39,7 +39,7 @@
 
 # declaration
 variables:
-  VERSION: "1.9.2.$CI_PIPELINE_IID"
+  VERSION: "1.9.8.$CI_PIPELINE_IID"
 
 stages:
   - test
@@ -71,6 +71,11 @@ nugetize-common:
   variables:
     projectFolder: src/base/Abitech.NextApi.Common
     projectName: Abitech.NextApi.Common
+nugetize-common-server:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/Abitech.NextApi.Server.Common
+    projectName: Abitech.NextApi.Server.Common
 nugetize-common-uploadqueue:
   <<: *nugetize
   variables:

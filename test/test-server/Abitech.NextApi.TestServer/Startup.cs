@@ -1,13 +1,15 @@
 using System;
 using Abitech.NextApi.Server;
 using Abitech.NextApi.Server.EfCore;
+using Abitech.NextApi.Server.Service;
 using Abitech.NextApi.Server.UploadQueue;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
-using Abitech.NextApi.Testing;
 using Abitech.NextApi.Testing.Data;
 using Abitech.NextApi.Testing.Security.Auth;
 using Abitech.NextApi.TestServer.DAL;
+using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Model;
+using Abitech.NextApi.TestServer.Service;
 using Abitech.NextApi.TestServer.UploadQueueHandlers;
 using AutoMapper;
 using Microsoft.AspNetCore.Builder;
@@ -24,8 +26,12 @@ namespace Abitech.NextApi.TestServer
 
             services.AddNextApiServices(options =>
                 {
-                    options.AnonymousByDefault = true;
                     options.MaximumReceiveMessageSize = 1000000;
+                    options.AddEntityService<TestUserDTO, TestUser, int>().AllowToGuests();
+                    options.AddUploadQueueService("Abitech.NextApi.TestServer")
+                        .AllowToGuests();
+                    options.AddTreeEntityService<TestTreeItemDto, TestTreeItem, int>();
+                    options.AddService<TestService>().AllowToGuests();
                 })
                 .AddPermissionProvider<TestPermissionProvider>();
             services.AddFakeDbContext<ITestDbContext, TestDbContext>();

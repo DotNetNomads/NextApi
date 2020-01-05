@@ -5,11 +5,12 @@ using Abitech.NextApi.TestServer.Model;
 
 namespace Abitech.NextApi.TestClient
 {
-    public interface ITestTreeItemService : INextApiEntityService<TestTreeItemDto, int>
+    public interface ITestTreeItemService : INextApiTreeEntityService<TestTreeItemDto, int>
     {
     }
 
-    public class TestTreeItemService : NextApiEntityService<TestTreeItemDto, int, INextApiClient>, ITestTreeItemService
+    public class TestTreeItemService : NextApiTreeEntityService<TestTreeItemDto, int, INextApiClient>,
+        ITestTreeItemService
     {
         public TestTreeItemService(INextApiClient client) : base(client, "TestTreeItem")
         {

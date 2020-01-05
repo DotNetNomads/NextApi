@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Server.Base;
+using Abitech.NextApi.Server.Common;
 using Abitech.NextApi.Server.Event;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Security;
@@ -28,27 +27,14 @@ namespace Abitech.NextApi.Server
         /// Used to initialize NextApi services
         /// <param name="options">NextApi configuration action</param>
         /// <param name="serviceCollection">Service collection instance</param>
-        /// </summary>
-        public static IServiceCollection AddNextApiServices(this IServiceCollection serviceCollection,
-            Action<NextApiServicesOptions> options = null) =>
-            AddNextApiServices(serviceCollection, Assembly.GetCallingAssembly(), options);
-
-        /// <summary>
-        /// Used to initialize NextApi services
-        /// <param name="assemblyWithNextApiServices">Assembly that contains NextApi services implementations</param>
-        /// <param name="options">NextApi configuration action</param>
-        /// <param name="serviceCollection">Service collection instance</param>
         /// <remarks>If assemblyWithNextApiServices is null. NextApi uses calling assembly (in other words assembly of Startup.cs)</remarks>
         /// </summary>
         public static IServiceCollection AddNextApiServices(this IServiceCollection serviceCollection,
-            Assembly assemblyWithNextApiServices = null,
-            Action<NextApiServicesOptions> options = null)
+            Action<NextApiBuilder> options = null)
         {
-            // detect default assembly, if it's not provided
-            assemblyWithNextApiServices ??= Assembly.GetCallingAssembly();
-            var nextApiOptions = new NextApiServicesOptions();
+            var nextApiBuilder = new NextApiBuilder(serviceCollection);
 
-            options?.Invoke(nextApiOptions);
+            options?.Invoke(nextApiBuilder);
 
             // mvc
             serviceCollection.AddMvc(mvcOptions => mvcOptions.EnableEndpointRouting = false);
@@ -57,7 +43,7 @@ namespace Abitech.NextApi.Server
                 .AddSignalR(srOptions =>
                 {
                     srOptions.EnableDetailedErrors = true;
-                    srOptions.MaximumReceiveMessageSize = nextApiOptions.MaximumReceiveMessageSize;
+                    srOptions.MaximumReceiveMessageSize = nextApiBuilder.MaximumReceiveMessageSize;
                 })
                 .AddMessagePackProtocol(mpOptions =>
                 {
@@ -66,12 +52,11 @@ namespace Abitech.NextApi.Server
                         TypelessContractlessStandardResolver.Instance
                     };
                 });
-            if (nextApiOptions.DisablePermissionValidation)
+            if (nextApiBuilder.DisablePermissionValidation)
             {
                 serviceCollection.AddTransient<INextApiPermissionProvider, DisabledNextApiPermissionProvider>();
             }
 
-            serviceCollection.AddSingleton(nextApiOptions);
             serviceCollection.AddScoped<INextApiUserAccessor, NextApiUserAccessor>();
             serviceCollection.AddScoped<INextApiRequest, NextApiRequest>();
             serviceCollection.AddScoped<INextApiEventManager, NextApiEventManager>();
@@ -79,15 +64,8 @@ namespace Abitech.NextApi.Server
             serviceCollection.AddScoped<NextApiHandler>();
             // handles all request from clients over HTTP
             serviceCollection.AddScoped<NextApiHttp>();
-            var serviceRegistry = new Dictionary<string, Type>();
-            foreach (var type in NextApiServiceHelper
-                .FindAllServices(assemblyWithNextApiServices))
-            {
-                serviceCollection.AddTransient(type);
-                serviceRegistry.Add(type.Name, type);
-            }
 
-            serviceCollection.AddSingleton(new NextApiServiceRegistry(serviceRegistry));
+            serviceCollection.AddSingleton(c => new NextApiServiceRegistry(nextApiBuilder.ServiceRegistry));
 
             return serviceCollection;
         }

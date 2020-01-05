@@ -17,47 +17,43 @@ namespace Abitech.NextApi.Server.UploadQueue.Service
     /// <para>Derive from this class and register repositories in the constructor</para>
     /// <para>You must call <see cref="UploadQueueServerExtensions.AddColumnChangesLogger{TDbContext}"/></para>
     /// </summary>
-    public abstract class UploadQueueService : IUploadQueueService
+    public class UploadQueueService : IUploadQueueService
     {
         private readonly IColumnChangesLogger _columnChangesLogger;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceProvider _serviceProvider;
-
-        /// <summary>
-        /// Assembly that contains UploadQueue models (should be implemented)
-        /// </summary>
-        protected abstract string UploadQueueModelsAssemblyName { get; }
 
         private static IDictionary<string, (Type entityType, Type repoType)> _wellKnownUploadQueueRepoTypes;
 
         private readonly List<IUploadQueueChangesHandler> _changesHandlers = new List<IUploadQueueChangesHandler>();
 
         /// <inheritdoc />
-        protected UploadQueueService(
+        public UploadQueueService(
             IColumnChangesLogger columnChangesLogger,
             IUnitOfWork unitOfWork,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            string uploadQueueModelsAssembly)
         {
             _columnChangesLogger = columnChangesLogger;
             _unitOfWork = unitOfWork;
             _serviceProvider = serviceProvider;
             // collect information about UploadQueue model types
-            CollectUploadQueueEntitiesInfo();
+            CollectUploadQueueEntitiesInfo(uploadQueueModelsAssembly);
         }
 
-        private void CollectUploadQueueEntitiesInfo()
+        private void CollectUploadQueueEntitiesInfo(string queueModelsAssembly)
         {
             if (_wellKnownUploadQueueRepoTypes != null)
                 return;
 
-            if (string.IsNullOrWhiteSpace(UploadQueueModelsAssemblyName))
+            if (string.IsNullOrWhiteSpace(queueModelsAssembly))
                 throw new ArgumentNullException(
-                    $"You should implement {nameof(UploadQueueModelsAssemblyName)} correctly!");
+                    $"You should set {nameof(queueModelsAssembly)} correctly!");
             var uploadQueueModelsAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == UploadQueueModelsAssemblyName);
+                .FirstOrDefault(a => a.GetName().Name == queueModelsAssembly);
             if (uploadQueueModelsAssembly == null)
                 throw new InvalidOperationException(
-                    $@"Assembly with name: {UploadQueueModelsAssemblyName} is not found in the current AppDomain. 
+                    $@"Assembly with name: {queueModelsAssembly} is not found in the current AppDomain. 
 Please specify correct assembly name!");
 
             var baseInterfaceType = typeof(IUploadQueueEntity);

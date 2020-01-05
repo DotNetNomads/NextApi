@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Server.Common;
 
 namespace Abitech.NextApi.Server.Service
 {
@@ -11,24 +13,24 @@ namespace Abitech.NextApi.Server.Service
     public class NextApiServiceRegistry
     {
         /// <inheritdoc />
-        public NextApiServiceRegistry(IDictionary<string, Type> registeredServices)
+        public NextApiServiceRegistry(IDictionary<string, ServiceInformation> registeredServices)
         {
             _registeredServices = registeredServices;
         }
 
-        private readonly IDictionary<string, Type> _registeredServices;
+        private readonly IDictionary<string, ServiceInformation> _registeredServices;
 
         /// <summary>
-        /// Resolves service type by name
+        /// Tries to Resolve service info by name
         /// </summary>
         /// <param name="name">Name of service</param>
-        /// <returns>Type of service</returns>
+        /// <param name="serviceInfo">Out argument. With service info</param>
+        /// <returns></returns>
         /// <exception cref="ArgumentNullException">When name is null or empty</exception>
-        public Type ResolveNextApiServiceType(string name)
+        public bool TryResolveServiceInfo(string name, out ServiceInformation serviceInfo)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            _registeredServices.TryGetValue($"{name}Service", out var serviceType);
-            return serviceType;
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+            return _registeredServices.TryGetValue(name, out serviceInfo);
         }
     }
 }

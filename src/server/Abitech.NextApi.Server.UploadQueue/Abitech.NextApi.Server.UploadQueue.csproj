@@ -18,6 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Server.Common\Abitech.NextApi.Server.Common.csproj" />
     <ProjectReference Include="..\..\base\Abitech.NextApi.UploadQueue.Common\Abitech.NextApi.UploadQueue.Common.csproj" />
     <ProjectReference Include="..\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
   </ItemGroup>

@@ -6,6 +6,7 @@
     <Description>Common classes for NextApi server/client implementation</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8</LangVersion>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

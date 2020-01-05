@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
@@ -10,7 +9,6 @@ using Abitech.NextApi.Common.DTO;
 using Abitech.NextApi.Common.Entity;
 using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Common.Paged;
-using Abitech.NextApi.Common.Tree;
 using Abitech.NextApi.Server.Base;
 using Abitech.NextApi.Server.Service;
 using AutoMapper;
@@ -18,12 +16,12 @@ using AutoMapper;
 namespace Abitech.NextApi.Server.Entity
 {
     /// <summary>
-    /// Basic abstractions for NextApi entity service
+    /// Basic realization for NextApi entity service
     /// </summary>
     /// <typeparam name="TDto">Type of dto</typeparam>
     /// <typeparam name="TEntity">Type of entity</typeparam>
     /// <typeparam name="TKey">Type of entity key</typeparam>
-    public abstract class NextApiEntityService<TDto, TEntity, TKey> : INextApiEntityService<TDto, TKey>
+    public class NextApiEntityService<TDto, TEntity, TKey> : INextApiEntityService<TDto, TKey>
         where TDto : class, IEntityDto<TKey>
         where TEntity : class, IEntity<TKey>
     {
@@ -42,7 +40,7 @@ namespace Abitech.NextApi.Server.Entity
         /// <param name="unitOfWork">Unit of work, used when saving data</param>
         /// <param name="mapper">Used for mapping operations</param>
         /// <param name="repository">Used for data access</param>
-        protected NextApiEntityService(IUnitOfWork unitOfWork, IMapper mapper,
+        public NextApiEntityService(IUnitOfWork unitOfWork, IMapper mapper,
             IRepo<TEntity, TKey> repository)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -158,7 +156,7 @@ namespace Abitech.NextApi.Server.Entity
         }
 
         /// <inheritdoc />
-        public async virtual Task<int> Count(Filter filter = null)
+        public virtual async Task<int> Count(Filter filter = null)
         {
             var entitiesQuery = _repository.GetAll();
             // apply filter
@@ -192,65 +190,6 @@ namespace Abitech.NextApi.Server.Entity
             }
 
             return await _repository.ToArrayAsync(entitiesQuery.Select(e => e.Id));
-        }
-
-        /// <inheritdoc />
-        public virtual async Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request)
-        {
-            var parentPredicate = await ParentPredicate(request.ParentId);
-            if (parentPredicate == null)
-            {
-                // in case entity doesn't support tree operations
-                throw new NextApiException(NextApiErrorCode.OperationIsNotSupported,
-                    "Please provide ParentPredicate and SelectTreeChunk implementations");
-            }
-
-            var entitiesQuery = _repository.GetAll();
-            entitiesQuery = await BeforeGet(entitiesQuery);
-            var rootQuery = entitiesQuery.Where(parentPredicate);
-            var totalCount = 0;
-
-            if (request.PagedRequest != null)
-            {
-                var filterExpression = request.PagedRequest.Filter?.ToLambdaFilter<TEntity>();
-                if (filterExpression != null)
-                {
-                    rootQuery = rootQuery.Where(filterExpression);
-                }
-
-                totalCount = rootQuery.Count();
-                if (request.PagedRequest.Skip != null)
-                    rootQuery = rootQuery.Skip(request.PagedRequest.Skip.Value);
-                if (request.PagedRequest.Take != null)
-                    rootQuery = rootQuery.Take(request.PagedRequest.Take.Value);
-                if (request.PagedRequest.Expand != null)
-                    rootQuery = _repository.Expand(rootQuery, request.PagedRequest.Expand);
-            }
-
-            var treeChunk = await _repository.ToArrayAsync(rootQuery
-                .Select(SelectTreeChunk(entitiesQuery)));
-            var output = treeChunk.Select(chunkItem =>
-                new TreeItem<TDto>
-                {
-                    ChildrenCount = chunkItem.ChildrenCount, Entity = _mapper.Map<TEntity, TDto>(chunkItem.Entity)
-                }).ToList();
-
-            return new PagedList<TreeItem<TDto>>
-            {
-                Items = output, TotalItems = totalCount == 0 ? output.Count : totalCount
-            };
-        }
-
-        /// <summary>
-        /// Used in select operation for GetTree method
-        /// </summary>
-        /// <param name="query">Query for additional calculations</param>
-        /// <returns>Select lambda</returns>
-        protected virtual Expression<Func<TEntity, TreeItem<TEntity>>> SelectTreeChunk(IQueryable<TEntity> query)
-        {
-            // in case entity doesn't support tree operations
-            throw new NextApiException(NextApiErrorCode.OperationIsNotSupported,
-                "Please provide SelectTreeChunk implementation");
         }
 
         /// <summary>
@@ -361,18 +300,6 @@ namespace Abitech.NextApi.Server.Entity
 #pragma warning restore 1998
         {
             return query;
-        }
-
-        /// <summary>
-        /// Returns parent predicate usable in GetTree method
-        /// </summary>
-        /// <returns>Predicate for matching parent id for the entity</returns>
-#pragma warning disable 1998
-        protected virtual async Task<Expression<Func<TEntity, bool>>> ParentPredicate(object parentId)
-#pragma warning restore 1998
-        {
-            // GetTree disabled by default
-            return null;
         }
 
         #endregion
