@@ -4,7 +4,7 @@ using Abitech.NextApi.Common.Tree;
 
 namespace Abitech.NextApi.TestServer.Model
 {
-    public class TestTreeItem : ITreeEntity<int>
+    public class TestTreeItem : ITreeEntity<int, int?>
     {
         public int Id { get; set; }
         public string Name { get; set; }

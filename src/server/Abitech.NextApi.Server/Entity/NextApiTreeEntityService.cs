@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Common.Abstractions.DAL;
@@ -18,16 +17,11 @@ namespace Abitech.NextApi.Server.Entity
     /// <typeparam name="TDto"></typeparam>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TKey"></typeparam>
-    public class NextApiTreeEntityService<TDto, TEntity, TKey> : NextApiEntityService<TDto, TEntity, TKey>,
-        INextApiTreeEntityService<TDto, TKey>
-        where TDto : class, IEntityDto<TKey> where TEntity : class, ITreeEntity<TKey>
+    /// <typeparam name="TParentKey"></typeparam>
+    public class NextApiTreeEntityService<TDto, TEntity, TKey, TParentKey> : NextApiEntityService<TDto, TEntity, TKey>,
+        INextApiTreeEntityService<TDto, TKey, TParentKey>
+        where TDto : class, ITreeEntityDto<TKey, TParentKey> where TEntity : class, ITreeEntity<TKey, TParentKey>
     {
-        private static readonly MethodInfo _equalsMethod =
-            typeof(object).GetMethod("Equals", new[] {typeof(object)});
-
-        private static readonly MethodInfo _countWithPredicate = typeof(Queryable).GetMethods()
-            .First(m => m.Name == "Count" && m.GetParameters().Length == 2);
-
         private readonly IMapper _mapper;
         private readonly IRepo<TEntity, TKey> _repository;
 
@@ -39,110 +33,16 @@ namespace Abitech.NextApi.Server.Entity
             _repository = repository;
         }
 
-        //        protected override Expression<Func<TestTreeItem, TreeItem<TestTreeItem>>> SelectTreeChunk(
-//            IQueryable<TestTreeItem> query) =>
-//            entity =>
-//                new TreeItem<TestTreeItem>
-//                {
-//                    Entity = entity, ChildrenCount = query.Count(childEntity => childEntity.ParentId == entity.Id)
-//                };
-
-        /// <summary>
-        /// Used in select operation for GetTree method
-        /// </summary>
-        /// <param name="query">Query for additional calculations</param>
-        /// <returns>Select lambda</returns>
-        protected virtual Expression<Func<TEntity, TreeItem<TEntity>>> SelectTreeChunk(IQueryable<TEntity> query)
-        {
-            var entityType = typeof(TEntity);
-
-            var mainParameter = Expression.Parameter(entityType, "entity");
-
-            var treeItemType = typeof(TreeItem<TEntity>);
-            var propertyEntity = treeItemType.GetProperty("Entity");
-            var propertyChildrenCount = treeItemType.GetProperty("ChildrenCount");
-
-            var ctorTreeItem = Expression.New(treeItemType);
-            var entityPropertyAssigment = Expression.Bind(propertyEntity, mainParameter);
-            var queryConst = Expression.Constant(query);
-            var generatedCountMethod = _countWithPredicate.MakeGenericMethod(entityType);
-            var childrenCountAssigment = Expression.Bind(propertyChildrenCount,
-                Expression.Call(generatedCountMethod, queryConst, ParentPredicateCount(mainParameter)));
-
-            return Expression.Lambda<Func<TEntity, TreeItem<TEntity>>>(
-                Expression.MemberInit(ctorTreeItem, entityPropertyAssigment, childrenCountAssigment), mainParameter);
-        }
-
-        private static MemberExpression GetMemberWithInformation(Expression parameter, string propertyName,
-            out Type underlyingType, out bool isNullableType)
-        {
-            var property = Expression.Property(parameter, propertyName);
-            underlyingType = Nullable.GetUnderlyingType(property.Type);
-            isNullableType = underlyingType != null;
-            if (!isNullableType)
-            {
-                underlyingType = typeof(TKey);
-            }
-
-            return property;
-        }
-
-        /// <summary>
-        /// Returns parent predicate usable in GetTree method
-        /// </summary>
-        /// <returns>Predicate for matching parent id for the entity</returns>
-        protected virtual Expression<Func<TEntity, bool>> ParentPredicate(object parentId)
-        {
-            var parameter = Expression.Parameter(typeof(TEntity), "entity");
-            var parentIdProperty =
-                GetMemberWithInformation(parameter, "ParentId", out var underlyingType, out var isNullableType);
-            var parentIdValueConstant =
-                ResolveParentIdConstant(parentId, underlyingType, isNullableType);
-            var predicateExpression = Expression.Equal(parentIdProperty, parentIdValueConstant);
-            return Expression.Lambda<Func<TEntity, bool>>(predicateExpression, parameter);
-        }
-
-        private ConstantExpression ResolveParentIdConstant(object parentId, Type underlyingType, in bool isNullableType)
-        {
-            var constantValueType =
-                isNullableType ? typeof(Nullable<>).MakeGenericType(underlyingType) : underlyingType;
-            var currentValueType = parentId?.GetType();
-            if (currentValueType == null || currentValueType == constantValueType || currentValueType == underlyingType)
-            {
-                return Expression.Constant(parentId, constantValueType);
-            }
-
-            var convertedValue = Convert.ChangeType(parentId, underlyingType);
-            return Expression.Constant(convertedValue, constantValueType);
-        }
-
-        /// <summary>
-        /// Returns parent predicate usable in children count operation.
-        /// </summary>
-        /// <param name="parentParameter">Parent parameter</param>
-        /// <returns></returns>
-        protected virtual Expression<Func<TEntity, bool>> ParentPredicateCount(ParameterExpression parentParameter)
-        {
-            var parameter = Expression.Parameter(typeof(TEntity), "childrenEntity");
-            var parentIdProperty =
-                GetMemberWithInformation(parameter, "ParentId", out var underlyingType, out var isNullableType);
-            var rightPropertyInfo = Expression.Property(parentParameter, "Id");
-            var rightProperty = isNullableType
-                ? (Expression)Expression.Convert(rightPropertyInfo, typeof(Nullable<>).MakeGenericType(underlyingType))
-                : rightPropertyInfo;
-            var predicateExpression =
-                Expression.Equal(parentIdProperty, rightProperty);
-            return Expression.Lambda<Func<TEntity, bool>>(predicateExpression, parameter);
-        }
-
         /// <inheritdoc />
-        public virtual async Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request)
+        public virtual async Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest<TParentKey> request)
         {
-            var parentPredicate = ParentPredicate(request.ParentId);
-
             var entitiesQuery = _repository.GetAll();
             entitiesQuery = await BeforeGet(entitiesQuery);
-            var rootQuery = entitiesQuery.Where(parentPredicate);
+            var rootExpression = request.ParentId == null
+                ? (Expression<Func<TEntity, bool>>)(e => e.ParentId == null)
+                : e => e.ParentId.Equals(request.ParentId);
+
+            var rootQuery = entitiesQuery.Where(rootExpression);
             var totalCount = 0;
 
             if (request.PagedRequest != null)
@@ -163,7 +63,7 @@ namespace Abitech.NextApi.Server.Entity
             }
 
             var treeChunk = await _repository.ToArrayAsync(rootQuery
-                .Select(SelectTreeChunk(entitiesQuery)));
+                .Select(e => new {Entity = e, ChildrenCount = entitiesQuery.Count(ce => e.Id.Equals(ce.ParentId))}));
             var output = treeChunk.Select(chunkItem =>
                 new TreeItem<TDto>
                 {
@@ -175,19 +75,5 @@ namespace Abitech.NextApi.Server.Entity
                 Items = output, TotalItems = totalCount == 0 ? output.Count : totalCount
             };
         }
-
-
-//        protected override async Task<Expression<Func<TestTreeItem, bool>>> ParentPredicate(object parentId)
-//#pragma warning restore 1998
-//        {
-//            if (parentId == null)
-//            {
-//                return entity => entity.ParentId == null;
-//            }
-//
-//            var converted = Convert.ToInt32(parentId);
-//            return entity => entity.ParentId == converted;
-//        }
-//
     }
 }

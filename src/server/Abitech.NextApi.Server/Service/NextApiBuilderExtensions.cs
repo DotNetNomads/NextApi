@@ -39,16 +39,17 @@ namespace Abitech.NextApi.Server.Service
         /// <typeparam name="TEntityDto">DTO type for entity</typeparam>
         /// <typeparam name="TEntity">Entity type</typeparam>
         /// <typeparam name="TKey">Entity key type</typeparam>
+        /// <typeparam name="TParentKey">Parent entity key</typeparam>
         /// <returns>Service builder for detailed configuration</returns>
         public static NextApiServiceBuilder AddTreeEntityService<TEntityDto,
-            TEntity, TKey>(this NextApiBuilder builder,
+            TEntity, TKey, TParentKey>(this NextApiBuilder builder,
             string serviceName = null)
-            where TEntityDto : class, IEntityDto<TKey>
-            where TEntity : class, ITreeEntity<TKey>
+            where TEntityDto : class, ITreeEntityDto<TKey, TParentKey>
+            where TEntity : class, ITreeEntity<TKey, TParentKey>
         {
             if (string.IsNullOrWhiteSpace(serviceName))
                 serviceName = typeof(TEntity).Name;
-            return builder.AddService<NextApiTreeEntityService<TEntityDto, TEntity, TKey>>(serviceName);
+            return builder.AddService<NextApiTreeEntityService<TEntityDto, TEntity, TKey, TParentKey>>(serviceName);
         }
     }
 }

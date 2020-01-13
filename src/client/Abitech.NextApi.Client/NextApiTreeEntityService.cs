@@ -14,9 +14,9 @@ namespace Abitech.NextApi.Client
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TClient"></typeparam>
     public abstract class
-        NextApiTreeEntityService<TEntity, TKey, TClient> : NextApiEntityService<TEntity, TKey, TClient>,
-            INextApiTreeEntityService<TEntity, TKey>
-        where TClient : class, INextApiClient where TEntity : class, IEntityDto<TKey>
+        NextApiTreeEntityService<TEntity, TKey, TParentKey, TClient> : NextApiEntityService<TEntity, TKey, TClient>,
+            INextApiTreeEntityService<TEntity, TKey, TParentKey>
+        where TClient : class, INextApiClient where TEntity : class, ITreeEntityDto<TKey, TParentKey>
     {
         /// <inheritdoc />
         protected NextApiTreeEntityService(TClient client, string serviceName) : base(client, serviceName)
@@ -24,7 +24,7 @@ namespace Abitech.NextApi.Client
         }
 
         /// <inheritdoc />
-        public async Task<PagedList<TreeItem<TEntity>>> GetTree(TreeRequest request) =>
+        public async Task<PagedList<TreeItem<TEntity>>> GetTree(TreeRequest<TParentKey> request) =>
             await InvokeService<PagedList<TreeItem<TEntity>>>(nameof(GetTree),
                 new NextApiArgument(nameof(request), request));
     }

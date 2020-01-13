@@ -30,7 +30,7 @@ namespace Abitech.NextApi.TestServer
                     options.AddEntityService<TestUserDTO, TestUser, int>().AllowToGuests();
                     options.AddUploadQueueService("Abitech.NextApi.TestServer")
                         .AllowToGuests();
-                    options.AddTreeEntityService<TestTreeItemDto, TestTreeItem, int>();
+                    options.AddTreeEntityService<TestTreeItemDto, TestTreeItem, int, int?>();
                     options.AddService<TestService>().AllowToGuests();
                 })
                 .AddPermissionProvider<TestPermissionProvider>();

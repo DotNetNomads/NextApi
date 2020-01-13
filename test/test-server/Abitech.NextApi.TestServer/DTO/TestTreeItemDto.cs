@@ -3,7 +3,7 @@ using Abitech.NextApi.Common.DTO;
 
 namespace Abitech.NextApi.TestServer.DTO
 {
-    public class TestTreeItemDto: IEntityDto<int>
+    public class TestTreeItemDto: ITreeEntityDto<int, int?>
     {
         public int Id { get; set; }
         public string Name { get; set; }
