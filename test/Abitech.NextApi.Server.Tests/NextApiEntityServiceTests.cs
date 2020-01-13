@@ -327,7 +327,7 @@ namespace Abitech.NextApi.Server.Tests
             await App.GenerateTreeItems();
             var service = App.ResolveService<ITestTreeItemService>("1", transport);
 
-            var request = new TreeRequest() {ParentId = parentId};
+            var request = new TreeRequest<int?>() {ParentId = parentId};
             //Expand = new[] {"Children"}};
 
             var response = await service.GetTree(request);
@@ -343,7 +343,7 @@ namespace Abitech.NextApi.Server.Tests
             await App.GenerateTreeItems();
             var service = App.ResolveService<ITestTreeItemService>("1", transport);
 
-            var request = new TreeRequest()
+            var request = new TreeRequest<int?>()
             {
                 ParentId = null,
                 PagedRequest = new PagedRequest() {Filter = new FilterBuilder().Contains("Name", "0").Build()}
@@ -351,7 +351,7 @@ namespace Abitech.NextApi.Server.Tests
             var response = await service.GetTree(request);
             Assert.Equal(3, response.Items.Count);
 
-            var request1 = new TreeRequest()
+            var request1 = new TreeRequest<int?>()
             {
                 ParentId = null,
                 PagedRequest = new PagedRequest()

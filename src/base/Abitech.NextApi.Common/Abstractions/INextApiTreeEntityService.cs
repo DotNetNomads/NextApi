@@ -10,13 +10,15 @@ namespace Abitech.NextApi.Common.Abstractions
     /// </summary>
     /// <typeparam name="TDto"></typeparam>
     /// <typeparam name="TKey"></typeparam>
-    public interface INextApiTreeEntityService<TDto, TKey> : INextApiEntityService<TDto, TKey> where TDto : class, IEntityDto<TKey>
+    /// <typeparam name="TParentKey"></typeparam>
+    public interface INextApiTreeEntityService<TDto, TKey, TParentKey> : INextApiEntityService<TDto, TKey>
+        where TDto : class, ITreeEntityDto<TKey, TParentKey>
     {
         /// <summary>
         /// Get entity tree by specific request
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest request);
+        Task<PagedList<TreeItem<TDto>>> GetTree(TreeRequest<TParentKey> request);
     }
 }
