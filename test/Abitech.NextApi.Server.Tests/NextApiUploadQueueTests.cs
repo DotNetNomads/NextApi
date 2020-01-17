@@ -471,7 +471,7 @@ namespace Abitech.NextApi.Server.Tests
                 {
                     Id = Guid.NewGuid(),
                     OperationType = OperationType.Update,
-                    OccuredAt = DateTimeOffset.Now,
+                    OccuredAt = DateTimeOffset.UtcNow,
                     EntityName = entityName,
                     EntityRowGuid = testCity.Id,
                     ColumnName = nameof(TestCity.Demonym),
@@ -495,10 +495,7 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var lastChange = await columnChangesLogger.GetLastChange(entityName, uploadQueueDto.ColumnName,
                     uploadQueueDto.EntityRowGuid);
-
-                // check, and just ignore milliseconds (due we test in mysql, and sometimes we have long queries)
-                Assert.Equal(uploadQueueDto.OccuredAt.AddMilliseconds(-uploadQueueDto.OccuredAt.Millisecond),
-                    lastChange.Value.AddMilliseconds(-lastChange.Value.Millisecond));
+                Assert.Equal(uploadQueueDto.OccuredAt, lastChange.Value);
             }
         }
 
