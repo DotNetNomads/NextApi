@@ -54,6 +54,7 @@ test-server:
   variables:
     project: test/Abitech.NextApi.Server.Tests
     MYSQL_ROOT_PASSWORD: "root"
+    NEXTAPI_TESTDB_PORT: "3306"
 test-server-efcore:
   <<: *dotnet-test
   variables:
