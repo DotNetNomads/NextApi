@@ -16,7 +16,7 @@ namespace Abitech.NextApi.Testing.Data
         /// </summary>
         public TDbContext Context { get; }
 
-        private IServiceScope _scope;
+        private readonly IServiceScope _scope;
 
         /// <inheritdoc />
         public DisposableDbContext(IServiceScope scope, TDbContext context)

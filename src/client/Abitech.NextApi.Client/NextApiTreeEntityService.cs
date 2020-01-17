@@ -13,6 +13,7 @@ namespace Abitech.NextApi.Client
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TParentKey"></typeparam>
     public abstract class
         NextApiTreeEntityService<TEntity, TKey, TParentKey, TClient> : NextApiEntityService<TEntity, TKey, TClient>,
             INextApiTreeEntityService<TEntity, TKey, TParentKey>

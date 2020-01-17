@@ -38,11 +38,8 @@ namespace Abitech.NextApi.Server.Entity
         {
             var entitiesQuery = _repository.GetAll();
             entitiesQuery = await BeforeGet(entitiesQuery);
-            var rootExpression = request.ParentId == null
-                ? (Expression<Func<TEntity, bool>>)(e => e.ParentId == null)
-                : e => e.ParentId.Equals(request.ParentId);
-
-            var rootQuery = entitiesQuery.Where(rootExpression);
+            
+            var rootQuery = entitiesQuery.Where(e=> e.ParentId.Equals(request.ParentId));
             var totalCount = 0;
 
             if (request.PagedRequest != null)

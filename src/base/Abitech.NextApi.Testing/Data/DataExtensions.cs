@@ -1,9 +1,12 @@
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Abitech.NextApi.Server.EfCore;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MySql.Data.MySqlClient;
+using Pomelo.EntityFrameworkCore.MySql.Storage;
 
 namespace Abitech.NextApi.Testing.Data
 {
@@ -16,15 +19,40 @@ namespace Abitech.NextApi.Testing.Data
         /// Add fake DbContext to services
         /// </summary>
         /// <param name="services">Service collection instance</param>
+        /// <param name="connectionStringAdditional"></param>
         /// <typeparam name="TInterface">DbContext interface</typeparam>
         /// <typeparam name="TImplementation">DbContext implementation</typeparam>
-        public static void AddFakeDbContext<TInterface, TImplementation>(this IServiceCollection services)
-            where TInterface : INextApiDbContext
+        public static void AddFakeMySqlDbContext<TInterface, TImplementation>(this IServiceCollection services,
+            string connectionStringAdditional = "")
+            where TInterface : class, INextApiDbContext
             where TImplementation : DbContext, TInterface
         {
-            var dbName = "TestNextApiDb" + Guid.NewGuid();
-            services.AddNextApiDbContext<TInterface, TImplementation>(options =>
-                options.UseInMemoryDatabase(dbName));
+            var dbHost = Environment.GetEnvironmentVariable("NEXTAPI_TESTDB_HOST") ?? "ascoa-local";
+            var dbPort = Environment.GetEnvironmentVariable("NEXTAPI_TESTDB_PORT") ?? "3399";
+            var dbUser = Environment.GetEnvironmentVariable("NEXTAPI_TESTDB_USER") ?? "root";
+            var dbPassword = Environment.GetEnvironmentVariable("NEXTAPI_TESTDB_PWD") ?? "root";
+            // NOTE: We should switch to MySQL provider due some limitation in InMemory provider (for example: predicate property = null
+            // not works correct in tree type like entities). Also, we use MySQL everywhere.
+            var dbName =
+                $"TestDb_{Guid.NewGuid()}";
+            var mysqlConnection = new MySqlConnection(
+                $"Server={dbHost};Port={dbPort};User={dbUser};Password={dbPassword};{connectionStringAdditional}");
+            services.AddSingleton(mysqlConnection);
+            services.AddDbContext<TImplementation>(options =>
+                options.UseMySql(mysqlConnection,
+                    c => c.CharSet(CharSet.Utf8)));
+            services.AddSingleton<ITestApplicationStatesHandler>(c =>
+                new TestApplicationStatesHandler<TImplementation>(c, dbHost, dbPort, dbUser, dbPassword, dbName,
+                    connectionStringAdditional));
+            Func<IServiceProvider, TImplementation> dbResolvler = c =>
+            {
+                var statesHandler = c.GetService<ITestApplicationStatesHandler>();
+                statesHandler.Start();
+                var dbContext = c.GetService<TImplementation>();
+                return dbContext;
+            };
+            services.AddScoped<TInterface>(dbResolvler);
+            services.AddScoped<INextApiDbContext>(dbResolvler);
         }
 
         /// <summary>
@@ -34,12 +62,11 @@ namespace Abitech.NextApi.Testing.Data
         /// <typeparam name="TDbContext">Type of DbContext</typeparam>
         /// <returns>DisposableDbContext for specific DbContext (should be used with "using" keyword. cause db context
         /// is scoped by default)</returns>
-        public static async Task<DisposableDbContext<TDbContext>> ResolveDbContext<TDbContext>(
+        public static DisposableDbContext<TDbContext> ResolveDbContext<TDbContext>(
             this INextApiApplication application) where TDbContext : INextApiDbContext
         {
             var scope = application.ServerServices.CreateScope();
             var dbContext = scope.ServiceProvider.GetService<TDbContext>();
-            await (dbContext as DbContext).Database.EnsureCreatedAsync();
             return new DisposableDbContext<TDbContext>(scope, dbContext);
         }
     }

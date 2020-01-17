@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Filtering;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 
 namespace Abitech.NextApi.Server.Entity
@@ -15,14 +16,6 @@ namespace Abitech.NextApi.Server.Entity
     /// </summary>
     public static class FilterExtensions
     {
-        private static readonly MethodInfo StringContainsMethod =
-            typeof(string).GetMethod("Contains", new[] {typeof(string)});
-
-        private static readonly MethodInfo ToStringMethod =
-            typeof(object).GetMethod("ToString", Type.EmptyTypes);
-
-        private static readonly MethodInfo ToLowerMethod =
-            typeof(string).GetMethod("ToLower", Type.EmptyTypes);
 
         // more info: https://docs.microsoft.com/en-us/dotnet/api/system.linq.enumerable.any?view=netcore-2.2
         private static readonly MethodInfo Any = typeof(Enumerable).GetMethods()
@@ -90,12 +83,17 @@ namespace Abitech.NextApi.Server.Entity
                     case FilterExpressionTypes.Contains:
                         var value = FormatValue(filterExpression.Value, typeof(string)) as string;
                         if (value == null) break;
-                        var convertedProperty =
-                            Expression.Call(Expression.Call(property, ToStringMethod), ToLowerMethod);
-                        currentExpression = Expression.AndAlso(
-                            Expression.NotEqual(property, Expression.Constant(null, property.Type)),
-                            Expression.Call(convertedProperty, StringContainsMethod,
-                                Expression.Constant(value.ToLower())));
+                        Expression matchExpression = property;
+                        if (matchExpression.Type != typeof(string))
+                        {
+                            matchExpression = Expression.Convert(matchExpression, typeof(object));
+                            matchExpression = Expression.Convert(matchExpression, typeof(string));
+                        }
+
+                        var pattern = Expression.Constant($"%{value}%");
+                        currentExpression = Expression.Call(
+                            typeof(DbFunctionsExtensions), "Like", Type.EmptyTypes,
+                            Expression.Constant(EF.Functions), matchExpression, pattern);
                         break;
                     case FilterExpressionTypes.Equal:
                         currentExpression = Expression.Equal(property,

@@ -34,7 +34,7 @@ namespace Abitech.NextApi.TestServer
                     options.AddService<TestService>().AllowToGuests();
                 })
                 .AddPermissionProvider<TestPermissionProvider>();
-            services.AddFakeDbContext<ITestDbContext, TestDbContext>();
+            services.AddFakeMySqlDbContext<ITestDbContext, TestDbContext>();
             services.AddDefaultUnitOfWork();
             services.AddTransient<IUploadQueueChangesHandler<TestCity>, TestUploadQueueChangesHandler>();
             services.AddCustomRepo<TestUser, int, ITestUserRepository, TestUserRepository>();

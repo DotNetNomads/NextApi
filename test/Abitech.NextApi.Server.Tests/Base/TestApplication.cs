@@ -3,7 +3,7 @@ using Abitech.NextApi.TestClient;
 using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer;
 using Microsoft.Extensions.Logging;
-
+using Xunit;
 namespace Abitech.NextApi.Server.Tests.Base
 {
     public class FakeStartup : Startup
