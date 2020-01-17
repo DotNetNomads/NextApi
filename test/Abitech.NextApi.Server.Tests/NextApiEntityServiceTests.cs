@@ -14,7 +14,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-
 namespace Abitech.NextApi.Server.Tests
 {
     public class NextApiEntityServiceTests : NextApiTest<TestApplication, INextApiClient>
@@ -201,6 +200,7 @@ namespace Abitech.NextApi.Server.Tests
         [InlineData(NextApiTransport.SignalR, "Role", "City")]
         public async Task GetByIds(NextApiTransport transport, params string[] expand)
         {
+            await App.GenerateUsers();
             var userService = ResolveUserService(transport);
 
             var idArray = new[] {14, 12, 13};

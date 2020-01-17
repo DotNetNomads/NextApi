@@ -1,6 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Testing;
+using Abitech.NextApi.Testing.Data;
 
 namespace Abitech.NextApi.Server.Tests
 {
@@ -13,6 +15,8 @@ namespace Abitech.NextApi.Server.Tests
         where TNextApiApplication : INextApiApplication<TClient>, new()
         where TClient : class, INextApiClient
     {
+        private readonly ITestApplicationStatesHandler _applicationStatesHandler;
+
         /// <summary>
         /// NextApi application instance
         /// </summary>
@@ -22,9 +26,22 @@ namespace Abitech.NextApi.Server.Tests
         protected NextApiTest()
         {
             App = new TNextApiApplication();
+            try
+            {
+                _applicationStatesHandler =
+                    (ITestApplicationStatesHandler)App.ServerServices.GetService(typeof(ITestApplicationStatesHandler));
+            }
+            catch
+            {
+                // its allright, just ignore. looks like this tests dont uses AddFakeMySqlDbContext
+            }
         }
 
         /// <inheritdoc />
-        public void Dispose() => App.Dispose();
+        public void Dispose()
+        {
+            _applicationStatesHandler?.Shutdown();
+            App.Dispose();
+        }
     }
 }

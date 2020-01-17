@@ -13,7 +13,7 @@ namespace Abitech.NextApi.Server.Tests.Base
     {
         public static async Task GenerateUsers(this INextApiApplication application, int count = 15)
         {
-            using var db = await application.ResolveDbContext<ITestDbContext>();
+            using var db = application.ResolveDbContext<ITestDbContext>();
             var role = CreateRole(1);
             await db.Context.Roles.AddAsync(role);
             await db.Context.SaveChangesAsync();
@@ -39,7 +39,7 @@ namespace Abitech.NextApi.Server.Tests.Base
 
         public static async Task GenerateCities(this INextApiApplication application, int count = 10)
         {
-            using var db = await application.ResolveDbContext<ITestDbContext>();
+            using var db = application.ResolveDbContext<ITestDbContext>();
             for (var id = 1; id <= count; id++)
             {
                 var city = CreateCity();
@@ -64,7 +64,7 @@ namespace Abitech.NextApi.Server.Tests.Base
 
         public static async Task GenerateTreeItems(this INextApiApplication application)
         {
-            using var db = await application.ResolveDbContext<ITestDbContext>();
+            using var db = application.ResolveDbContext<ITestDbContext>();
             var mainTree = new TestTreeItem
             {
                 Id = 1,
