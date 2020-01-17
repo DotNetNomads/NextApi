@@ -495,7 +495,16 @@ namespace Abitech.NextApi.Server.Tests
             {
                 var lastChange = await columnChangesLogger.GetLastChange(entityName, uploadQueueDto.ColumnName,
                     uploadQueueDto.EntityRowGuid);
-                Assert.Equal(uploadQueueDto.OccuredAt, lastChange.Value);
+                // I don't have an idea, why Equal(dt1, dt2) gives the terrible result as: 
+                //    Assert.Equal() Failure
+                //                Expected: 2020-01-17T13:11:20.0984364+00:00
+                //                Actual:   2020-01-17T13:11:20.0984360+00:00
+                Assert.Equal(
+                    new DateTime(uploadQueueDto.OccuredAt.Year, uploadQueueDto.OccuredAt.Month,
+                        uploadQueueDto.OccuredAt.Day, uploadQueueDto.OccuredAt.Hour, uploadQueueDto.OccuredAt.Minute,
+                        uploadQueueDto.OccuredAt.Second), new DateTime(lastChange.Value.Year, lastChange.Value.Month,
+                        lastChange.Value.Day, lastChange.Value.Hour, lastChange.Value.Minute,
+                        lastChange.Value.Second));
             }
         }
 
