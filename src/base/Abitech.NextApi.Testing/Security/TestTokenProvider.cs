@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 
-namespace Abitech.NextApi.Server.Tests
+namespace Abitech.NextApi.Testing.Security
 {
     /// <summary>
     /// Test implementation of TokenProvider (with fake token provider)

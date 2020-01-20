@@ -1,9 +1,10 @@
 using Abitech.NextApi.Client;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.Testing;
+using Abitech.NextApi.Testing.Security;
 using Abitech.NextApi.TestServer;
 using Microsoft.Extensions.Logging;
-using Xunit;
+
 namespace Abitech.NextApi.Server.Tests.Base
 {
     public class FakeStartup : Startup
@@ -12,11 +13,6 @@ namespace Abitech.NextApi.Server.Tests.Base
 
     public class TestApplication : NextApiApplication<FakeStartup, INextApiClient>
     {
-        public TestApplication()
-        {
-            LogLevel = LogLevel.Critical;
-        }
-
         protected override ServiceRegistrationMaster GetClientServiceRegistry() =>
             new ServiceRegistrationMaster()
                 .Add<ITestService, TestService>()

@@ -9,6 +9,7 @@ using Abitech.NextApi.Common.Abstractions.DAL;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.Server.UploadQueue.ChangeTracking;
 using Abitech.NextApi.TestClient;
+using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer.Model;
 using Abitech.NextApi.TestServer.UploadQueueHandlers;
 using Abitech.NextApi.UploadQueue.Common.UploadQueue;
@@ -23,7 +24,7 @@ namespace Abitech.NextApi.Server.Tests
     {
         private readonly ITestOutputHelper _output;
 
-        public NextApiUploadQueueTests(ITestOutputHelper output)
+        public NextApiUploadQueueTests(ITestOutputHelper output) : base(output)
         {
             _output = output;
         }

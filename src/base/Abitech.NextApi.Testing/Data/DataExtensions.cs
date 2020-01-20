@@ -1,11 +1,7 @@
 using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Abitech.NextApi.Server.EfCore;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using MySql.Data.MySqlClient;
 using Pomelo.EntityFrameworkCore.MySql.Storage;
 
 namespace Abitech.NextApi.Testing.Data
