@@ -40,13 +40,25 @@ namespace Abitech.NextApi.Testing.Data
         {
             if (_isInitializedBefore)
                 return;
-            using var scope = _serviceProvider.CreateScope();
+            var scope = _serviceProvider.CreateScope();
             if (scope.ServiceProvider.GetService<TDbContext>() is DbContext dbContext)
             {
-                dbContext.Database.EnsureCreated();
-                _isInitializedBefore = true;
+                try
+                {
+                    dbContext.Database.EnsureCreated();
+                    _isInitializedBefore = true;
+                }
+                finally
+                {
+                    dbContext.Dispose();
+                    scope.Dispose();
+                }
             }
-            else throw new InvalidOperationException("Only EF Core DbContexts are supported");
+            else
+            {
+                scope.Dispose();
+                throw new InvalidOperationException("Only EF Core DbContexts are supported");
+            }
         }
 
         /// <inheritdoc />
@@ -54,10 +66,12 @@ namespace Abitech.NextApi.Testing.Data
         {
             if (!_isInitializedBefore)
                 return;
+
             var connection =
                 new MySqlConnection(
                     $"Server={_dbHost};Port={_dbPort};User={_dbUser};Database=mysql;Password={_dbPassword};{_dbAdditional}");
             try
+
             {
                 ExecuteInMysql(connection, $"DROP DATABASE `{_dbName}`");
             }
@@ -65,6 +79,7 @@ namespace Abitech.NextApi.Testing.Data
             {
                 Console.WriteLine(e);
             }
+
             finally
             {
                 connection.Close();
