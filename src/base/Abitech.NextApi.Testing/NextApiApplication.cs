@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common.Abstractions;
-using Abitech.NextApi.Server.Tests;
+using Abitech.NextApi.Testing.Security;
+using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Xunit.Abstractions;
 
 namespace Abitech.NextApi.Testing
 {
@@ -35,7 +35,15 @@ namespace Abitech.NextApi.Testing
         protected override IWebHostBuilder CreateWebHostBuilder() =>
             WebHost.CreateDefaultBuilder()
                 .UseStartup<TServerStartup>()
-                .ConfigureLogging(l => l.SetMinimumLevel(LogLevel));
+                .ConfigureLogging(l => l
+                    .ClearProviders()
+                    .AddXUnit(Output)
+                .SetMinimumLevel(LogLevel));
+
+        /// <summary>
+        /// XUnit output
+        /// </summary>
+        public ITestOutputHelper Output { get; set; }
 
         /// <inheritdoc />
         protected override void ConfigureWebHost(IWebHostBuilder builder)

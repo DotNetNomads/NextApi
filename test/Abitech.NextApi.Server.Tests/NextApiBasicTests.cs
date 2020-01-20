@@ -5,10 +5,13 @@ using Abitech.NextApi.Client;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
+using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Event;
 using DeepEqual.Syntax;
+using MartinCostello.Logging.XUnit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Abitech.NextApi.Server.Tests
 {
@@ -256,6 +259,10 @@ namespace Abitech.NextApi.Server.Tests
                 await Task.Delay(1000);
                 maxTries--;
             }
+        }
+
+        public NextApiBasicTests(ITestOutputHelper output) : base(output)
+        {
         }
     }
 }

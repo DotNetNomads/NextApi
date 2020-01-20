@@ -7,13 +7,17 @@ using Abitech.NextApi.Common.Paged;
 using Abitech.NextApi.Common.Tree;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
+using Abitech.NextApi.Testing;
 using Abitech.NextApi.TestServer.DAL;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Model;
 using AutoMapper;
+using MartinCostello.Logging.XUnit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using Xunit.Abstractions;
+
 namespace Abitech.NextApi.Server.Tests
 {
     public class NextApiEntityServiceTests : NextApiTest<TestApplication, INextApiClient>
@@ -362,6 +366,10 @@ namespace Abitech.NextApi.Server.Tests
             var response1 = await service.GetTree(request1);
             Assert.Equal(20, response1.Items.Count);
             Assert.Equal(31, response1.TotalItems);
+        }
+
+        public NextApiEntityServiceTests(ITestOutputHelper output) : base(output)
+        {
         }
     }
 }

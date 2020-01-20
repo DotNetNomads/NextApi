@@ -2,13 +2,16 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
+using Abitech.NextApi.Testing;
+using MartinCostello.Logging.XUnit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Abitech.NextApi.Server.Tests
 {
     public class SystemTests : NextApiTest<TestApplication, INextApiClient>
     {
-        public SystemTests()
+        public SystemTests(ITestOutputHelper output) : base(output)
         {
         }
 

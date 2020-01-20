@@ -1,10 +1,10 @@
 using System;
-using System.Threading.Tasks;
 using Abitech.NextApi.Client;
-using Abitech.NextApi.Testing;
 using Abitech.NextApi.Testing.Data;
+using MartinCostello.Logging.XUnit;
+using Xunit.Abstractions;
 
-namespace Abitech.NextApi.Server.Tests
+namespace Abitech.NextApi.Testing
 {
     /// <summary>
     /// Base class for all NextApi tests
@@ -22,10 +22,11 @@ namespace Abitech.NextApi.Server.Tests
         /// </summary>
         protected INextApiApplication<TClient> App { get; }
 
+        /// <param name="output"></param>
         /// <inheritdoc />
-        protected NextApiTest()
+        protected NextApiTest(ITestOutputHelper output)
         {
-            App = new TNextApiApplication();
+            App = new TNextApiApplication {Output = output};
             try
             {
                 _applicationStatesHandler =

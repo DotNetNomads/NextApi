@@ -1,6 +1,8 @@
 using System;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common.Abstractions;
+using MartinCostello.Logging.XUnit;
+using Xunit.Abstractions;
 
 namespace Abitech.NextApi.Testing
 {
@@ -39,5 +41,10 @@ namespace Abitech.NextApi.Testing
         /// <returns></returns>
         TService ResolveService<TService>(string token = null, NextApiTransport transport = NextApiTransport.SignalR)
             where TService : INextApiService;
+
+        /// <summary>
+        /// XUnit output
+        /// </summary>
+        ITestOutputHelper Output { get; set; }
     }
 }
