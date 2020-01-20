@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,18 +39,6 @@ namespace Abitech.NextApi.Testing.Data
         {
             if (_isInitializedBefore)
                 return;
-            var connection = _serviceProvider.GetService<MySqlConnection>();
-            if (connection.State == ConnectionState.Closed) connection.Open();
-            try
-            {
-                ExecuteInMysql(connection, $"CREATE DATABASE `{_dbName}`");
-                ExecuteInMysql(connection, $"use `{_dbName}`");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
             using var scope = _serviceProvider.CreateScope();
             if (scope.ServiceProvider.GetService<TDbContext>() is DbContext dbContext)
             {
@@ -66,10 +53,11 @@ namespace Abitech.NextApi.Testing.Data
         {
             if (!_isInitializedBefore)
                 return;
-            var connection = _serviceProvider.GetService<MySqlConnection>();
+            var connection =
+                new MySqlConnection(
+                    $"Server={_dbHost};Port={_dbPort};User={_dbUser};Database=mysql;Password={_dbPassword};{_dbAdditional}");
             try
             {
-                ExecuteInMysql(connection, $"use mysql;");
                 ExecuteInMysql(connection, $"DROP DATABASE `{_dbName}`");
             }
             catch (Exception e)
