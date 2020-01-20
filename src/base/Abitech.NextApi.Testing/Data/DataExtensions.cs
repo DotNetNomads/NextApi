@@ -32,14 +32,11 @@ namespace Abitech.NextApi.Testing.Data
             var dbUser = Environment.GetEnvironmentVariable("NEXTAPI_TESTDB_USER") ?? "root";
             var dbPassword = Environment.GetEnvironmentVariable("NEXTAPI_TESTDB_PWD") ?? "root";
             // NOTE: We should switch to MySQL provider due some limitation in InMemory provider (for example: predicate property = null
-            // not works correct in tree type like entities). Also, we use MySQL everywhere.
+            // don't works correct in tree type like entities). Also, we use MySQL everywhere.
             var dbName =
                 $"TestDb_{Guid.NewGuid()}";
-            var mysqlConnection = new MySqlConnection(
-                $"Server={dbHost};Port={dbPort};User={dbUser};Password={dbPassword};{connectionStringAdditional}");
-            services.AddSingleton(mysqlConnection);
             services.AddDbContext<TImplementation>(options =>
-                options.UseMySql(mysqlConnection,
+                options.UseMySql($"Server={dbHost};Port={dbPort};User={dbUser};Database={dbName};Password={dbPassword};{connectionStringAdditional}",
                     c => c.CharSet(CharSet.Utf8)));
             services.AddSingleton<ITestApplicationStatesHandler>(c =>
                 new TestApplicationStatesHandler<TImplementation>(c, dbHost, dbPort, dbUser, dbPassword, dbName,
