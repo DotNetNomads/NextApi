@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using Abitech.NextApi.Server.EfCore.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,6 +74,11 @@ namespace Abitech.NextApi.Testing.Data
 
         private static void ExecuteInMysql(MySqlConnection connection, string query)
         {
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
             var command = connection.CreateCommand();
             command.CommandText = query;
             command.ExecuteNonQuery();
