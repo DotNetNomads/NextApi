@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Abitech.NextApi.TestServer.DAL
 {
-    public interface ITestDbContext: IUploadQueueDbContext
+    public interface ITestDbContext : IUploadQueueDbContext
     {
         DbSet<TestCity> Cities { get; set; }
         DbSet<TestRole> Roles { get; set; }
@@ -38,6 +38,7 @@ namespace Abitech.NextApi.TestServer.DAL
                     .HasForeignKey(t => t.ParentId)
                     .IsRequired(false);
             });
+            builder.Entity<TestCity>().Property(t => t.Id).HasColumnType("binary(16)");
         }
 
         public TestDbContext(DbContextOptions options, INextApiUserAccessor nextApiUserAccessor) : base(options,
