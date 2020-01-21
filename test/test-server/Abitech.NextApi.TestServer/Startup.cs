@@ -34,7 +34,8 @@ namespace Abitech.NextApi.TestServer
                     options.AddService<TestService>().AllowToGuests();
                 })
                 .AddPermissionProvider<TestPermissionProvider>();
-            services.AddFakeMySqlDbContext<ITestDbContext, TestDbContext>();
+            // OldGuids=true i have no idea why, but without this attribute, Guids can't be mapped to binary(16)
+            services.AddFakeMySqlDbContext<ITestDbContext, TestDbContext>("OldGuids=true");
             services.AddDefaultUnitOfWork();
             services.AddTransient<IUploadQueueChangesHandler<TestCity>, TestUploadQueueChangesHandler>();
             services.AddCustomRepo<TestUser, int, ITestUserRepository, TestUserRepository>();
