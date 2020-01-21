@@ -48,13 +48,10 @@ stages:
 # tests
 test-server:
   <<: *dotnet-test
-  services:
-    - name: mysql:8
-      alias: ascoa-local
   variables:
     project: test/Abitech.NextApi.Server.Tests
-    MYSQL_ROOT_PASSWORD: "root"
     NEXTAPI_TESTDB_PORT: "3306"
+    NEXTAPI_TESTDB_HOST: "blade1.abitech.kz"
 test-server-efcore:
   <<: *dotnet-test
   variables:
