@@ -21,6 +21,11 @@ namespace Abitech.NextApi.Server.Tests.Base
                 .Add<ITestUploadQueueService, TestUploadQueueService>();
 
         protected override INextApiClient ClientBuilder(TestTokenProvider tokenProvider, NextApiTransport transport) =>
-            new NextApiClient("http://localhost/nextapi", tokenProvider, transport);
+            new NextApiClient("ws://localhost/nextapi", tokenProvider, transport);
+
+//        public TestApplication()
+//        {
+//            LogLevel = LogLevel.Debug;
+//        }
     }
 }

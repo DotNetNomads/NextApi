@@ -189,7 +189,7 @@ namespace Abitech.NextApi.Server.Tests
             var updateUploadQueue = new List<UploadQueueDto>();
             var testCities = new List<TestCity>();
 
-            for (var i = 0; i < 1000; i++)
+            for (var i = 0; i < 500; i++)
             {
                 var newTestCity = new TestCity
                 {

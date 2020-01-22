@@ -11,6 +11,7 @@ using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Event;
 using MessagePack;
 using MessagePack.Resolvers;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -162,7 +163,8 @@ namespace Abitech.NextApi.Client
         protected virtual HubConnection InitializeClientSignalR()
         {
             var connection = new HubConnectionBuilder()
-                .WithUrl(Url, ConnectionOptionsConfig)
+                .WithUrl(Url,
+                    ConnectionOptionsConfig)
                 .AddMessagePackProtocol(options =>
                 {
                     options.FormatterResolvers = new List<IFormatterResolver>
@@ -208,7 +210,10 @@ namespace Abitech.NextApi.Client
         /// <param name="options"></param>
         protected virtual void ConnectionOptionsConfig(HttpConnectionOptions options)
         {
-            if (MessageHandler != null) options.HttpMessageHandlerFactory = _ => MessageHandler;
+            if (MessageHandler != null)
+            {
+                options.HttpMessageHandlerFactory = _ => MessageHandler;
+            }
 
             if (TokenProvider != null) options.AccessTokenProvider = TokenProvider.ResolveToken;
         }
