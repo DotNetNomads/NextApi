@@ -4,7 +4,6 @@ using System.Linq;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common.Abstractions;
 using Abitech.NextApi.Testing.Security;
-using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -76,7 +75,7 @@ namespace Abitech.NextApi.Testing
 
 
         /// <inheritdoc />
-        public TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.SignalR)
+        public virtual TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.Http)
         {
             var client = ClientBuilder(string.IsNullOrEmpty(token) ? null : new TestTokenProvider(token), transport);
             client.MessageHandler = Server.CreateHandler();
@@ -91,8 +90,8 @@ namespace Abitech.NextApi.Testing
         }
 
         /// <inheritdoc />
-        public TService ResolveService<TService>(string token = null,
-            NextApiTransport transport = NextApiTransport.SignalR) where TService : INextApiService
+        public virtual TService ResolveService<TService>(string token = null,
+            NextApiTransport transport = NextApiTransport.Http) where TService : INextApiService
         {
             var type = typeof(TService);
             var implementationInfo = _servicesInfo.FirstOrDefault(s => s.interfaceType == type);
