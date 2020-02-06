@@ -33,7 +33,12 @@ namespace Abitech.NextApi.Client.Base
         /// </summary>
         /// <returns></returns>
         public static JsonSerializerSettings GetJsonConfig() =>
-            new JsonSerializerSettings {Converters = new JsonConverter[] {new StringEnumConverter()}};
+            new JsonSerializerSettings
+            {
+                Converters = new JsonConverter[] {new StringEnumConverter()},
+                NullValueHandling = NullValueHandling.Ignore,
+                TypeNameHandling = TypeNameHandling.Auto
+            };
 
         /// <summary>
         /// Prepare multipart form for sending via HTTP

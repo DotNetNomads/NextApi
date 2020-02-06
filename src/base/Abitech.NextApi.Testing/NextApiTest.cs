@@ -39,7 +39,7 @@ namespace Abitech.NextApi.Testing
         }
 
         /// <inheritdoc />
-        public void Dispose()
+        public virtual void Dispose()
         {
             _applicationStatesHandler?.Shutdown();
             App.Dispose();
