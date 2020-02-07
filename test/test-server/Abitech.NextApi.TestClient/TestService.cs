@@ -26,6 +26,7 @@ namespace Abitech.NextApi.TestClient
         Task<NextApiFileResponse> GetFile(string path);
         Task<NextApiFileResponse> GetFileMimeTyped(string path);
         Task RaiseEvents();
+        Task<IArrayItem[]> TestArraySerializationDeserialization(IArrayItem[] data);
     }
 
     public class TestService : NextApiService<INextApiClient>, ITestService
@@ -78,5 +79,9 @@ namespace Abitech.NextApi.TestClient
             InvokeService<NextApiFileResponse>(nameof(GetFileMimeTyped), new NextApiArgument(nameof(path), path));
 
         public Task RaiseEvents() => InvokeService(nameof(RaiseEvents));
+
+        public Task<IArrayItem[]> TestArraySerializationDeserialization(IArrayItem[] data) =>
+            InvokeService<IArrayItem[]>(nameof(TestArraySerializationDeserialization),
+                new NextApiArgument(nameof(data), data));
     }
 }

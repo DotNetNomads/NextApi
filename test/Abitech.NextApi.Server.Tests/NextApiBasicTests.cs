@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
@@ -259,6 +260,25 @@ namespace Abitech.NextApi.Server.Tests
                 await Task.Delay(1000);
                 maxTries--;
             }
+        }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task TestArraySerialization(NextApiTransport transport)
+        {
+            var service = App.ResolveService<ITestService>(null, transport);
+            // we are going to test array serialization. sounds very simple,
+            // but there were some problem with sub-type detecting in JSON Serializer...
+            var source = new IArrayItem[]
+            {
+                new EquipmentArrayItem {Id = "Dfdfsdfsf", EquipmentName = "lolkeks"},
+                new EquipmentArrayItem {Id = "Dfdfsdfsf333", EquipmentName = "lolkeks555"},
+                new WorkArrayItem {Id = "Dfdfsdfsf", WorkName = "lolkeksfdsfsfsd"},
+                new WorkArrayItem {Id = "Dfdfsdfsf3432432re", WorkName = "lolkeksfdsfsfsddfsdfsfserere"}
+            };
+            var returned = await service.TestArraySerializationDeserialization(source);
+            source.ShouldDeepEqual(returned);
         }
 
         public NextApiBasicTests(ITestOutputHelper output) : base(output)

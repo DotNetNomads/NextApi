@@ -126,6 +126,8 @@ namespace Abitech.NextApi.TestServer.Service
             await _eventManager.Publish<ReferenceEvent, User>(new User {Name = "Pedro!"});
             await _eventManager.Publish<WithoutPayloadEvent>();
         }
+
+        public IArrayItem[] TestArraySerializationDeserialization(IArrayItem[] data) => data;
     }
 #pragma warning restore 1998
 }

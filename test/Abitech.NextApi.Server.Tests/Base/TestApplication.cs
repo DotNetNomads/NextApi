@@ -23,9 +23,9 @@ namespace Abitech.NextApi.Server.Tests.Base
         protected override INextApiClient ClientBuilder(TestTokenProvider tokenProvider, NextApiTransport transport) =>
             new NextApiClient("ws://localhost/nextapi", tokenProvider, transport);
 
-//        public TestApplication()
-//        {
-//            LogLevel = LogLevel.Debug;
-//        }
+        public TestApplication()
+        {
+            LogLevel = LogLevel.Debug;
+        }
     }
 }
