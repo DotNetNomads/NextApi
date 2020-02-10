@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -29,13 +30,6 @@ namespace Abitech.NextApi.Client.Base
         }
 
         /// <summary>
-        /// Get default JSON serializer settings
-        /// </summary>
-        /// <returns></returns>
-        public static JsonSerializerSettings GetJsonConfig() =>
-            new JsonSerializerSettings {Converters = new JsonConverter[] {new StringEnumConverter()}};
-
-        /// <summary>
         /// Prepare multipart form for sending via HTTP
         /// </summary>
         /// <param name="command"></param>
@@ -47,7 +41,7 @@ namespace Abitech.NextApi.Client.Base
             {
                 {new StringContent(command.Service), "Service"},
                 {new StringContent(command.Method), "Method"},
-                {new StringContent(JsonConvert.SerializeObject(args, GetJsonConfig())), "Args"}
+                {new StringContent(JsonConvert.SerializeObject(args, SerializationUtils.GetJsonConfig())), "Args"}
             };
             // send files
             var fileArgs = command.Args.Where(arg => arg is NextApiFileArgument).Cast<NextApiFileArgument>().ToArray();

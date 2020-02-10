@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Serialization;
 using Abitech.NextApi.Server.Base;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -61,7 +62,8 @@ namespace Abitech.NextApi.Server.Service
                         continue;
                     case NextApiJsonArgument nextApiJsonArgument:
                         var argType = parameter.ParameterType;
-                        var deserializedValue = nextApiJsonArgument.Value?.ToObject(argType);
+                        var deserializedValue = nextApiJsonArgument.Value?.ToObject(argType,
+                            JsonSerializer.Create(SerializationUtils.GetJsonConfig()));
                         paramValues.Add(deserializedValue);
                         break;
                     case NextApiArgument nextApiArgument:
@@ -179,7 +181,7 @@ namespace Abitech.NextApi.Server.Service
         {
             response.StatusCode = 200;
             response.ContentType = "application/json";
-            var encoded = JsonConvert.SerializeObject(data);
+            var encoded = JsonConvert.SerializeObject(data, SerializationUtils.GetJsonConfig());
             await response.WriteAsync(encoded);
         }
 
@@ -198,34 +200,6 @@ namespace Abitech.NextApi.Server.Service
             using (fileInfo)
             {
                 await fileInfo.CopyToAsync(response.Body);
-            }
-        }
-
-        /// <summary>
-        /// Returns all parent types for specific type
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns>Collection of parent types</returns>
-        public static IEnumerable<Type> GetParentTypes(this Type type)
-        {
-            // is there any base type?
-            if (type == null)
-            {
-                yield break;
-            }
-
-            // return all implemented or inherited interfaces
-            foreach (var i in type.GetInterfaces())
-            {
-                yield return i;
-            }
-
-            // return all inherited types
-            var currentBaseType = type.BaseType;
-            while (currentBaseType != null)
-            {
-                yield return currentBaseType;
-                currentBaseType = currentBaseType.BaseType;
             }
         }
     }

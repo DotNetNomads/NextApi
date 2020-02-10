@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Serialization;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.Server.Service;
 using Microsoft.AspNetCore.Http;
@@ -41,17 +42,16 @@ namespace Abitech.NextApi.Server.Base
 
             var command = new NextApiCommand
             {
-                Service = form["Service"].FirstOrDefault(),
-                Method = form["Method"].FirstOrDefault()
+                Service = form["Service"].FirstOrDefault(), Method = form["Method"].FirstOrDefault()
             };
-            
+
             var argsString = form["Args"].FirstOrDefault();
             command.Args = string.IsNullOrEmpty(argsString)
                 ? null
-                : JsonConvert.DeserializeObject<NextApiJsonArgument[]>(argsString)
+                : JsonConvert.DeserializeObject<NextApiJsonArgument[]>(argsString, SerializationUtils.GetJsonConfig())
                     .Cast<INextApiArgument>()
                     .ToArray();
-            
+
             var result = await _handler.ExecuteCommand(command);
             if (result is NextApiFileResponse fileResponse)
             {

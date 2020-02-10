@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client.Base;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Event;
+using Abitech.NextApi.Common.Serialization;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Http.Connections;
@@ -253,7 +254,7 @@ namespace Abitech.NextApi.Client
             response.EnsureSuccessStatusCode();
 
             var stringResp = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<string[]>(stringResp, NextApiClientUtils.GetJsonConfig());
+            return JsonConvert.DeserializeObject<string[]>(stringResp, SerializationUtils.GetJsonConfig());
         }
 
         /// <summary>
@@ -309,7 +310,7 @@ namespace Abitech.NextApi.Client
             // process as normal nextapi response
             var data = await response.Content.ReadAsStringAsync();
             var result =
-                JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, NextApiClientUtils.GetJsonConfig());
+                JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, SerializationUtils.GetJsonConfig());
             if (!result.Success)
                 throw NextApiClientUtils.NextApiException(result.Error);
 
