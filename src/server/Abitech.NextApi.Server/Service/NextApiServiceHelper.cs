@@ -164,9 +164,12 @@ namespace Abitech.NextApi.Server.Service
             {
                 code = NextApiErrorCode.Unknown.ToString();
             }
-
-            parameters.Add(
-                "message", message);
+            
+            if (!parameters.ContainsKey("message"))
+            {
+                parameters.Add(
+                    "message", message);   
+            }
             var error = new NextApiError(code, parameters);
             return new NextApiResponse(null, error, false);
         }
