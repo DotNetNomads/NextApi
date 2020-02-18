@@ -222,7 +222,7 @@ namespace Abitech.NextApi.Server.Tests
         public async Task EventsTest()
         {
             // only signalr
-            var client = App.ResolveClient();
+            var client = App.ResolveClient(null, NextApiTransport.SignalR);
 
             var textEventReceived = false;
             var referenceEventReceived = false;

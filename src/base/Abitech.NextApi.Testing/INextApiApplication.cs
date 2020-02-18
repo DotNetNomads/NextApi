@@ -30,7 +30,7 @@ namespace Abitech.NextApi.Testing
         /// <param name="token">Fake token (if required)</param>
         /// <param name="transport">Transport type</param>
         /// <returns>Instance of NextApi client</returns>
-        TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.SignalR);
+        TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.Http);
 
         /// <summary>
         /// Resolve client-side NextApi service
@@ -39,7 +39,7 @@ namespace Abitech.NextApi.Testing
         /// <param name="transport">Transport type</param>
         /// <typeparam name="TService">Service type</typeparam>
         /// <returns></returns>
-        TService ResolveService<TService>(string token = null, NextApiTransport transport = NextApiTransport.SignalR)
+        TService ResolveService<TService>(string token = null, NextApiTransport transport = NextApiTransport.Http)
             where TService : INextApiService;
 
         /// <summary>
