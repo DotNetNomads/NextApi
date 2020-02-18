@@ -139,7 +139,7 @@ namespace Abitech.NextApi.Server.Base
             }
             catch (Exception ex)
             {
-                _logger.LogError($"NextApi/Error: {ex.Message}", ex);
+                _logger.LogError($"NextApi/Error: {ex.GetAllMessagesFromException()}", ex);
                 return NextApiServiceHelper.CreateNextApiExceptionResponse(ex);
             }
         }

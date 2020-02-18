@@ -25,7 +25,7 @@ namespace Abitech.NextApi.Server.Tests.Base
 
         public TestApplication()
         {
-            LogLevel = LogLevel.Debug;
+//            LogLevel = LogLevel.Debug;
         }
     }
 }

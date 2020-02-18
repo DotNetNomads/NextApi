@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
@@ -143,13 +144,30 @@ namespace Abitech.NextApi.Server.Service
         }
 
         /// <summary>
+        /// Get all error messages from Exception
+        /// </summary>
+        /// <param name="exception">Exception instance</param>
+        /// <returns>Returns all messages from Exception and its inners</returns>
+        public static string GetAllMessagesFromException(this Exception exception)
+        {
+            var currentException = exception;
+            var messageText = new StringBuilder();
+            do
+            {
+                messageText.Append($"{currentException.Message} \n");
+            } while ((currentException = currentException.InnerException) != null);
+
+            return messageText.ToString();
+        }
+
+        /// <summary>
         /// Create and return exception response for client
         /// </summary>
         /// <param name="exception">Any exception</param>
         /// <returns></returns>
         public static NextApiResponse CreateNextApiExceptionResponse(Exception exception)
         {
-            var message = exception.Message;
+            var message = exception.GetAllMessagesFromException();
             string code;
             var parameters = new Dictionary<string, object>();
             if (exception is NextApiException nextApiException)
@@ -164,12 +182,13 @@ namespace Abitech.NextApi.Server.Service
             {
                 code = NextApiErrorCode.Unknown.ToString();
             }
-            
+
             if (!parameters.ContainsKey("message"))
             {
                 parameters.Add(
-                    "message", message);   
+                    "message", message);
             }
+
             var error = new NextApiError(code, parameters);
             return new NextApiResponse(null, error, false);
         }

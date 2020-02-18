@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common;
+using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.Server.Tests.Base;
 using Abitech.NextApi.TestClient;
 using Abitech.NextApi.Testing;
@@ -279,6 +281,26 @@ namespace Abitech.NextApi.Server.Tests
             };
             var returned = await service.TestArraySerializationDeserialization(source);
             source.ShouldDeepEqual(returned);
+        }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task TestGetByFilter(NextApiTransport transport)
+        {
+            var service = App.ResolveService<ITestService>(null, transport);
+            var guidToFilter = new Guid("52111957-9e88-4eac-aeca-c4e633a8f6f2");
+            var guidToFilter2 = new Guid("0d4598e0-2cbe-4a16-be59-44bbea8f2902");
+            var filter = new FilterBuilder()
+                .Equal("IntField", 3)
+                .Or(fb => fb
+                    .Equal("GuidField", guidToFilter)
+                    .In("GuidField", new[] {guidToFilter2})
+                )
+                .Build();
+            var result = await service.GetByFilterTest(filter);
+            Assert.Equal(2, result.Length);
+            new[] {guidToFilter, guidToFilter2}.ShouldDeepEqual(result.Select(i => i.GuidField).ToArray());
         }
 
         public NextApiBasicTests(ITestOutputHelper output) : base(output)

@@ -16,7 +16,6 @@ namespace Abitech.NextApi.Server.Entity
     /// </summary>
     public static class FilterExtensions
     {
-
         // more info: https://docs.microsoft.com/en-us/dotnet/api/system.linq.enumerable.any?view=netcore-2.2
         private static readonly MethodInfo Any = typeof(Enumerable).GetMethods()
             .First(m => m.Name == "Any" && m.GetParameters().Length == 1);
@@ -62,14 +61,13 @@ namespace Abitech.NextApi.Server.Entity
 
             object FormatArray(object val, MemberExpression memberExpression)
             {
-                if (!(val is JToken))
+                if (!(val is JArray jArray))
                 {
                     return val;
                 }
 
-                var array = ((JToken)val).ToObject<object[]>();
                 var type = memberExpression.Type;
-                return (from object o in array select o.GetType() != type ? Convert.ChangeType(o, type) : type)
+                return (from JToken o in jArray select FormatValue(o, type))
                     .ToList();
             }
 
@@ -213,7 +211,19 @@ namespace Abitech.NextApi.Server.Entity
             return allExpressions;
         }
 
-        private static object FormatValue(object val, Type type) => val is JToken token ? token.ToObject(type) : val;
+        private static object FormatValue(object val, Type type) =>
+            val switch
+            {
+                null => null,
+                JToken token => token.ToObject(type),
+                // this is in case when JsonConverter parsed Guid as string
+                // (there is Abitech.NextApi.Server.Tests.NextApiBasicTests.TestFilterGuidProperty test for that)
+                string strGuid when (type == typeof(Guid) || type == typeof(Guid?)) => new Guid(strGuid),
+                // this is in case when JsonConverter parsed int as long or other type...
+                _ when val.GetType() != typeof(int) && type == typeof(int) || type == typeof(int?) =>
+                Convert.ChangeType(val, typeof(int)),
+                _ => val
+            };
 
         private static bool IsItACollection(Expression property) =>
             typeof(IEnumerable).IsAssignableFrom(property.Type) && property.Type.IsGenericType;
