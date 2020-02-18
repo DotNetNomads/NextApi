@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Abitech.NextApi.Client;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Filtering;
 using Abitech.NextApi.TestServer.DTO;
 
 namespace Abitech.NextApi.TestClient
@@ -27,6 +28,7 @@ namespace Abitech.NextApi.TestClient
         Task<NextApiFileResponse> GetFileMimeTyped(string path);
         Task RaiseEvents();
         Task<IArrayItem[]> TestArraySerializationDeserialization(IArrayItem[] data);
+        Task<GuidDto[]> GetByFilterTest(Filter filter);
     }
 
     public class TestService : NextApiService<INextApiClient>, ITestService
@@ -83,5 +85,8 @@ namespace Abitech.NextApi.TestClient
         public Task<IArrayItem[]> TestArraySerializationDeserialization(IArrayItem[] data) =>
             InvokeService<IArrayItem[]>(nameof(TestArraySerializationDeserialization),
                 new NextApiArgument(nameof(data), data));
+
+        public Task<GuidDto[]> GetByFilterTest(Filter filter) =>
+            InvokeService<GuidDto[]>(nameof(GetByFilterTest), new NextApiArgument(nameof(filter), filter));
     }
 }

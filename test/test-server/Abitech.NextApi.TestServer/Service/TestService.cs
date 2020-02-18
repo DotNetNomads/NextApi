@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Abitech.NextApi.Common;
 using Abitech.NextApi.Common.Abstractions;
+using Abitech.NextApi.Common.Filtering;
+using Abitech.NextApi.Server.Entity;
 using Abitech.NextApi.Server.Request;
 using Abitech.NextApi.TestServer.DTO;
 using Abitech.NextApi.TestServer.Event;
@@ -128,6 +131,18 @@ namespace Abitech.NextApi.TestServer.Service
         }
 
         public IArrayItem[] TestArraySerializationDeserialization(IArrayItem[] data) => data;
+
+        public GuidDto[] GetByFilterTest(Filter filter)
+        {
+            var dtos = new List<GuidDto>
+            {
+                new GuidDto {GuidField = new Guid("52111957-9e88-4eac-aeca-c4e633a8f6f2")},
+                new GuidDto {GuidField = new Guid("0d4598e0-2cbe-4a16-be59-44bbea8f2902")},
+                new GuidDto {GuidField = Guid.NewGuid()},
+                new GuidDto {GuidField = Guid.NewGuid()}
+            };
+            var parsedFilter = filter.ToLambdaFilter<GuidDto>();
+            return dtos.Where(parsedFilter.Compile()).ToArray();
+        }
     }
-#pragma warning restore 1998
 }
