@@ -154,7 +154,8 @@ nugetize-server-uploadqueue:
 docs-release:
   <<: *update-swarm-stack
   dependencies:
-    - 'docs-dockerize'
+    - "docs-dockerize"
+  when: manual
   variables:
     portainerUrl: $PortainerUrl
     portainerUser: $PortainerUser
