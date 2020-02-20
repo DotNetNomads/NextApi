@@ -312,3 +312,9 @@ infrastructureApp/publishOutDebug
 *.zip
 .DS_Store
 *.DotSettings
+/**/DROP/
+/**/TEMP/
+/**/packages/
+/**/bin/
+/**/obj/
+_site

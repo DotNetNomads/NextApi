@@ -1,0 +1,9 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as binaries
+COPY . /app
+RUN cd /app && dotnet build -c Release
+FROM hub.abitech.kz/rdurnin/docfx:latest as compiledDocs
+COPY --from=binaries /app /app
+RUN cd /app/documentation && docfx
+FROM hub.abitech.kz/nginx
+WORKDIR /usr/share/nginx/html/
+COPY --from=compiledDocs /app/documentation/_site .
