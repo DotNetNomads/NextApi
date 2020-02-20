@@ -24,10 +24,10 @@
   script:
     - cd $project
     - *dotnet-restore
-    - dotnet test -v n 
+    - dotnet test -v n
 
 .nugetize: &nugetize
-  stage: build
+  stage: deploy
   when: manual
   only:
     - *main-master
@@ -37,13 +37,31 @@
     - dotnet pack -p:Version=$VERSION
     - dotnet nuget push "bin/Debug/$projectName.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
 
+.update-swarm-stack: &update-swarm-stack
+  stage: deploy
+  tags:
+    - docker
+  image: hub.abitech.kz/binali/portainerctl
+  script:
+    - 'portainerctl auth 
+    --url $portainerUrl 
+    --user $portainerUser 
+    --password $portainerPassword'
+    - 'portainerctl stack update 
+    -e "VERSION=$VERSION" $stackName'
+  environment:
+    name: $stackName
+    url: http://$host
+
 # declaration
 variables:
   VERSION: "2.0.$CI_PIPELINE_IID"
+  BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
 
 stages:
   - test
   - build
+  - deploy
 
 # tests
 test-server:
@@ -61,8 +79,21 @@ test-client-di:
   variables:
     project: test/Abitech.NextApi.Client.Tests
 
-# build/nugetize
+# build / documentation
+docs-dockerize:
+  <<: *docker-job
+  stage: build
+  when: manual
+  image: hub.abitech.kz/docker
+  script:
+    - docker build -f DocDockerfile -t registry.abitech.kz/$BASE_DOC_DOCKER_IMAGE:$VERSION .
+    - docker login registry.abitech.kz -u $DockerUser -p $DockerPassword
+    - docker push registry.abitech.kz/$BASE_DOC_DOCKER_IMAGE:$VERSION
+    - docker rmi registry.abitech.kz/$BASE_DOC_DOCKER_IMAGE:$VERSION
+#  only:
+#    - *main-master
 
+# deploy
 nugetize-testing:
   <<: *nugetize
   variables:
@@ -118,3 +149,19 @@ nugetize-server-uploadqueue:
   variables:
     projectFolder: src/server/Abitech.NextApi.Server.UploadQueue
     projectName: Abitech.NextApi.Server.UploadQueue
+
+# deploy / documentation
+docs-release:
+  <<: *update-swarm-stack
+  dependencies:
+    - 'docs-dockerize'
+  variables:
+    portainerUrl: $PortainerUrl
+    portainerUser: $PortainerUser
+    portainerPassword: $PortainerPassword
+    stackName: nextapi-docs
+    host: nextapi.abitech.kz
+#  only:
+#    - *main-master
+
+
