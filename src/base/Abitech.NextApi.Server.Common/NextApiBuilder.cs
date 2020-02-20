@@ -27,6 +27,10 @@ namespace Abitech.NextApi.Server.Common
         /// </summary>
         public IDictionary<string, ServiceInformation> ServiceRegistry => _serviceRegistry;
 
+        /// <summary>
+        /// Builder that executed in NextApi server initialization process
+        /// </summary>
+        /// <param name="serviceCollection">Instance of current service collection</param>
         public NextApiBuilder(IServiceCollection serviceCollection)
         {
             ServiceCollection = serviceCollection;

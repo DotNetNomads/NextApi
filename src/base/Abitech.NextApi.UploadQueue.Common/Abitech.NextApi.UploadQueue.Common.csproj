@@ -5,6 +5,14 @@
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Abitech.NextApi.UploadQueue.Common.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\Abitech.NextApi.UploadQueue.Common.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
   </ItemGroup>
