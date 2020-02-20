@@ -1,0 +1,19 @@
+version: '3.3'
+
+services:
+  # docs-server
+  docs-server:
+    image: "hub.abitech.kz/abitech/nextapi-docs:${VERSION}"
+    networks:
+      - traefik-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        "traefik.enable": "true"
+        "traefik.frontend.rule": "Host:${HOST}"
+        "traefik.port": "80"
+networks:
+  traefik-net:
+    external:
+      name: traefik-net
