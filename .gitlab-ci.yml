@@ -90,8 +90,8 @@ docs-dockerize:
     - docker login registry.abitech.kz -u $DockerUser -p $DockerPassword
     - docker push registry.abitech.kz/$BASE_DOC_DOCKER_IMAGE:$VERSION
     - docker rmi registry.abitech.kz/$BASE_DOC_DOCKER_IMAGE:$VERSION
-#  only:
-#    - *main-master
+  only:
+    - *main-master
 
 # deploy
 nugetize-testing:
@@ -162,7 +162,7 @@ docs-release:
     portainerPassword: $PortainerPassword
     stackName: nextapi-docs
     host: nextapi.abitech.kz
-#  only:
-#    - *main-master
+  only:
+    - *main-master
 
 
