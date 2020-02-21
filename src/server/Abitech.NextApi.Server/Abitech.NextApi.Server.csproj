@@ -28,11 +28,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.1"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' != 'Release' ">
-    <ProjectReference Include="..\..\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj"/>
     <ProjectReference Include="..\..\base\Abitech.NextApi.Server.Common\Abitech.NextApi.Server.Common.csproj"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="Abitech.NextApi.Common" Version="$(NEXTAPI_COMMON_VERSION)"/>
     <PackageReference Include="Abitech.NextApi.Server.Common" Version="$(NEXTAPI_SERVER_COMMON_VERSION)"/>
   </ItemGroup>
 
