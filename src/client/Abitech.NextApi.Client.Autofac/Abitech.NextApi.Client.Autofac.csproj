@@ -18,11 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="5.0.0" />
+    <PackageReference Include="Autofac" Version="5.0.0"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
+  <ItemGroup Condition=" '$(Configuration)' != 'Release' ">
+    <ProjectReference Include="..\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="Abitech.NextApi.Client" Version="$(NEXTAPI_CLIENT_VERSION)"/>
   </ItemGroup>
 
 </Project>

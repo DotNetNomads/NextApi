@@ -19,11 +19,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.1"/>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.1"/>
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj" />
+  <ItemGroup Condition=" '$(Configuration)' != 'Release' ">
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Common\Abitech.NextApi.Common.csproj"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="Abitech.NextApi.Common" Version="$(NEXTAPI_COMMON_VERSION)"/>
   </ItemGroup>
 </Project>

@@ -18,8 +18,11 @@
     <DocumentationFile>bin\Release\Abitech.NextApi.Client.MicrosoftDI.xml</DocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj" />
+  <ItemGroup Condition=" '$(Configuration)' != 'Release' ">
+    <ProjectReference Include="..\Abitech.NextApi.Client\Abitech.NextApi.Client.csproj"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="Abitech.NextApi.Client" Version="$(NEXTAPI_CLIENT_VERSION)"/>
   </ItemGroup>
 
 </Project>
