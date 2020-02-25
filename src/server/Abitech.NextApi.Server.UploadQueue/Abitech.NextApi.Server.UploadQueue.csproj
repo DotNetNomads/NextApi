@@ -16,11 +16,15 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\Abitech.NextApi.Server.UploadQueue.xml</DocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\base\Abitech.NextApi.Server.Common\Abitech.NextApi.Server.Common.csproj" />
-    <ProjectReference Include="..\..\base\Abitech.NextApi.UploadQueue.Common\Abitech.NextApi.UploadQueue.Common.csproj" />
-    <ProjectReference Include="..\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj" />
+  <ItemGroup Condition=" '$(Configuration)' != 'Release' ">
+    <ProjectReference Include="..\..\base\Abitech.NextApi.Server.Common\Abitech.NextApi.Server.Common.csproj"/>
+    <ProjectReference Include="..\..\base\Abitech.NextApi.UploadQueue.Common\Abitech.NextApi.UploadQueue.Common.csproj"/>
+    <ProjectReference Include="..\Abitech.NextApi.Server.EfCore\Abitech.NextApi.Server.EfCore.csproj"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="Abitech.NextApi.Server.Common" Version="$(NEXTAPI_SERVER_COMMON_VERSION)"/>
+    <PackageReference Include="Abitech.NextApi.UploadQueue.Common" Version="$(NEXTAPI_UPLOADQUEUE_COMMON_VERSION)"/>
+    <PackageReference Include="Abitech.NextApi.Server.EfCore" Version="$(NEXTAPI_EFCORE_VERSION)"/>
   </ItemGroup>
 
 </Project>

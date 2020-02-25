@@ -34,7 +34,7 @@
   <<: *dotnet-job
   script:
     - cd $projectFolder
-    - dotnet pack -p:Version=$VERSION
+    - dotnet pack -с Release -p:Version=$VERSION
     - dotnet nuget push "bin/Debug/$projectName.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
 
 .update-swarm-stack: &update-swarm-stack
@@ -55,7 +55,7 @@
 
 # declaration
 variables:
-  VERSION: "2.0.$CI_PIPELINE_IID"
+  VERSION: "3.0.0-build$CI_PIPELINE_IID"
   BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
 
 stages:
@@ -99,56 +99,80 @@ nugetize-testing:
   variables:
     projectFolder: src/base/Abitech.NextApi.Testing
     projectName: Abitech.NextApi.Testing
+    NEXTAPI_CLIENT_VERSION: "3.0"
+    NEXTAPI_EFCORE_VERSION: "3.0"
+
 nugetize-common:
   <<: *nugetize
   variables:
     projectFolder: src/base/Abitech.NextApi.Common
     projectName: Abitech.NextApi.Common
+
 nugetize-common-server:
   <<: *nugetize
   variables:
     projectFolder: src/base/Abitech.NextApi.Server.Common
     projectName: Abitech.NextApi.Server.Common
+    NEXTAPI_COMMON_VERSION: "3.0"
+
 nugetize-common-uploadqueue:
   <<: *nugetize
   variables:
     projectFolder: src/base/Abitech.NextApi.UploadQueue.Common
     projectName: Abitech.NextApi.UploadQueue.Common
+    NEXTAPI_COMMON_VERSION: "3.0"
+
 nugetize-client:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client
     projectName: Abitech.NextApi.Client
+    NEXTAPI_COMMON_VERSION: "3.0"
+
 nugetize-client-uploadqueue:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.UploadQueue
     projectName: Abitech.NextApi.Client.UploadQueue
+    NEXTAPI_CLIENT_VERSION: "3.0"
+    NEXTAPI_UPLOADQUEUE_COMMON_VERSION: "3.0"
+
 nugetize-client-autofac:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.Autofac
     projectName: Abitech.NextApi.Client.Autofac
+    NEXTAPI_CLIENT_VERSION: "3.0"
+
 nugetize-client-microsoft-di:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.MicrosoftDI
     projectName: Abitech.NextApi.Client.MicrosoftDI
+    NEXTAPI_CLIENT_VERSION: "3.0"
+
 nugetize-server:
   <<: *nugetize
   variables:
     projectFolder: src/server/Abitech.NextApi.Server
     projectName: Abitech.NextApi.Server
+    NEXTAPI_SERVER_COMMON_VERSION: "3.0"
+
 nugetize-server-efcore:
   <<: *nugetize
   variables:
     projectFolder: src/server/Abitech.NextApi.Server.EfCore
     projectName: Abitech.NextApi.Server.EfCore
+    NEXTAPI_COMMON_VERSION: "3.0"
+
 nugetize-server-uploadqueue:
   <<: *nugetize
   variables:
     projectFolder: src/server/Abitech.NextApi.Server.UploadQueue
     projectName: Abitech.NextApi.Server.UploadQueue
+    NEXTAPI_SERVER_COMMON_VERSION: "3.0"
+    NEXTAPI_UPLOADQUEUE_COMMON_VERSION: "3.0"
+    NEXTAPI_EFCORE_VERSION: "3.0"
 
 # deploy / documentation
 docs-release:
