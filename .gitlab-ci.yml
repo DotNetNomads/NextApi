@@ -55,7 +55,7 @@
 
 # declaration
 variables:
-  VERSION: "3.0.0+$CI_PIPELINE_IID"
+  VERSION: "3.0.$CI_PIPELINE_IID"
   BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
 
 stages:
