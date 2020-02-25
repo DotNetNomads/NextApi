@@ -34,7 +34,7 @@
   <<: *dotnet-job
   script:
     - cd $projectFolder
-    - dotnet pack -с:Release -p:Version=$VERSION
+    - dotnet pack --configuration Release -p:Version=$VERSION
     - dotnet nuget push "bin/Debug/$projectName.$VERSION.nupkg" -k $NugetApiKey  -s $NugetSource
 
 .update-swarm-stack: &update-swarm-stack
