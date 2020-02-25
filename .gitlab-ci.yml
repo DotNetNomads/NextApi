@@ -142,14 +142,14 @@ nugetize-client-autofac:
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.Autofac
     projectName: Abitech.NextApi.Client.Autofac
-    NEXTAPI_CLIENT_VERSION: "3"
+    NEXTAPI_CLIENT_VERSION: "3.*"
 
 nugetize-client-microsoft-di:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.MicrosoftDI
     projectName: Abitech.NextApi.Client.MicrosoftDI
-    NEXTAPI_CLIENT_VERSION: "3"
+    NEXTAPI_CLIENT_VERSION: "3.*"
 
 nugetize-server:
   <<: *nugetize
