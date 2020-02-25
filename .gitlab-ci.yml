@@ -55,7 +55,7 @@
 
 # declaration
 variables:
-  VERSION: "3.0.0-build$CI_PIPELINE_IID"
+  VERSION: "3.0.0+$CI_PIPELINE_IID"
   BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
 
 stages:
@@ -142,14 +142,14 @@ nugetize-client-autofac:
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.Autofac
     projectName: Abitech.NextApi.Client.Autofac
-    NEXTAPI_CLIENT_VERSION: "3.0"
+    NEXTAPI_CLIENT_VERSION: "3"
 
 nugetize-client-microsoft-di:
   <<: *nugetize
   variables:
     projectFolder: src/client/Abitech.NextApi.Client.MicrosoftDI
     projectName: Abitech.NextApi.Client.MicrosoftDI
-    NEXTAPI_CLIENT_VERSION: "3.0"
+    NEXTAPI_CLIENT_VERSION: "3"
 
 nugetize-server:
   <<: *nugetize
