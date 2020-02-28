@@ -84,8 +84,9 @@ Please specify correct assembly name!");
 
             var resultDict = new Dictionary<Guid, (UploadQueueDto, UploadQueueResult)>();
 
-            var entitiesGroups = from queueList in uploadQueue.AsQueryable()
-                group queueList by queueList.EntityName
+            var entitiesGroups = from uploadQueueDto in uploadQueue.AsQueryable()
+                where uploadQueueDto != null
+                group uploadQueueDto by uploadQueueDto.EntityName
                 into entityGroup
                 select new {EntityName = entityGroup.Key, Items = entityGroup.ToList()};
             foreach (var entityGroup in entitiesGroups)
@@ -175,6 +176,8 @@ Please specify correct assembly name!");
                     return;
                 }
 
+                var isGuidEmpty = rowGuid == Guid.Empty;
+
                 // If create and update are in the same batch,
                 // Repo.AddAsync is called after all updates are applied
                 var createAndUpdateInSameBatch =
@@ -182,24 +185,32 @@ Please specify correct assembly name!");
                     && rowGuidGroupingList.Any(dto => dto.OperationType == OperationType.Update);
 
                 dynamic entityInstance = null;
-
-                // Get entity instance from repo, if exists
-                try
+                if (!isGuidEmpty)
                 {
-                    // result of get method - entity instance
-                    var result = await repoInstance.GetByIdAsync(rowGuid);
-                    entityInstance = Convert.ChangeType(result, entityType);
-                }
-                catch
-                {
-                    entityInstance = null;
+                    // Get entity instance from repo, if exists
+                    try
+                    {
+                        // result of get method - entity instance
+                        var result = await repoInstance.GetByIdAsync(rowGuid);
+                        entityInstance = Convert.ChangeType(result, entityType);
+                    }
+                    catch
+                    {
+                        entityInstance = null;
+                    }
                 }
 
                 // Process delete operations
-                var deleteList = rowGuidGroupingList.Where(dto => dto.OperationType == OperationType.Delete
-                                                                  && dto.EntityRowGuid == rowGuid).ToList();
-
-                if (entityInstance != null && deleteList.Count > 0)
+                var deleteList = rowGuidGroupingList.Where(dto => dto.OperationType == OperationType.Delete).ToList();
+                if (isGuidEmpty || entityInstance == null)
+                {
+                    var result = new UploadQueueResult(UploadQueueError.EntityDoesNotExist);
+                    foreach (var deleteOperation in deleteList)
+                    {
+                        AddOrUpdate(resultDict, deleteOperation, result);
+                    }
+                }
+                else if (deleteList.Count > 0)
                 {
                     var result = new UploadQueueResult(UploadQueueError.NoError);
                     try
@@ -234,22 +245,76 @@ Please specify correct assembly name!");
                         }
                     }
                 }
-                else
-                {
-                    var result = new UploadQueueResult(UploadQueueError.EntityDoesNotExist);
-                    foreach (var deleteOperation in deleteList)
-                    {
-                        AddOrUpdate(resultDict, deleteOperation, result);
-                    }
-                }
 
                 // Process create operations
                 // should only be one create operation for this rowguid
-                var createList = rowGuidGroupingList.Where(dto => dto.OperationType == OperationType.Create
-                                                                  && dto.EntityRowGuid == rowGuid).ToList();
+                // if rowguid == Guid.Empty, create for all ops, ignore update ops
+                UploadQueueDto firstCreateOperation = null;
+                var createList = rowGuidGroupingList.Where(dto => dto.OperationType == OperationType.Create).ToList();
+                if (createList.Count > 0)
+                {
+                    if (isGuidEmpty)
+                    {
+                        foreach (var createOperation in createList)
+                        {
+                            var createResult = new UploadQueueResult(UploadQueueError.NoError);
+                            try
+                            {
+                                entityInstance = JsonConvert
+                                    .DeserializeObject((string)createOperation.NewValue, entityType);
 
-                // get only first create operation for this rowguid
-                var firstCreateOperation = createList.FirstOrDefault();
+                                await CreateEntityAsync(entityInstance);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                                createResult.Error = UploadQueueError.Exception;
+                                createResult.Extra = e.Message;
+                            }
+                            finally
+                            {
+                                AddOrUpdate(resultDict, createOperation, createResult);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // get only first create operation for this rowguid
+                        firstCreateOperation = createList.First();
+                        var createResult = new UploadQueueResult(UploadQueueError.NoError);
+                        try
+                        {
+                            if (entityInstance == null)
+                            {
+                                entityInstance = JsonConvert
+                                    .DeserializeObject((string)firstCreateOperation.NewValue, entityType);
+
+                                // Create entity, if only create operation is in the batch
+                                if (!createAndUpdateInSameBatch)
+                                    await CreateEntityAsync(entityInstance);
+                            }
+                            else
+                                createResult.Error = UploadQueueError.EntityAlreadyExists;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            entityInstance = null;
+                            createResult.Error = UploadQueueError.Exception;
+                            createResult.Extra = e.Message;
+                        }
+                        finally
+                        {
+                            AddOrUpdate(resultDict, firstCreateOperation, createResult);
+                        }
+                        
+                        var multipleCreateOpsResult = new UploadQueueResult(UploadQueueError.OnlyOneCreateOperationAllowed);
+                        foreach (var createOp in createList.Where(u => u.Id != firstCreateOperation.Id))
+                        {
+                            AddOrUpdate(resultDict, createOp, multipleCreateOpsResult);
+                        }
+                    }
+                }
 
                 async Task CreateEntityAsync(dynamic entityInstanceArg)
                 {
@@ -267,52 +332,18 @@ Please specify correct assembly name!");
                     }
                 }
 
-                if (firstCreateOperation != null)
-                {
-                    var createResult = new UploadQueueResult(UploadQueueError.NoError);
-                    try
-                    {
-                        if (entityInstance == null)
-                        {
-                            entityInstance =
-                                JsonConvert.DeserializeObject((string)firstCreateOperation.NewValue, entityType);
-
-                            // Create entity, if only create operation is in the batch
-                            if (!createAndUpdateInSameBatch)
-                                await CreateEntityAsync(entityInstance);
-                        }
-                        else
-                            createResult.Error = UploadQueueError.EntityAlreadyExists;
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        entityInstance = null;
-                        createResult.Error = UploadQueueError.Exception;
-                        createResult.Extra = e.Message;
-                    }
-                    finally
-                    {
-                        AddOrUpdate(resultDict, firstCreateOperation, createResult);
-                    }
-                }
-
-                // Put the rest of create ops (if any) into the result dict
-                if (createList.Count > 1)
-                {
-                    var multipleCreateOpsResult = new UploadQueueResult(UploadQueueError.OnlyOneCreateOperationAllowed);
-                    foreach (var createOp in createList)
-                    {
-                        if (resultDict.ContainsKey(createOp.Id)) continue;
-                        AddOrUpdate(resultDict, createOp, multipleCreateOpsResult);
-                    }
-                }
-
                 // Process update operations
-                var updateList = rowGuidGroupingList.Where(dto => dto.OperationType == OperationType.Update
-                                                                  && dto.EntityRowGuid == rowGuid).ToList();
-
-                if (entityInstance != null && updateList.Count > 0)
+                var updateList = rowGuidGroupingList.Where(dto => dto.OperationType == OperationType.Update).ToList();
+                // ignore update ops if rowguid is empty
+                if (isGuidEmpty || entityInstance == null)
+                {
+                    var result = new UploadQueueResult(UploadQueueError.EntityDoesNotExist);
+                    foreach (var updateOperation in updateList)
+                    {
+                        AddOrUpdate(resultDict, updateOperation, result);
+                    }
+                }
+                else if (updateList.Count > 0)
                 {
                     // if update operation occured before the last change, then reject it
                     // to remove from list inside the loop, iterate backwards
@@ -401,7 +432,8 @@ Please specify correct assembly name!");
                         var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
                         if (createAndUpdateInSameBatch)
                         {
-                            AddOrUpdate(resultDict, firstCreateOperation, result);
+                            if (firstCreateOperation != null)
+                                AddOrUpdate(resultDict, firstCreateOperation, result);
                         }
 
                         foreach (var updateOperation in updateList)
@@ -409,15 +441,7 @@ Please specify correct assembly name!");
                             AddOrUpdate(resultDict, updateOperation, result);
                         }
                     }
-                }
-                else if (entityInstance == null)
-                {
-                    var result = new UploadQueueResult(UploadQueueError.EntityDoesNotExist);
-                    foreach (var updateOperation in updateList)
-                    {
-                        AddOrUpdate(resultDict, updateOperation, result);
-                    }
-                }
+                } 
             }
 
             #endregion

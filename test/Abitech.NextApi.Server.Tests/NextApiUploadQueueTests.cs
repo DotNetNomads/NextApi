@@ -119,6 +119,179 @@ namespace Abitech.NextApi.Server.Tests
             var res = resultDict[createOp.Id];
             Assert.Equal(UploadQueueError.EntityAlreadyExists, res.Error);
         }
+        
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task CreateWithDefaultGuidTest(NextApiTransport transport)
+        {
+            var uploadQueue = new List<UploadQueueDto>();
+
+            var newTestCity1 = new TestCity
+            {
+                Id = Guid.Empty,
+                Name = "MyNewTestCity1",
+                Population = 123456,
+                Demonym = "MyTestCityDemonym"
+            };
+            
+            var newTestCity2 = new TestCity
+            {
+                Id = Guid.Empty,
+                Name = "MyNewTestCity2",
+                Population = 123456,
+                Demonym = "MyTestCityDemonym"
+            };
+
+            var createOp1 = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Create,
+                EntityName = nameof(TestCity),
+                NewValue = JsonConvert.SerializeObject(newTestCity1),
+                EntityRowGuid = newTestCity1.Id
+            };
+
+            var createOp2 = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Create,
+                EntityName = nameof(TestCity),
+                NewValue = JsonConvert.SerializeObject(newTestCity2),
+                EntityRowGuid = newTestCity2.Id
+            };
+
+            var emptyGuidUpdateOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.Name),
+                NewValue = "sadkf",
+                EntityRowGuid = Guid.Empty
+            };
+
+            uploadQueue.Add(createOp1);
+            uploadQueue.Add(createOp2);
+            uploadQueue.Add(emptyGuidUpdateOp);
+
+            var service = ResolveQueueService(transport);
+
+            var resultDict = await service.ProcessAsync(uploadQueue);
+            
+            Assert.Equal(UploadQueueError.NoError, resultDict[createOp1.Id].Error);
+            Assert.Equal(UploadQueueError.NoError, resultDict[createOp2.Id].Error);
+            Assert.Equal(UploadQueueError.EntityDoesNotExist, resultDict[emptyGuidUpdateOp.Id].Error);
+        }
+        
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task UpdateOrDeleteWithDefaultGuidTest(NextApiTransport transport)
+        {
+            var uploadQueue = new List<UploadQueueDto>();
+
+            var emptyGuidUpdateOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.Name),
+                NewValue = "sadkf",
+                EntityRowGuid = Guid.Empty
+            };
+
+            var emptyGuidDeleteOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Delete,
+                EntityName = nameof(TestCity),
+                EntityRowGuid = Guid.Empty
+            };
+
+            uploadQueue.Add(emptyGuidUpdateOp);
+            uploadQueue.Add(emptyGuidDeleteOp);
+
+            var service = ResolveQueueService(transport);
+
+            var resultDict = await service.ProcessAsync(uploadQueue);
+            
+            Assert.Equal(UploadQueueError.EntityDoesNotExist, resultDict[emptyGuidUpdateOp.Id].Error);
+            Assert.Equal(UploadQueueError.EntityDoesNotExist, resultDict[emptyGuidDeleteOp.Id].Error);
+        }
+
+        [Theory] [InlineData(NextApiTransport.Http)] [InlineData(NextApiTransport.SignalR)]
+        public async Task SilentCreateDeleteTest(NextApiTransport transport)
+        {
+            var uploadQueue = new List<UploadQueueDto>();
+
+            var newTestCity = new TestCity
+            {
+                Id = Guid.NewGuid(),
+                Name = "MyNewTestCity1",
+                Population = 123456,
+                Demonym = "MyTestCityDemonym"
+            };
+
+            var createOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Create,
+                EntityName = nameof(TestCity),
+                NewValue = JsonConvert.SerializeObject(newTestCity),
+                EntityRowGuid = newTestCity.Id
+            };
+
+            var updateOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.Name),
+                NewValue = "sadkf",
+                EntityRowGuid = newTestCity.Id
+            };
+
+            var deleteOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Delete,
+                EntityName = nameof(TestCity),
+                EntityRowGuid = newTestCity.Id
+            };
+
+            uploadQueue.Add(createOp);
+            uploadQueue.Add(updateOp);
+            uploadQueue.Add(deleteOp);
+
+            var service = ResolveQueueService(transport);
+
+            var resultDict = await service.ProcessAsync(uploadQueue);
+
+            foreach (var result in resultDict)
+            {
+                Assert.Equal(UploadQueueError.NoError, result.Value.Error);
+            }
+            
+            // Check for default guids as well
+            createOp.EntityRowGuid = Guid.Empty;
+            updateOp.EntityRowGuid = Guid.Empty;
+            deleteOp.EntityRowGuid = Guid.Empty;
+            
+            resultDict = await service.ProcessAsync(uploadQueue);
+            foreach (var result in resultDict)
+            {
+                Assert.Equal(UploadQueueError.NoError, result.Value.Error);
+            }
+        }
 
         private ITestUploadQueueService ResolveQueueService(NextApiTransport transport) =>
             App.ResolveService<ITestUploadQueueService>(null, transport);
