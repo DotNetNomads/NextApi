@@ -13,5 +13,7 @@ namespace Abitech.NextApi.TestServer.Model
         public int? SomeNullableInt { get; set; }
         public int Population { get; set; }
         public string Demonym { get; set; }
+        public Guid GuidProp { get; set; }
+        public Guid? NullableGuidProp { get; set; }
     }
 }
