@@ -32,6 +32,83 @@ namespace Abitech.NextApi.Server.Tests
         [Theory]
         [InlineData(NextApiTransport.Http)]
         [InlineData(NextApiTransport.SignalR)]
+        public async Task GuidPropTest(NextApiTransport transport)
+        {
+            var uploadQueue = new List<UploadQueueDto>();
+
+            var newTestCity = new TestCity
+            {
+                GuidProp = Guid.NewGuid(),
+                NullableGuidProp = Guid.NewGuid()
+            };
+
+            var createOp1 = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Create,
+                EntityName = nameof(TestCity),
+                NewValue = JsonConvert.SerializeObject(newTestCity),
+                EntityRowGuid = newTestCity.Id
+            };
+
+            uploadQueue.Add(createOp1);
+            var service = ResolveQueueService(transport);
+            await service.ProcessAsync(uploadQueue);
+            
+            // set to new Guid values
+            uploadQueue.Clear();
+            var updateOp = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.GuidProp),
+                NewValue = Guid.NewGuid(),
+                EntityRowGuid = newTestCity.Id
+            };
+            var updateOp1 = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.NullableGuidProp),
+                NewValue = Guid.NewGuid(),
+                EntityRowGuid = newTestCity.Id
+            };
+            uploadQueue.Add(updateOp);
+            uploadQueue.Add(updateOp1);
+
+            var resultDict = await service.ProcessAsync(uploadQueue);
+
+            Assert.Equal(uploadQueue.Count, resultDict.Count);
+            Assert.Equal(UploadQueueError.NoError, resultDict[updateOp.Id].Error);
+            Assert.Equal(UploadQueueError.NoError, resultDict[updateOp1.Id].Error);
+            
+            // set to null
+            uploadQueue.Clear();
+            var updateOp2 = new UploadQueueDto
+            {
+                Id = Guid.NewGuid(),
+                OccuredAt = DateTimeOffset.Now,
+                OperationType = OperationType.Update,
+                EntityName = nameof(TestCity),
+                ColumnName = nameof(TestCity.NullableGuidProp),
+                NewValue = null,
+                EntityRowGuid = newTestCity.Id
+            };
+            uploadQueue.Add(updateOp2);
+            resultDict = await service.ProcessAsync(uploadQueue);
+            
+            Assert.Equal(uploadQueue.Count, resultDict.Count);
+            Assert.Equal(UploadQueueError.NoError, resultDict[updateOp2.Id].Error);
+        }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
         public async Task CreateTwiceInSameBatchTest(NextApiTransport transport)
         {
             var uploadQueue = new List<UploadQueueDto>();
@@ -57,8 +134,6 @@ namespace Abitech.NextApi.Server.Tests
                 NewValue = JsonConvert.SerializeObject(newTestCity),
                 EntityRowGuid = newTestCity.Id
             };
-
-            await Task.Delay(2000);
 
             uploadQueue.Add(createOp1);
             uploadQueue.Add(createOp2);

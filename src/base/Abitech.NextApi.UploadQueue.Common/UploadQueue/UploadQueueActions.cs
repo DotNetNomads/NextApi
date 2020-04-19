@@ -27,6 +27,8 @@ namespace Abitech.NextApi.UploadQueue.Common.UploadQueue
                 .OrderBy(m => m.OccuredAt);
 
             var rejectedModifications = new Dictionary<Guid, Exception>(); // modification Id and reason
+            var guidType = typeof(Guid);
+            var nullableGuidType = typeof(Guid?);
             foreach (var modification in sort)
             {
                 try
@@ -35,7 +37,13 @@ namespace Abitech.NextApi.UploadQueue.Common.UploadQueue
                     if (prop == null)
                         continue;
 
-                    var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType);
+                    var propType = prop.PropertyType;
+                    if ((propType == guidType || propType == nullableGuidType)
+                        && modification.NewValue != null
+                        && modification.NewValue is string value)
+                        modification.NewValue = new Guid(value);
+
+                    var underlyingType = Nullable.GetUnderlyingType(propType);
                     if (underlyingType == null)
                     {
                         // underlying type is null, which means it is not a nullable type
