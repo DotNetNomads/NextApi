@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="5.0.0" />
+    <PackageReference Include="Autofac" Version="5.1.4" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
     <PackageReference Include="NextApi.Client" Version="$(NEXTAPI_CLIENT_VERSION)" />
