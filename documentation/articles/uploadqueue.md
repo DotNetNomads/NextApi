@@ -2,9 +2,9 @@
 
 If you have already taken a look at the NextApi Nuget packages,
 you must have noticed some strange names like
-[__Abitech.NextApi.UploadQueue.Common__](http://nexus.abitech.kz/#browse/search=name.raw%3DAbitech.NextApi.UploadQueue.Common%20AND%20version%3D%3E1.9),
-[__Abitech.NextApi.Server.UploadQueue__](http://nexus.abitech.kz/#browse/search=name.raw%3DAbitech.NextApi.Server.UploadQueue%20AND%20version%3D%3E1.9)
-and [__Abitech.NextApi.Client.UploadQueue__](http://nexus.abitech.kz/#browse/search=name.raw%3DAbitech.NextApi.Client.UploadQueue%20AND%20version%3D%3E1.9).
+[__NextApi.UploadQueue.Common__](http://nexus.abitech.kz/#browse/search=name.raw%3DNextApi.UploadQueue.Common%20AND%20version%3D%3E1.9),
+[__NextApi.Server.UploadQueue__](http://nexus.abitech.kz/#browse/search=name.raw%3DNextApi.Server.UploadQueue%20AND%20version%3D%3E1.9)
+and [__NextApi.Client.UploadQueue__](http://nexus.abitech.kz/#browse/search=name.raw%3DNextApi.Client.UploadQueue%20AND%20version%3D%3E1.9).
 
 So, what is UploadQueue and what is the purpose of these packages?  
 You will find that out in this article!
@@ -108,9 +108,9 @@ the order of uploading.___
 
 In the previous section we talked about altering data with a stable internet connection and it does prove to be useful in those scenarios.  
 But some systems require offline data access and the time spent on changing the data is even longer and it depends on connection availability. Most synchronization frameworks resolve conflicts simply: either server or client wins.
-As you saw, UploadQueue resolves conflicts gracefully, leaving everyone happy, which makes it a good solution for offline applications. UploadQueue was specifically developed to be used in offline applications. Abitech.Infrastructure.Client is one of those applications.
+As you saw, UploadQueue resolves conflicts gracefully, leaving everyone happy, which makes it a good solution for offline applications. UploadQueue was specifically developed to be used in offline applications. Infrastructure.Client is one of those applications.
 
-In Abitech.Infrastructure.Client we use the [Dotmim.Sync](https://github.com/Mimetis/Dotmim.Sync) synchronization framework to download data and UploadQueue to upload changes accordingly.  
+In Infrastructure.Client we use the [Dotmim.Sync](https://github.com/Mimetis/Dotmim.Sync) synchronization framework to download data and UploadQueue to upload changes accordingly.  
 There are some drawbacks of this pattern though:
 1. UploadQueueDto operations have to be persisted on the client and applied to the downloaded data everytime it is being queried.
 2. After operations are uploaded, they get applied to the server-side database, which is then synchronized with the data at the client side, meaning the same changes are downloaded back to the client, alongside other changes that might have been made by other users.
@@ -128,7 +128,7 @@ public void ConfigureServices(IServiceCollection services)
         {
             ...
 
-            options.AddUploadQueueService("Abitech.NextApi.TestServer");
+            options.AddUploadQueueService("NextApi.TestServer");
         });
     
     ...
@@ -137,7 +137,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-"Abitech.NextApi.TestServer" in .AddUploadQueueService() is the assembly name that contains all the entity models and corresponding IRepo classes of those entities that you will be able to create, update and delete through UploadQueueService. ___Your models must implement the IUploadQueueEntity interface.___
+"NextApi.TestServer" in .AddUploadQueueService() is the assembly name that contains all the entity models and corresponding IRepo classes of those entities that you will be able to create, update and delete through UploadQueueService. ___Your models must implement the IUploadQueueEntity interface.___
 
 There you go! Now you can upload UQ operations by using NextApiClient or other apps like Postman.
 
@@ -161,11 +161,11 @@ var res = await nextApiClient.Invoke<Dictionary<Guid, UploadQueueResult>>(
                         "ProcessAsync",
                         new NextApiArgument("uploadQueue", queue));
 ```
-_Or you can use the abstract wrapper class UploadQueueService from Abitech.NextApi.Client.UploadQueue Nuget package._
+_Or you can use the abstract wrapper class UploadQueueService from NextApi.Client.UploadQueue Nuget package._
 
-The Abitech.NextApi.UploadQueue.Common Nuget package contains all the shared classes and some useful extension methods, such as ApplyModifications() to apply all the changes to an unchanged freshly queried row.
+The NextApi.UploadQueue.Common Nuget package contains all the shared classes and some useful extension methods, such as ApplyModifications() to apply all the changes to an unchanged freshly queried row.
 
-The Abitech.NextApi.Server.UploadQueue Nuget package contains everything needed for your ASP.NET server application to enable UQ functionality. UploadQueueService and ColumnChangesLogger are in this package as well.
+The NextApi.Server.UploadQueue Nuget package contains everything needed for your ASP.NET server application to enable UQ functionality. UploadQueueService and ColumnChangesLogger are in this package as well.
 
 ### Intercepting changes
 In some cases you might want to intercept an operation to check on something and possibly reject the change.  

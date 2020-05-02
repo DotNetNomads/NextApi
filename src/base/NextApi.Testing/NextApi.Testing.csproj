@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>NextApi.Testing</PackageId>
+    <Description>Package contains tools that simplify testing process of NextApi based projects</Description>
+    <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
+    <Company>DotNetNomads</Company>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\NextApi.Testing.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\NextApi.Testing.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.1.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.1"/>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.1"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="NextApi.Client" Version="$(NEXTAPI_CLIENT_VERSION)"/>
+    <PackageReference Include="NextApi.Server.EfCore" Version="$(NEXTAPI_EFCORE_VERSION)"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\client\NextApi.Client\NextApi.Client.csproj"/>
+    <ProjectReference Include="..\..\server\NextApi.Server.EfCore\NextApi.Server.EfCore.csproj"/>
+  </ItemGroup>
+
+</Project>

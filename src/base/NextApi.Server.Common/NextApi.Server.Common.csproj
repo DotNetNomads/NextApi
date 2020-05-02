@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>NextApi.Server.Common</PackageId>
+    <Description>Common abstractions for NextApi server-side package.</Description>
+    <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
+    <Company>DotNetNomads</Company>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\NextApi.Server.Common.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\NextApi.Server.Common.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="NextApi.Common" Version="$(NEXTAPI_COMMON_VERSION)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NextApi.Common\NextApi.Common.csproj" />
+  </ItemGroup>
+
+</Project>

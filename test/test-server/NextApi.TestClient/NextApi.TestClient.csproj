@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\src\base\NextApi.Common\NextApi.Common.csproj" />
+      <ProjectReference Include="..\..\..\src\client\NextApi.Client.UploadQueue\NextApi.Client.UploadQueue.csproj" />
+      <ProjectReference Include="..\NextApi.TestServer\NextApi.TestServer.csproj" />
+    </ItemGroup>
+
+</Project>

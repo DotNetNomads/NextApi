@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>NextApi.UploadQueue.Common</PackageId>
+    <Description>Package contains abstractions of UploadQueue mechanism</Description>
+    <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
+    <Company>DotNetNomads</Company>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\NextApi.UploadQueue.Common.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\NextApi.UploadQueue.Common.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="NextApi.Common" Version="$(NEXTAPI_COMMON_VERSION)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NextApi.Common\NextApi.Common.csproj" />
+  </ItemGroup>
+
+</Project>

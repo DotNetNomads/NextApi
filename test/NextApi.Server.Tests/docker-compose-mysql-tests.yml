@@ -1,0 +1,24 @@
+version: "3.3"
+services:
+  db:
+    image: "mysql:8"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - test
+  tests:
+    image: "nextapi-tests"
+    build:
+      context: ../../
+      dockerfile: test/NextApi.Server.Tests/TestsDockerfile
+    depends_on:
+      - db
+    networks:
+      - test
+    environment:
+      NEXTAPI_TESTDB_HOST: db
+      NEXTAPI_TESTDB_USER: root
+      NEXTAPI_TESTDB_PWD: root
+      NEXTAPI_TESTDB_PORT: 3306
+networks:
+  test:

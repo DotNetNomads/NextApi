@@ -4,18 +4,9 @@ obj/
 .vs/
 .vscode/
 packages/
-MobileFrontendInstaller/Debug
-MobileFrontendInstaller/Release
-PRSAppInstaller/Debug
-PRSAppInstaller/Release
-TedXRegistratorInstaller/Debug
-TedXRegistratorInstaller/Release
 
 # MSBuild property file holding settings local to developer's machine
 *.props.local
-
-# EF-generated POCO files
-ModelAskouI.*.cs
 
 *.cache
 
@@ -305,10 +296,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-#paket
-paket-files/
-infrastructureApp/publishOut
-infrastructureApp/publishOutDebug
 *.zip
 .DS_Store
 *.DotSettings
