@@ -1,0 +1,31 @@
+name: Common tests
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test-client:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Moving to test project...
+      run: cd test/NextApi.Client.Tests
+    - name: Testing...
+      run: dotnet test --verbosity normal
+  test-efcore:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Moving to test project...
+      run: cd test/NextApi.Server.EfCore.Tests
+    - name: Testing...
+      run: dotnet test --verbosity normal
