@@ -6,6 +6,9 @@ on:
 
 jobs:
   test-client:
+    defaults:
+      run:
+        working-directory: test/NextApi.Client.Tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -13,8 +16,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.201
-    - name: Moving to test project...
-      run: cd test/NextApi.Client.Tests
     - name: pwd
       run: pwd
     - name: Restoring packages...
