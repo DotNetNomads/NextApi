@@ -15,22 +15,8 @@ jobs:
         dotnet-version: 3.1.201
     - name: Moving to test project...
       run: cd test/NextApi.Client.Tests
-    - name: Restoring packages...
-      run: dotnet restore -v m
-    - name: Building project...
-      run: dotnet build -c Debug -v q --no-restore
-    - name: Testing...
-      run: dotnet test -v n --no-restore --no-build
-  test-efcore:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.201
-    - name: Moving to test project...
-      run: cd test/NextApi.Server.EfCore.Tests
+    - name: pwd
+      run: pwd
     - name: Restoring packages...
       run: dotnet restore -v m
     - name: Building project...
