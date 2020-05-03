@@ -1,0 +1,54 @@
+name: Tests
+
+on: 
+  pull_request:
+    branches: [ master ]
+jobs:
+  common-tests:
+    name: "Common tests"
+    runs-on: ubuntu-latest
+    strategy:
+     matrix:
+      projDir: [test/NextApi.Client.Tests, test/NextApi.Server.EfCore.Tests]
+    container: "mcr.microsoft.com/dotnet/core/sdk:3.1"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Restoring packages...
+      working-directory: ${{ matrix.projDir }}
+      run: dotnet restore -v m
+    - name: Building project...
+      working-directory: ${{ matrix.projDir }}
+      run: dotnet build -c Debug -v q --no-restore
+    - name: Testing...
+      working-directory: ${{ matrix.projDir }}
+      run: dotnet test -v n --no-restore --no-build
+
+  integration-tests:
+    name: "Integration tests"
+    runs-on: ubuntu-latest
+    env:
+      NEXTAPI_TESTDB_HOST: db
+      NEXTAPI_TESTDB_USER: root
+      NEXTAPI_TESTDB_PWD: root
+      NEXTAPI_TESTDB_PORT: 3306
+    strategy:
+     matrix:
+      db: ["mariadb:10.5", "mysql:8"]
+    defaults:
+      run:
+       working-directory: test/NextApi.Server.Tests
+    container: "mcr.microsoft.com/dotnet/core/sdk:3.1"
+    services:
+      db:
+       image: ${{ matrix.db }}
+       env:
+         MYSQL_ROOT_PASSWORD: root
+    steps:
+    - uses: actions/checkout@v2
+    - name: Restoring packages...
+      run: dotnet restore -v m
+    - name: Building project...
+      run: dotnet build -c Debug -v q --no-restore
+    - name: Testing...
+      run: dotnet test -v n --no-restore --no-build
+
