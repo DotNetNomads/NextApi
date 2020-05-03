@@ -33,7 +33,7 @@ jobs:
       NEXTAPI_TESTDB_PORT: 3306
     strategy:
      matrix:
-      db: [mariadb:10.5, mysql:8]
+      db: ["mariadb:10.5", "mysql:8"]
     defaults:
       run:
        working-directory: test/NextApi.Server.Tests
