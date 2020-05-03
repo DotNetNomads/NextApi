@@ -1,26 +1,24 @@
 name: Common tests
 
-on:
+on: 
   pull_request:
     branches: [ master ]
 
 jobs:
-  test-client:
-    defaults:
-      run:
-        working-directory: test/NextApi.Client.Tests
+  common-tests:
     runs-on: ubuntu-latest
+    strategy:
+     matrix:
+      projDir: [test/NextApi.Client.Tests, test/NextApi.Server.EfCore.Tests]
+    container: 'mcr.microsoft.com/dotnet/core/sdk:3.1'
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.201
-    - name: pwd
-      run: pwd
     - name: Restoring packages...
+      working-directory: ${{ matrix.projDir }}
       run: dotnet restore -v m
     - name: Building project...
+      working-directory: ${{ matrix.projDir }}
       run: dotnet build -c Debug -v q --no-restore
     - name: Testing...
+      working-directory: ${{ matrix.projDir }}
       run: dotnet test -v n --no-restore --no-build
