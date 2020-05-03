@@ -12,11 +12,15 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 3.1.201
     - name: Moving to test project...
       run: cd test/NextApi.Client.Tests
+    - name: Restoring packages...
+      run: dotnet restore -v m
+    - name: Building project...
+      run: dotnet build -c Debug -v q --no-restore
     - name: Testing...
-      run: dotnet test --verbosity normal
+      run: dotnet test -v n --no-restore --no-build
   test-efcore:
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +28,12 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 3.1.201
     - name: Moving to test project...
       run: cd test/NextApi.Server.EfCore.Tests
+    - name: Restoring packages...
+      run: dotnet restore -v m
+    - name: Building project...
+      run: dotnet build -c Debug -v q --no-restore
     - name: Testing...
-      run: dotnet test --verbosity normal
+      run: dotnet test -v n --no-restore --no-build
