@@ -6,6 +6,7 @@
     <Description>NextApi.Client integration with Autofac</Description>
     <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
     <Company>DotNetNomads</Company>
+    <RepositoryUrl>https://github.com/DotNetNomads/NextApi</RepositoryUrl>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 

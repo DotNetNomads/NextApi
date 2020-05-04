@@ -4,6 +4,7 @@
     <Description>NextApi.Client with ASP.NET Core apps</Description>
     <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
     <Company>DotNetNomads</Company>
+    <RepositoryUrl>https://github.com/DotNetNomads/NextApi</RepositoryUrl>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup>

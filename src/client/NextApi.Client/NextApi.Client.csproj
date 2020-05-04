@@ -4,6 +4,7 @@
     <Description>Client implementation for server based on NextApi</Description>
     <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
     <Company>DotNetNomads</Company>
+    <RepositoryUrl>https://github.com/DotNetNomads/NextApi</RepositoryUrl>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
