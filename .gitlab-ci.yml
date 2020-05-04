@@ -1,0 +1,110 @@
+# common
+.main-master: &main-master "master@binali-rustamov/NextApi"
+.dotnet-job: &dotnet-job
+  image: mcr.microsoft.com/dotnet/core/sdk:3.1
+
+.docker-job: &docker-job
+  image: hub.abitech.kz/docker:latest
+
+.nugetize: &nugetize
+  stage: deploy
+  when: manual
+  only:
+    - *main-master
+  <<: *dotnet-job
+  script:
+    - cd $projectFolder
+    - dotnet pack --configuration Release -p:Version=$VERSION
+    - dotnet nuget add source https://nuget.pkg.github.com/DotNetNomads/index.json -n github -u $NugetUser -p $NugetToken --store-password-in-clear-text
+    - dotnet nuget push "bin/Release/$projectName.$VERSION.nupkg"  -s "github"
+
+# declaration
+variables:
+  VERSION: "1.0.0"
+  BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
+
+stages:
+  - deploy
+
+# deploy
+nugetize-testing:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/NextApi.Testing
+    projectName: NextApi.Testing
+    NEXTAPI_CLIENT_VERSION: "1.0"
+    NEXTAPI_EFCORE_VERSION: "1.0"
+
+nugetize-common:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/NextApi.Common
+    projectName: NextApi.Common
+
+nugetize-common-server:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/NextApi.Server.Common
+    projectName: NextApi.Server.Common
+    NEXTAPI_COMMON_VERSION: "1.0"
+
+nugetize-common-uploadqueue:
+  <<: *nugetize
+  variables:
+    projectFolder: src/base/NextApi.UploadQueue.Common
+    projectName: NextApi.UploadQueue.Common
+    NEXTAPI_COMMON_VERSION: "1.0"
+
+nugetize-client:
+  <<: *nugetize
+  variables:
+    projectFolder: src/client/NextApi.Client
+    projectName: NextApi.Client
+    NEXTAPI_COMMON_VERSION: "1.0"
+
+nugetize-client-uploadqueue:
+  <<: *nugetize
+  variables:
+    projectFolder: src/client/NextApi.Client.UploadQueue
+    projectName: NextApi.Client.UploadQueue
+    NEXTAPI_CLIENT_VERSION: "1.0"
+    NEXTAPI_UPLOADQUEUE_COMMON_VERSION: "1.0"
+
+nugetize-client-autofac:
+  <<: *nugetize
+  variables:
+    projectFolder: src/client/NextApi.Client.Autofac
+    projectName: NextApi.Client.Autofac
+    NEXTAPI_CLIENT_VERSION: "1.*"
+
+nugetize-client-microsoft-di:
+  <<: *nugetize
+  variables:
+    projectFolder: src/client/NextApi.Client.MicrosoftDI
+    projectName: NextApi.Client.MicrosoftDI
+    NEXTAPI_CLIENT_VERSION: "1.*"
+
+nugetize-server:
+  <<: *nugetize
+  variables:
+    projectFolder: src/server/NextApi.Server
+    projectName: NextApi.Server
+    NEXTAPI_SERVER_COMMON_VERSION: "1.0"
+
+nugetize-server-efcore:
+  <<: *nugetize
+  variables:
+    projectFolder: src/server/NextApi.Server.EfCore
+    projectName: NextApi.Server.EfCore
+    NEXTAPI_COMMON_VERSION: "1.0"
+
+nugetize-server-uploadqueue:
+  <<: *nugetize
+  variables:
+    projectFolder: src/server/NextApi.Server.UploadQueue
+    projectName: NextApi.Server.UploadQueue
+    NEXTAPI_SERVER_COMMON_VERSION: "1.0"
+    NEXTAPI_UPLOADQUEUE_COMMON_VERSION: "1.0"
+    NEXTAPI_EFCORE_VERSION: "1.0"
+
+

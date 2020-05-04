@@ -5,6 +5,7 @@
     <Description>Package contains abstractions of UploadQueue mechanism</Description>
     <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
     <Company>DotNetNomads</Company>
+    <RepositoryUrl>https://github.com/DotNetNomads/NextApi</RepositoryUrl>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8</LangVersion>
   </PropertyGroup>

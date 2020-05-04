@@ -5,6 +5,7 @@
     <Description>Package contains tools that simplify testing process of NextApi based projects</Description>
     <Authors>Binali Rustamov; Yedige Omarbekov; Zarina Ulykpanova</Authors>
     <Company>DotNetNomads</Company>
+    <RepositoryUrl>https://github.com/DotNetNomads/NextApi</RepositoryUrl>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
