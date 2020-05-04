@@ -17,7 +17,7 @@
     - dotnet pack --configuration Release -p:Version=$VERSION
     - dotnet nuget add source https://nuget.pkg.github.com/DotNetNomads/index.json -n github -u $NugetUser -p $NugetToken --store-password-in-clear-text --configfile ../../../nuget.config
     - cat ../../../nuget.config
-    - dotnet nuget push "bin/Release/$projectName.$VERSION.nupkg"  -s "github" --configfile ../../../nuget.config
+    - dotnet nuget push "bin/Release/$projectName.$VERSION.nupkg"  -s "github"
 
 # declaration
 variables:
