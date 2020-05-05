@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Abitech.NextApi.UploadQueue.Common.Entity;
+using NextApi.UploadQueue.Common.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NextApi.Common.Abstractions.Security;

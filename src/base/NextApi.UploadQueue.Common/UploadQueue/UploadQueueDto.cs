@@ -1,6 +1,6 @@
 using System;
 
-namespace Abitech.NextApi.UploadQueue.Common.UploadQueue
+namespace NextApi.UploadQueue.Common.UploadQueue
 {
     /// <summary>
     /// Model to send to an implementation of UploadQueueService

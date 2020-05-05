@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Abitech.NextApi.UploadQueue.Common.Abstractions;
-using Abitech.NextApi.UploadQueue.Common.UploadQueue;
+using NextApi.UploadQueue.Common.Abstractions;
+using NextApi.UploadQueue.Common.UploadQueue;
 using NextApi.Common;
 
 namespace NextApi.Client.UploadQueue

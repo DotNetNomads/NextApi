@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using Abitech.NextApi.UploadQueue.Common.Entity;
+using NextApi.UploadQueue.Common.Entity;
 
 namespace NextApi.TestServer.Model
 {

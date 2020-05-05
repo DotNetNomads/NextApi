@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NextApi.Common.Abstractions;
-using Abitech.NextApi.UploadQueue.Common.UploadQueue;
+using NextApi.UploadQueue.Common.UploadQueue;
 
-namespace Abitech.NextApi.UploadQueue.Common.Abstractions
+namespace NextApi.UploadQueue.Common.Abstractions
 {
     /// <summary>
     /// Upload queue service

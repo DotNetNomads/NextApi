@@ -1,4 +1,4 @@
-using Abitech.NextApi.UploadQueue.Common.Entity;
+using NextApi.UploadQueue.Common.Entity;
 using Microsoft.EntityFrameworkCore;
 using NextApi.Server.EfCore.DAL;
 

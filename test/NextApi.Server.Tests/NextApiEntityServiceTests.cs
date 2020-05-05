@@ -123,7 +123,7 @@ namespace NextApi.Server.Tests
             // update field
             userDto.Name = name;
             // should skip as
-            // https://gitlab.abitech.kz/development/common/abitech.nextapi/issues/12
+            // https://gitlab.abitech.kz/development/common/NextApi/issues/12
             userDto.UnknownProperty = "someValue";
             var updatedDto = await userService.Update(14, userDto);
             Assert.Equal(14, updatedDto.Id);

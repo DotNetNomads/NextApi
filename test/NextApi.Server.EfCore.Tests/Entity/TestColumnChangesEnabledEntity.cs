@@ -1,5 +1,5 @@
 using System;
-using Abitech.NextApi.UploadQueue.Common.Entity;
+using NextApi.UploadQueue.Common.Entity;
 
 namespace NextApi.Server.EfCore.Tests.Entity
 {
