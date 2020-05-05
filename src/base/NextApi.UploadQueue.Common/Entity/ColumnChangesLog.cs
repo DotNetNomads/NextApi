@@ -1,7 +1,7 @@
 using System;
 using NextApi.Common.Entity;
 
-namespace Abitech.NextApi.UploadQueue.Common.Entity
+namespace NextApi.UploadQueue.Common.Entity
 {
     /// <summary>
     /// Column changes log item

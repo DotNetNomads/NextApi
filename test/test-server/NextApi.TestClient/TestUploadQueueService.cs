@@ -1,4 +1,4 @@
-using Abitech.NextApi.UploadQueue.Common.Abstractions;
+using NextApi.UploadQueue.Common.Abstractions;
 using NextApi.Client;
 using NextApi.Client.UploadQueue;
 

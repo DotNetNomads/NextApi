@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using NextApi.TestClient;
 using NextApi.TestServer.Model;
 using NextApi.TestServer.UploadQueueHandlers;
-using Abitech.NextApi.UploadQueue.Common.UploadQueue;
+using NextApi.UploadQueue.Common.UploadQueue;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using NextApi.Client;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NextApi.Common.Entity;
 
-namespace Abitech.NextApi.UploadQueue.Common.UploadQueue
+namespace NextApi.UploadQueue.Common.UploadQueue
 {
     /// <summary>
     /// UploadQueue helper methods to be used at both server and client sides

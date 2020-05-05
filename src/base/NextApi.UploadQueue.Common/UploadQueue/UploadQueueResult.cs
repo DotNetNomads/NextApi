@@ -1,4 +1,4 @@
-namespace Abitech.NextApi.UploadQueue.Common.UploadQueue
+namespace NextApi.UploadQueue.Common.UploadQueue
 {
     /// <summary>
     /// Result of an uploaded UploadQueueDto
