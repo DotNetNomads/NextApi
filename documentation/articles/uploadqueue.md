@@ -2,9 +2,9 @@
 
 If you have already taken a look at the NextApi Nuget packages,
 you must have noticed some strange names like
-[__NextApi.UploadQueue.Common__](http://nexus.abitech.kz/#browse/search=name.raw%3DNextApi.UploadQueue.Common%20AND%20version%3D%3E1.9),
-[__NextApi.Server.UploadQueue__](http://nexus.abitech.kz/#browse/search=name.raw%3DNextApi.Server.UploadQueue%20AND%20version%3D%3E1.9)
-and [__NextApi.Client.UploadQueue__](http://nexus.abitech.kz/#browse/search=name.raw%3DNextApi.Client.UploadQueue%20AND%20version%3D%3E1.9).
+[__NextApi.UploadQueue.Common__](https://www.nuget.org/packages/NextApi.UploadQueue.Common/),
+[__NextApi.Server.UploadQueue__](https://www.nuget.org/packages/NextApi.Server.UploadQueue/)
+and [__NextApi.Client.UploadQueue__](https://www.nuget.org/packages/NextApi.Client.UploadQueue/).
 
 So, what is UploadQueue and what is the purpose of these packages?  
 You will find that out in this article!
