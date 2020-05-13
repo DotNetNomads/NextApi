@@ -10,6 +10,14 @@ namespace NextApi.Server.Entity
     /// </summary>
     public static class OrderExtensions
     {
+        /// <summary>
+        /// Generates ordering specified by the <see cref="Order"/> array
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="orders"></param>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public static IQueryable<TEntity> GenerateOrdering<TEntity>(this IQueryable<TEntity> source, Order[] orders)
         {
             foreach (var order in orders)
@@ -32,38 +40,11 @@ namespace NextApi.Server.Entity
                         throw new ArgumentException(nameof(order.OrderOperator));
                 }
             }
-
             return source;
         }
         
         // more info https://stackoverflow.com/questions/41244/dynamic-linq-orderby-on-ienumerablet-iqueryablet
-        public static IOrderedQueryable<TEntity> OrderBy<TEntity>(this IQueryable<TEntity> source, string property)
-        {
-            return ApplyOrder<TEntity>(source, property, "OrderBy");
-        }
-        
-        public static IOrderedQueryable<TEntity> OrderByDescending<TEntity>(
-            this IQueryable<TEntity> source, 
-            string property)
-        {
-            return ApplyOrder<TEntity>(source, property, "OrderByDescending");
-        }
-
-        public static IOrderedQueryable<TEntity> ThenBy<TEntity>(
-            this IOrderedQueryable<TEntity> source, 
-            string property)
-        {
-            return ApplyOrder<TEntity>(source, property, "ThenBy");
-        }
-
-        public static IOrderedQueryable<TEntity> ThenByDescending<TEntity>(
-            this IOrderedQueryable<TEntity> source, 
-            string property)
-        {
-            return ApplyOrder<TEntity>(source, property, "ThenByDescending");
-        }
-
-        static IOrderedQueryable<TEntity> ApplyOrder<TEntity>(
+        private static IOrderedQueryable<TEntity> ApplyOrder<TEntity>(
             IQueryable<TEntity> source, 
             string property, 
             string methodName) 
