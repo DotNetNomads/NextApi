@@ -6,11 +6,12 @@ services:
       MYSQL_ROOT_PASSWORD: root
     networks:
       - test
+    command: mysqld --max_connections=1000
   tests:
     image: "nextapi-tests"
     build:
       context: ../../
-      dockerfile: test/TestsDockerfile
+      dockerfile: test/NextApi.Server.Tests/TestsDockerfile
     depends_on:
       - db
     networks:

@@ -1,4 +1,4 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1
 COPY . /app
 WORKDIR /app/test/NextApi.Server.Tests
-CMD ["dotnet", "test", "-v", "n"]
+CMD ["/bin/bash", "-c", "dotnet restore -v q; dotnet build -v q --no-restore -c Debug; dotnet test -v n --no-restore --no-build -c Debug"]

@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Restoring packages...
       working-directory: ${{ matrix.projDir }}
-      run: dotnet restore -v m
+      run: dotnet restore -v q
     - name: Building project...
       working-directory: ${{ matrix.projDir }}
       run: dotnet build -c Debug -v q --no-restore
@@ -23,32 +23,24 @@ jobs:
       working-directory: ${{ matrix.projDir }}
       run: dotnet test -v n --no-restore --no-build
 
-  integration-tests:
-    name: "Integration tests"
+  integration-tests-mysql:
+    name: "Integration tests / MySQL"
     runs-on: ubuntu-latest
-    env:
-      NEXTAPI_TESTDB_HOST: db
-      NEXTAPI_TESTDB_USER: root
-      NEXTAPI_TESTDB_PWD: root
-      NEXTAPI_TESTDB_PORT: 3306
-    strategy:
-     matrix:
-      db: ["mariadb:10.5", "mysql:8"]
     defaults:
       run:
        working-directory: test/NextApi.Server.Tests
-    container: "mcr.microsoft.com/dotnet/core/sdk:3.1"
-    services:
-      db:
-       image: ${{ matrix.db }}
-       env:
-         MYSQL_ROOT_PASSWORD: root
     steps:
     - uses: actions/checkout@v2
-    - name: Restoring packages...
-      run: dotnet restore -v m
-    - name: Building project...
-      run: dotnet build -c Debug -v q --no-restore
-    - name: Testing...
-      run: dotnet test -v n --no-restore --no-build
+    - name: Running tests...
+      run: docker-compose -f docker-compose-mysql-tests.yml up --exit-code-from=tests
+  integration-tests-mariadb:
+    name: "Integration tests / MariaDB"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: test/NextApi.Server.Tests
+    steps:
+      - uses: actions/checkout@v2
+      - name: Running tests...
+        run: docker-compose -f docker-compose-mariadb-tests.yml up --exit-code-from=tests
 
