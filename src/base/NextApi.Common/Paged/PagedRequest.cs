@@ -1,4 +1,5 @@
 using NextApi.Common.Filtering;
+using NextApi.Common.Ordering;
 
 namespace NextApi.Common.Paged
 {
@@ -24,5 +25,10 @@ namespace NextApi.Common.Paged
         /// Filter instance for this request
         /// </summary>
         public Filter Filter { get; set; }
+        
+        /// <summary>
+        /// Order instances for this request
+        /// </summary>
+        public Order[] Orders { get; set; }
     }
 }

@@ -107,6 +107,10 @@ namespace NextApi.Server.Entity
 
             entitiesQuery = await BeforeGet(entitiesQuery);
             var totalCount = entitiesQuery.Count();
+            
+            if (request.Orders != null)
+                entitiesQuery = entitiesQuery.GenerateOrdering(request.Orders);
+            
             if (request.Skip != null)
                 entitiesQuery = entitiesQuery.Skip(request.Skip.Value);
             if (request.Take != null)

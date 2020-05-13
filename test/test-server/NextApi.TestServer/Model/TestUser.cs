@@ -15,6 +15,8 @@ namespace NextApi.TestServer.Model
         public bool Enabled { get; set; }
         public Guid? CityId { get; set; }
         public int? RoleId { get; set; }
+        public DateTime Birthday { get; set; }
+        public string ExtraInfo { get; set; }
         public virtual TestCity City { get; set; }
         public virtual TestRole Role { get; set; }
     }
