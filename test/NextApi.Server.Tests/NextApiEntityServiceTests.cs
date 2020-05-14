@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NextApi.TestClient;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NextApi.Client;
 using NextApi.Common.Abstractions.DAL;
 using NextApi.Common.Filtering;
+using NextApi.Common.Ordering;
 using NextApi.Common.Paged;
 using NextApi.Common.Tree;
 using NextApi.Server.Tests.Base;
@@ -254,6 +256,39 @@ namespace NextApi.Server.Tests
 
             Assert.True(data.TotalItems == 3);
             Assert.True(data.Items.All(e => e.Id == 5 || e.Id == 10 || e.Id == 14));
+        }
+        
+        [Theory]
+        [InlineData(NextApiTransport.Http, OrderOperators.OrderBy, "ExtraInfo", OrderOperators.ThenByDescending, "Id", new [] {14, 12, 10, 8, 6})]
+        [InlineData(NextApiTransport.SignalR, OrderOperators.OrderBy, "ExtraInfo", OrderOperators.ThenByDescending, "Id", new [] {14, 12, 10, 8, 6})]
+        [InlineData(NextApiTransport.Http, OrderOperators.OrderByDescending, "ExtraInfo", OrderOperators.ThenBy, "Birthday", new [] {1, 3, 5, 7, 9})]
+        [InlineData(NextApiTransport.SignalR, OrderOperators.OrderByDescending, "ExtraInfo", OrderOperators.ThenBy, "Birthday", new [] {1, 3, 5, 7, 9})]
+        [InlineData(NextApiTransport.Http, OrderOperators.OrderByDescending, "Birthday", OrderOperators.ThenBy, null, new [] {15, 14, 13, 12, 11})]
+        [InlineData(NextApiTransport.SignalR, OrderOperators.OrderByDescending, "Birthday", OrderOperators.ThenBy, null, new [] {15, 14, 13, 12, 11})]
+        public async Task GetPagedSorted(NextApiTransport transport, OrderOperators firstOrderOperator, string firstProperty, 
+            OrderOperators secondOrderOperator, string secondProperty, int[] result)
+        {
+            await App.GenerateUsers();
+            var userService = ResolveUserService(transport);
+
+            var orders = new List<Order> {new Order(firstOrderOperator, firstProperty)};
+            if (secondProperty != null) orders.Add(new Order(secondOrderOperator, secondProperty));
+            
+            var paged = new PagedRequest
+            {
+                Take = 5,
+                Expand = new [] { "City" },
+                Orders = orders.ToArray()
+            };
+
+            var data = await userService.GetPaged(paged);
+
+            Assert.Equal(15, data.TotalItems);
+
+            for (int i=0; i < data.Items.Count; i++)
+            {
+                Assert.Equal(result[i] ,data.Items[i].Id);
+            }
         }
 
         [Theory]

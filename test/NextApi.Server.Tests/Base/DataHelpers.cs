@@ -20,6 +20,7 @@ namespace NextApi.Server.Tests.Base
             var city = CreateCity();
             await db.Context.Cities.AddAsync(city);
             await db.Context.SaveChangesAsync();
+            var initialDate = new DateTime(2000, 01, 01);
             for (var id = 1; id <= count; id++)
             {
                 var user = new TestUser
@@ -29,7 +30,9 @@ namespace NextApi.Server.Tests.Base
                     Enabled = true,
                     Id = id,
                     City = city,
-                    Role = role
+                    Role = role,
+                    Birthday = initialDate.AddYears(id),
+                    ExtraInfo = id % 2 == 0 ? "even" : "odd"
                 };
                 await db.Context.Users.AddAsync(user);
             }
