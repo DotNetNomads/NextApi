@@ -13,11 +13,10 @@ namespace NextApi.Server.Security
         /// </summary>
         /// <param name="claimsPrincipal"></param>
         /// <returns>subject id or null</returns>
-        public static int? GetSubjectId(this ClaimsPrincipal claimsPrincipal)
+        public static string GetSubjectId(this ClaimsPrincipal claimsPrincipal)
         {
-            var claim = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == "sub");
-            if (claim == null) return null;
-            return int.Parse(claim.Value);
+            var claim = claimsPrincipal?.Claims?.FirstOrDefault(c => c.Type == "sub");
+            return claim?.Value;
         }
     }
 }

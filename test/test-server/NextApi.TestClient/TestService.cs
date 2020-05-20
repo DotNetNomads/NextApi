@@ -22,7 +22,7 @@ namespace NextApi.TestClient
         Task<string> MethodWithoutArgsTest();
         Task ExceptionTest();
         Task AsyncVoidDenied();
-        int? GetCurrentUser();
+        string GetCurrentUser();
         Task<string> UploadFile(Stream fileStream, string fileName);
         Task<NextApiFileResponse> GetFile(string path);
         Task<NextApiFileResponse> GetFileMimeTyped(string path);
@@ -69,7 +69,7 @@ namespace NextApi.TestClient
 
         public Task AsyncVoidDenied() => InvokeService(nameof(AsyncVoidDenied));
 
-        public int? GetCurrentUser() => InvokeService<int?>(nameof(GetCurrentUser)).Result;
+        public string GetCurrentUser() => InvokeService<string>(nameof(GetCurrentUser)).Result;
 
         public Task<string> UploadFile(Stream fileStream, string fileName) =>
             InvokeService<string>(nameof(UploadFile), new NextApiFileArgument("belloni", fileName, fileStream));

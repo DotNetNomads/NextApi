@@ -15,6 +15,6 @@ namespace NextApi.Common.Abstractions.Security
         /// <summary>
         /// Current users subject id
         /// </summary>
-        int? SubjectId { get; }
+        string SubjectId { get; }
     }
 }
