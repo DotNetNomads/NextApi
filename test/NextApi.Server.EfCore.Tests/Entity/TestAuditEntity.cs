@@ -3,7 +3,7 @@ using NextApi.Common.Entity;
 
 namespace NextApi.Server.EfCore.Tests.Entity
 {
-    public class TestAuditEntity : IEntity<int>, ILoggedEntity
+    public class TestAuditEntity : IEntity<int>, ILoggedEntity<int?>
     {
         public int Id { get; set; }
         public string Name { get; set; }

@@ -41,13 +41,13 @@ namespace NextApi.Server.Tests
             {
                 var service = App.ResolveService<ITestService>("1", transport);
                 var userId = service.GetCurrentUser();
-                Assert.Equal(1, userId.Value);
+                Assert.Equal("1", userId);
             }
             // case: authorized as user 2
             {
                 var service = App.ResolveService<ITestService>("2", transport);
                 var userId = service.GetCurrentUser();
-                Assert.Equal(2, userId.Value);
+                Assert.Equal("2", userId);
             }
         }
     }

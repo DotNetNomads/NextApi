@@ -1,10 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NextApi.Common.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NextApi.Common.Abstractions.Security;
+using NextApi.Common.Entity;
 
 namespace NextApi.Server.EfCore.DAL
 {
@@ -87,8 +88,32 @@ namespace NextApi.Server.EfCore.DAL
         protected virtual async Task HandleTrackedEntity(EntityEntry entityEntry)
 #pragma warning restore 1998
         {
-            var userId = _nextApiUserAccessor?.SubjectId;
-            this.RecordAuditInfo(userId, entityEntry);
+            var subjectId = _nextApiUserAccessor?.SubjectId;
+            RecordAuditInfo(subjectId, entityEntry);
+        }
+
+        protected virtual void RecordAuditInfo(string subjectId, EntityEntry entityEntry)
+        {
+            if (string.IsNullOrWhiteSpace(subjectId))
+                return;
+            if (!(entityEntry.Entity is ILoggedEntity entity))
+                return;
+
+            switch (entityEntry.State)
+            {
+                case EntityState.Modified:
+                    entity.UpdatedById = subjectId;
+                    entity.Updated = DateTimeOffset.Now;
+                    break;
+                case EntityState.Added:
+                {
+                    if (string.IsNullOrWhiteSpace(entity.CreatedById))
+                        entity.CreatedById = subjectId;
+                    if (!entity.Created.HasValue)
+                        entity.Created = DateTimeOffset.Now;
+                    break;
+                }
+            }
         }
 
         /// <inheritdoc />

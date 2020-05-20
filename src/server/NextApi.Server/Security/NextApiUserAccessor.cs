@@ -10,6 +10,6 @@ namespace NextApi.Server.Security
         public ClaimsPrincipal User { get; set; }
 
         /// <inheritdoc />
-        public int? SubjectId => User?.GetSubjectId();
+        public string SubjectId => User?.GetSubjectId();
     }
 }

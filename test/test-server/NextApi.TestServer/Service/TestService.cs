@@ -97,7 +97,7 @@ namespace NextApi.TestServer.Service
             // invalid method
         }
 
-        public int? GetCurrentUser()
+        public string GetCurrentUser()
         {
             return _nextApiUserAccessor.SubjectId;
         }

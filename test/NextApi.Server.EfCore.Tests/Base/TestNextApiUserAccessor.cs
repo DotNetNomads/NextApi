@@ -9,6 +9,6 @@ namespace NextApi.Server.EfCore.Tests.Base
         public ClaimsPrincipal User { get; set; }
 
         /// <inheritdoc />
-        public int? SubjectId => 1;
+        public string SubjectId => "1";
     }
 }
