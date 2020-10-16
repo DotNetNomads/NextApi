@@ -1,8 +1,10 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using MessagePack;
 using Newtonsoft.Json;
 using NextApi.Common;
 using NextApi.Common.Serialization;
@@ -32,16 +34,37 @@ namespace NextApi.Client.Base
         /// Prepare multipart form for sending via HTTP
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="argsSerialization"></param>
         /// <returns></returns>
-        public static MultipartFormDataContent PrepareRequestForm(NextApiCommand command)
+        public static MultipartFormDataContent PrepareRequestForm(NextApiCommand command, SerializationType argsSerialization)
         {
             var args = command.Args.Where(arg => arg is NextApiArgument).ToArray();
             var form = new MultipartFormDataContent
             {
                 {new StringContent(command.Service), "Service"},
-                {new StringContent(command.Method), "Method"},
-                {new StringContent(JsonConvert.SerializeObject(args, SerializationUtils.GetJsonConfig())), "Args"}
+                {new StringContent(command.Method), "Method"}
             };
+
+            switch (argsSerialization)
+            {
+                case SerializationType.Json:
+                {
+                    var serArgs = JsonConvert.SerializeObject(args, SerializationUtils.GetJsonConfig());
+                    form.Add(new StringContent(serArgs), "Args");
+                    break;
+                }
+                case SerializationType.MessagePack:
+                {
+                    var serArgs = MessagePackSerializer.Typeless.Serialize(args);
+                    var argsStream = new MemoryStream(serArgs);
+                    form.Add(new StreamContent(argsStream), "Args", "Args");
+                    form.Add(new StringContent(SerializationType.MessagePack.ToString()), "Serialization");
+                    break;
+                }
+                default:
+                    throw new Exception($"Unsupported serialization type {argsSerialization}");
+            }
+            
             // send files
             var fileArgs = command.Args.Where(arg => arg is NextApiFileArgument).Cast<NextApiFileArgument>().ToArray();
             foreach (var nextApiFileArgument in fileArgs)

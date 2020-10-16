@@ -32,6 +32,11 @@ namespace NextApi.Client
         /// </summary>
         protected NextApiTransport TransportType { get; }
 
+        /// <summary>
+        /// Serialization type for Http transport type
+        /// </summary>
+        public SerializationType HttpSerializationType { get; set; } = SerializationType.Json;
+
         #region SuportedPermissions
 
         private string[] _supportedPermissions;
@@ -270,7 +275,8 @@ namespace NextApi.Client
 
         private async Task<T> InvokeHttp<T>(NextApiCommand command)
         {
-            var form = NextApiClientUtils.PrepareRequestForm(command);
+            var httpSerializationType = HttpSerializationType;
+            var form = NextApiClientUtils.PrepareRequestForm(command, httpSerializationType);
             HttpResponseMessage response;
             try
             {
@@ -284,7 +290,8 @@ namespace NextApi.Client
             }
 
             // check that response can processed as json
-            if (!response.Content.Headers.ContentType.MediaType.Contains("application/json"))
+            var mediaType = response.Content.Headers.ContentType.MediaType;
+            if (!mediaType.Contains("application/json") && !mediaType.Contains("application/octet-stream"))
             {
                 if (typeof(T) != typeof(NextApiFileResponse))
                     throw new NextApiException(
@@ -302,14 +309,28 @@ namespace NextApi.Client
                 }
             }
 
-            // process as normal nextapi response
-            var data = await response.Content.ReadAsStringAsync();
-            var result =
-                JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, SerializationUtils.GetJsonConfig());
-            if (!result.Success)
-                throw NextApiClientUtils.NextApiException(result.Error);
+            switch (httpSerializationType)
+            {
+                case SerializationType.Json:
+                {
+                    // process as normal nextapi response
+                    var data = await response.Content.ReadAsStringAsync();
+                    var result =
+                        JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, SerializationUtils.GetJsonConfig());
+                    if (!result.Success)
+                        throw NextApiClientUtils.NextApiException(result.Error);
 
-            return result.Data;
+                    return result.Data;
+                }
+                case SerializationType.MessagePack:
+                {
+                    var resultByteArray = await response.Content.ReadAsByteArrayAsync();
+                    var result = MessagePackSerializer.Typeless.Deserialize(resultByteArray);
+                    return (T) ((NextApiResponse) result).Data;
+                }
+                default:
+                    throw new Exception($"Unsupported serialization type {HttpSerializationType}");
+            }
         }
 
         private async Task<NextApiFileResponse> ProcessNextApiFileResponse(HttpResponseMessage response)

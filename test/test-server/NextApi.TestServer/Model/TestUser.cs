@@ -19,5 +19,6 @@ namespace NextApi.TestServer.Model
         public string ExtraInfo { get; set; }
         public virtual TestCity City { get; set; }
         public virtual TestRole Role { get; set; }
+        public decimal DecimalProperty { get; set; }
     }
 }
