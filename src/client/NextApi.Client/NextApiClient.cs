@@ -291,14 +291,8 @@ namespace NextApi.Client
 
             // check that response can processed as json
             var mediaType = response.Content.Headers.ContentType.MediaType;
-            if (!mediaType.Contains("application/json") && !mediaType.Contains("application/octet-stream"))
+            if (!mediaType.Contains("application/json") && typeof(T) == typeof(NextApiFileResponse))
             {
-                if (typeof(T) != typeof(NextApiFileResponse))
-                    throw new NextApiException(
-                        NextApiErrorCode.IncorrectRequest,
-                        "Please specify correct return type for this request. Use NextApiFileResponse."
-                    );
-
                 try
                 {
                     return await NextApiClientUtils.ProcessNextApiFileResponse(response) as dynamic;

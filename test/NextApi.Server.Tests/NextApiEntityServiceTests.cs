@@ -281,7 +281,7 @@ namespace NextApi.Server.Tests
             
             // TODO Same request fails with Json serialization
             // decimal is deserialized as double at server side
-            var userServiceJson = ResolveUserService(transport);
+            var userServiceJson = ResolveUserService(NextApiTransport.Http);
             await Assert.ThrowsAnyAsync<Exception>(async () => await userServiceJson.GetPaged(paged));
         }
         
