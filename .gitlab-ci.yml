@@ -19,7 +19,7 @@
 
 # declaration
 variables:
-  VERSION: "1.0.4"
+  VERSION: "1.0.5"
   BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
 
 stages:
@@ -31,7 +31,7 @@ nugetize-testing:
   variables:
     projectFolder: src/base/NextApi.Testing
     projectName: NextApi.Testing
-    NEXTAPI_CLIENT_VERSION: "1.0.1"
+    NEXTAPI_CLIENT_VERSION: "1.0.5"
     NEXTAPI_EFCORE_VERSION: "1.0.1"
 
 nugetize-common:
@@ -45,7 +45,7 @@ nugetize-common-server:
   variables:
     projectFolder: src/base/NextApi.Server.Common
     projectName: NextApi.Server.Common
-    NEXTAPI_COMMON_VERSION: "1.0.3"
+    NEXTAPI_COMMON_VERSION: "1.0.5"
 
 nugetize-common-uploadqueue:
   <<: *nugetize
@@ -59,7 +59,7 @@ nugetize-client:
   variables:
     projectFolder: src/client/NextApi.Client
     projectName: NextApi.Client
-    NEXTAPI_COMMON_VERSION: "1.0.1"
+    NEXTAPI_COMMON_VERSION: "1.0.5"
 
 nugetize-client-uploadqueue:
   <<: *nugetize
@@ -88,7 +88,7 @@ nugetize-server:
   variables:
     projectFolder: src/server/NextApi.Server
     projectName: NextApi.Server
-    NEXTAPI_SERVER_COMMON_VERSION: "1.0.3"
+    NEXTAPI_SERVER_COMMON_VERSION: "1.0.5"
 
 nugetize-server-efcore:
   <<: *nugetize
