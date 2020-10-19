@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NextApi.Client;
 using NextApi.Common.Abstractions;
+using NextApi.Common.Serialization;
 using NextApi.Testing.Security;
 using Xunit.Abstractions;
 
@@ -64,8 +65,12 @@ namespace NextApi.Testing
         /// </summary>
         /// <param name="tokenProvider">Token provider instance for client</param>
         /// <param name="transport"></param>
+        /// <param name="httpSerializationType"></param>
         /// <returns>NextApi client instance</returns>
-        protected abstract TClient ClientBuilder(TestTokenProvider tokenProvider, NextApiTransport transport);
+        protected abstract TClient ClientBuilder(
+            TestTokenProvider tokenProvider,
+            NextApiTransport transport,
+            SerializationType httpSerializationType = SerializationType.Json);
 
         /// <summary>
         /// Do additional registration at client-side DI engine
@@ -75,9 +80,12 @@ namespace NextApi.Testing
 
 
         /// <inheritdoc />
-        public virtual TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.Http)
+        public virtual TClient ResolveClient(
+            string token = null,
+            NextApiTransport transport = NextApiTransport.Http,
+            SerializationType httpSerializationType = SerializationType.Json)
         {
-            var client = ClientBuilder(string.IsNullOrEmpty(token) ? null : new TestTokenProvider(token), transport);
+            var client = ClientBuilder(string.IsNullOrEmpty(token) ? null : new TestTokenProvider(token), transport, httpSerializationType);
             client.MessageHandler = Server.CreateHandler();
             return client;
         }
@@ -90,14 +98,16 @@ namespace NextApi.Testing
         }
 
         /// <inheritdoc />
-        public virtual TService ResolveService<TService>(string token = null,
-            NextApiTransport transport = NextApiTransport.Http) where TService : INextApiService
+        public virtual TService ResolveService<TService>(
+            string token = null,
+            NextApiTransport transport = NextApiTransport.Http,
+            SerializationType httpSerializationType = SerializationType.Json) where TService : INextApiService
         {
             var type = typeof(TService);
             var implementationInfo = _servicesInfo.FirstOrDefault(s => s.interfaceType == type);
             if (implementationInfo == (null, null))
                 throw new InvalidOperationException($"Service {type.Name} is not registered!");
-            var client = ResolveClient(token, transport);
+            var client = ResolveClient(token, transport, httpSerializationType);
             var serviceCollection = ResolveServiceCollection();
             serviceCollection.AddTransient(provider => client);
             serviceCollection.AddTransient(implementationInfo.interfaceType, implementationInfo.implementationType);

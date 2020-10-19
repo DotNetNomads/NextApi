@@ -17,5 +17,6 @@ namespace NextApi.TestServer.DTO
         public virtual TestCityDTO City { get; set; }
         public virtual TestRoleDTO Role { get; set; }
         public string UnknownProperty { get; set; }
+        public decimal DecimalProperty { get; set; }
     }
 }

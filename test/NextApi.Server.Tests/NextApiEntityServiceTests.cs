@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using NextApi.Common.Abstractions.DAL;
 using NextApi.Common.Filtering;
 using NextApi.Common.Ordering;
 using NextApi.Common.Paged;
+using NextApi.Common.Serialization;
 using NextApi.Common.Tree;
 using NextApi.Server.Tests.Base;
 using NextApi.Testing;
@@ -76,8 +78,10 @@ namespace NextApi.Server.Tests
             }
         }
 
-        private ITestUserService ResolveUserService(NextApiTransport transport = NextApiTransport.SignalR) =>
-            App.ResolveService<ITestUserService>(null, transport);
+        private ITestUserService ResolveUserService(
+            NextApiTransport transport = NextApiTransport.SignalR,
+            SerializationType httpSerializationType = SerializationType.Json)
+            => App.ResolveService<ITestUserService>(null, transport, httpSerializationType);
 
         [Theory]
         [InlineData(NextApiTransport.Http)]
@@ -256,6 +260,29 @@ namespace NextApi.Server.Tests
 
             Assert.True(data.TotalItems == 3);
             Assert.True(data.Items.All(e => e.Id == 5 || e.Id == 10 || e.Id == 14));
+        }
+
+        [Theory]
+        [InlineData(NextApiTransport.Http)]
+        [InlineData(NextApiTransport.SignalR)]
+        public async Task TestDecimalFilter(NextApiTransport transport)
+        {
+            await App.GenerateUsers(10);
+            var paged = new PagedRequest
+            {
+                Filter = new FilterBuilder()
+                    .LessThan<decimal>(nameof(TestUserDTO.DecimalProperty), 6)
+                    .Build()
+            };
+
+            var userServiceMp = ResolveUserService(transport, SerializationType.MessagePack);
+            var data = await userServiceMp.GetPaged(paged);
+            Assert.True(data.TotalItems == 5);
+            
+            // TODO Same request fails with Json serialization
+            // decimal is deserialized as double at server side
+            var userServiceJson = ResolveUserService(NextApiTransport.Http);
+            await Assert.ThrowsAnyAsync<Exception>(async () => await userServiceJson.GetPaged(paged));
         }
         
         [Theory]

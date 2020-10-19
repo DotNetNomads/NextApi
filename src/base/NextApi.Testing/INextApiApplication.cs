@@ -1,6 +1,7 @@
 using System;
 using NextApi.Client;
 using NextApi.Common.Abstractions;
+using NextApi.Common.Serialization;
 using Xunit.Abstractions;
 
 namespace NextApi.Testing
@@ -28,17 +29,19 @@ namespace NextApi.Testing
         /// </summary>
         /// <param name="token">Fake token (if required)</param>
         /// <param name="transport">Transport type</param>
+        /// <param name="httpSerializationType">Serialization type for http transport type</param>
         /// <returns>Instance of NextApi client</returns>
-        TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.Http);
+        TClient ResolveClient(string token = null, NextApiTransport transport = NextApiTransport.Http, SerializationType httpSerializationType = SerializationType.Json);
 
         /// <summary>
         /// Resolve client-side NextApi service
         /// </summary>
         /// <param name="token">Fake token (if required)</param>
         /// <param name="transport">Transport type</param>
+        /// <param name="httpSerializationType">Serialization type for http transport type</param>
         /// <typeparam name="TService">Service type</typeparam>
         /// <returns></returns>
-        TService ResolveService<TService>(string token = null, NextApiTransport transport = NextApiTransport.Http)
+        TService ResolveService<TService>(string token = null, NextApiTransport transport = NextApiTransport.Http, SerializationType httpSerializationType = SerializationType.Json)
             where TService : INextApiService;
 
         /// <summary>

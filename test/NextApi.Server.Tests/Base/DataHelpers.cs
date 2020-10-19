@@ -32,7 +32,8 @@ namespace NextApi.Server.Tests.Base
                     City = city,
                     Role = role,
                     Birthday = initialDate.AddYears(id),
-                    ExtraInfo = id % 2 == 0 ? "even" : "odd"
+                    ExtraInfo = id % 2 == 0 ? "even" : "odd",
+                    DecimalProperty = id
                 };
                 await db.Context.Users.AddAsync(user);
             }

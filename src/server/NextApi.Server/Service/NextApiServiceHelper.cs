@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -205,6 +206,20 @@ namespace NextApi.Server.Service
             response.ContentType = "application/json";
             var encoded = JsonConvert.SerializeObject(data, SerializationUtils.GetJsonConfig());
             await response.WriteAsync(encoded);
+        }
+
+        /// <summary>
+        /// Wrapper for sending byte array to client
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static async Task SendByteArray(this HttpResponse response, byte[] data)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "application/octet-stream";
+            using var memoryStream = new MemoryStream(data);
+            await memoryStream.CopyToAsync(response.Body);
         }
 
         /// <summary>

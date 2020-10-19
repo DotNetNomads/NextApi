@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using NextApi.Common;
@@ -45,12 +47,26 @@ namespace NextApi.Server.Base
                 Service = form["Service"].FirstOrDefault(), Method = form["Method"].FirstOrDefault()
             };
 
-            var argsString = form["Args"].FirstOrDefault();
-            command.Args = string.IsNullOrEmpty(argsString)
-                ? null
-                : JsonConvert.DeserializeObject<NextApiJsonArgument[]>(argsString, SerializationUtils.GetJsonConfig())
-                    .Cast<INextApiArgument>()
-                    .ToArray();
+            var serialization = form["Serialization"].FirstOrDefault();
+            var useMessagePack = serialization == SerializationType.MessagePack.ToString();
+            if (useMessagePack)
+            {
+                var argsFile = form.Files["Args"];
+                using var memoryStream = new MemoryStream();
+                await argsFile.CopyToAsync(memoryStream);
+                var byteArray = memoryStream.ToArray();
+                var args = MessagePackSerializer.Typeless.Deserialize(byteArray);
+                command.Args = (INextApiArgument[]) args;
+            }
+            else
+            {
+                var argsString = form["Args"].FirstOrDefault();
+                command.Args = string.IsNullOrEmpty(argsString)
+                    ? null
+                    : JsonConvert.DeserializeObject<NextApiJsonArgument[]>(argsString, SerializationUtils.GetJsonConfig())
+                        .Cast<INextApiArgument>()
+                        .ToArray();
+            }
 
             var result = await _handler.ExecuteCommand(command);
             if (result is NextApiFileResponse fileResponse)
@@ -59,7 +75,13 @@ namespace NextApi.Server.Base
                 return;
             }
 
-            await context.Response.SendJson(result);
+            if (useMessagePack)
+            {
+                var resultByteArray = MessagePackSerializer.Typeless.Serialize(result);
+                await context.Response.SendByteArray(resultByteArray);
+            }
+            else
+                await context.Response.SendJson(result);
         }
 
         /// <summary>
