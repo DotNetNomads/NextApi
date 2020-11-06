@@ -19,7 +19,7 @@
 
 # declaration
 variables:
-  VERSION: "1.1.0"
+  VERSION: "1.1.1"
   BASE_DOC_DOCKER_IMAGE: abitech/nextapi-docs
 
 stages:

@@ -319,8 +319,10 @@ namespace NextApi.Client
                 case SerializationType.MessagePack:
                 {
                     var resultByteArray = await response.Content.ReadAsByteArrayAsync();
-                    var result = MessagePackSerializer.Typeless.Deserialize(resultByteArray);
-                    return (T) ((NextApiResponse) result).Data;
+                    var result = (NextApiResponse) MessagePackSerializer.Typeless.Deserialize(resultByteArray);
+                    if (!result.Success)
+                        throw NextApiClientUtils.NextApiException(result.Error);
+                    return (T) result.Data;
                 }
                 default:
                     throw new Exception($"Unsupported serialization type {HttpSerializationType}");
