@@ -9,6 +9,7 @@ using DeepEqual.Syntax;
 using NextApi.Client;
 using NextApi.Common;
 using NextApi.Common.Filtering;
+using NextApi.Common.Serialization;
 using NextApi.Server.Tests.Base;
 using NextApi.Testing;
 using Xunit;
@@ -61,14 +62,15 @@ namespace NextApi.Server.Tests
         }
 
         [Theory]
-        [InlineData(NextApiTransport.Http)]
-        [InlineData(NextApiTransport.SignalR)]
-        public async Task ExceptionTest(NextApiTransport transport)
+        [InlineData(NextApiTransport.Http, SerializationType.Json)]
+        [InlineData(NextApiTransport.Http, SerializationType.MessagePack)]
+        [InlineData(NextApiTransport.SignalR, SerializationType.MessagePack)]
+        public async Task ExceptionTest(NextApiTransport transport, SerializationType serType)
         {
             Exception ex = null;
             try
             {
-                await ResolveTestService(transport).ExceptionTest();
+                await ResolveTestService(transport, serType).ExceptionTest();
             }
             catch (Exception e)
             {
@@ -88,8 +90,9 @@ namespace NextApi.Server.Tests
             Assert.True(true);
         }
 
-        private ITestService ResolveTestService(NextApiTransport transport = NextApiTransport.Http) =>
-            App.ResolveService<ITestService>(null, transport);
+        private ITestService ResolveTestService(NextApiTransport transport = NextApiTransport.Http,
+            SerializationType serType = SerializationType.Json) =>
+            App.ResolveService<ITestService>(null, transport, serType);
 
         [Theory]
         [InlineData(NextApiTransport.Http)]
