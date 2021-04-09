@@ -17,10 +17,6 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\NextApi.Client.UploadQueue.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="NextApi.Client" Version="$(NEXTAPI_CLIENT_VERSION)" />
-    <PackageReference Include="NextApi.UploadQueue.Common" Version="$(NEXTAPI_UPLOADQUEUE_COMMON_VERSION)" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\base\NextApi.UploadQueue.Common\NextApi.UploadQueue.Common.csproj" />
     <ProjectReference Include="..\NextApi.Client\NextApi.Client.csproj" />
