@@ -410,7 +410,7 @@ Please specify correct assembly name!");
                                     try
                                     {
                                         if (!createAndUpdateInSameBatch && changesHandlerInstance != null)
-                                            changesHandlerInstance.OnAfterUpdate(entityInstance,
+                                            await changesHandlerInstance.OnAfterUpdate(entityInstance,
                                                 updateOperation.ColumnName, updateOperation.NewValue);
                                     }
                                     catch
