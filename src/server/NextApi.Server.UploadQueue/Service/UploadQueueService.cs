@@ -358,36 +358,38 @@ Please specify correct assembly name!");
                             var result = new UploadQueueResult(UploadQueueError.OutdatedChange);
                             AddOrUpdate(resultDict, updateOperation, result);
                         }
-                        else
-                        {
-                            try
-                            {
-                                if (changesHandlerInstance != null)
-                                    await changesHandlerInstance.OnBeforeUpdate(entityInstance,
-                                        updateOperation.ColumnName, updateOperation.NewValue);
-                            }
-                            catch (Exception e)
-                            {
-                                updateList.Remove(updateOperation); // reject
-                                var result = new UploadQueueResult(UploadQueueError.Exception, e.Message);
-                                AddOrUpdate(resultDict, updateOperation, result);
-                            }
-                        }
                     }
 
                     try
                     {
                         if (updateList.Count > 0)
                         {
-                            var rejected = UploadQueueActions.ApplyModifications(entityInstance, updateList)
-                                as Dictionary<Guid, Exception>;
-
+                            Dictionary<Guid, Exception> rejected;
                             // Add entity, if create and update ops are in the same batch
                             if (createAndUpdateInSameBatch)
+                            {
+                                rejected = UploadQueueActions.ApplyModifications(entityInstance, updateList)
+                                    as Dictionary<Guid, Exception>;
                                 await CreateEntityAsync(entityInstance);
+                            }
                             // Else just update existing entity
                             else
+                            {
+                                if (changesHandlerInstance != null)
+                                    await changesHandlerInstance.OnBeforeUpdate(entityInstance, updateList);
+                                rejected = UploadQueueActions.ApplyModifications(entityInstance, updateList)
+                                    as Dictionary<Guid, Exception>;
                                 await repoInstance.UpdateAsync(entityInstance);
+                                try
+                                {
+                                    if (changesHandlerInstance != null)
+                                        await changesHandlerInstance.OnAfterUpdate(entityInstance);
+                                }
+                                catch
+                                {
+                                    // ignored
+                                }
+                            }
 
                             foreach (var updateOperation in updateList)
                             {
@@ -406,17 +408,6 @@ Please specify correct assembly name!");
                                         updateOperation.ColumnName,
                                         updateOperation.EntityRowGuid,
                                         updateOperation.OccuredAt);
-
-                                    try
-                                    {
-                                        if (!createAndUpdateInSameBatch && changesHandlerInstance != null)
-                                            await changesHandlerInstance.OnAfterUpdate(entityInstance,
-                                                updateOperation.ColumnName, updateOperation.NewValue);
-                                    }
-                                    catch
-                                    {
-                                        // ignored
-                                    }
                                 }
 
                                 AddOrUpdate(resultDict, updateOperation, result);

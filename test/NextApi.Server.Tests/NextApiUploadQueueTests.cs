@@ -896,16 +896,15 @@ namespace NextApi.Server.Tests
                 newTestCity.Id = TestUploadQueueChangesHandler.RejectUpdateGuid;
                 createOp.NewValue = JsonConvert.SerializeObject(newTestCity);
                 createOp.EntityRowGuid = newTestCity.Id;
-                updateOp.EntityRowGuid = newTestCity.Id;
-
-                var resultDict = await service.ProcessAsync(uploadQueue);
-
-                Assert.Equal(uploadQueue.Count, resultDict.Count);
+                var resultDict = await service.ProcessAsync(new List<UploadQueueDto>{createOp});
                 var createOpResult = resultDict[createOp.Id];
-                var updateOpResult = resultDict[updateOp.Id];
-
                 Assert.Equal(UploadQueueError.NoError, createOpResult.Error);
                 Assert.Null(createOpResult.Extra);
+
+                updateOp.EntityRowGuid = newTestCity.Id;
+                resultDict = await service.ProcessAsync(new List<UploadQueueDto>{updateOp});
+
+                var updateOpResult = resultDict[updateOp.Id];
                 Assert.Equal(UploadQueueError.Exception, updateOpResult.Error);
                 Assert.Contains(TestUploadQueueChangesHandler.RejectUpdateGuidMessage, updateOpResult.Extra.ToString());
             }

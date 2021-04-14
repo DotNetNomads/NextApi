@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NextApi.Common.Entity;
+using NextApi.UploadQueue.Common.UploadQueue;
 
 namespace NextApi.Server.UploadQueue.ChangeTracking
 {
@@ -22,10 +24,9 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
         /// This method is called right before an entity is updated through it's repository
         /// </summary>
         /// <param name="originalEntity">Entity instance that is to be updated</param>
-        /// <param name="columnName">Column name that is to be updated</param>
-        /// <param name="newValue">New value</param>
+        /// <param name="updateList"></param>
         /// <returns>void or an exception is thrown, in which scenario - do not update this entity instance</returns>
-        Task OnBeforeUpdate(TEntity originalEntity, string columnName, object newValue);
+        Task OnBeforeUpdate(TEntity originalEntity, IList<UploadQueueDto> updateList);
         
         /// <summary>
         /// This method is called right before an entity is created through it's repository
@@ -45,10 +46,8 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
         /// This method is called right after an entity is updated through it's repository
         /// </summary>
         /// <param name="originalEntity">Entity instance that has been updated</param>
-        /// <param name="columnName">Column name that is to be updated</param>
-        /// <param name="newValue">New value</param>
         /// <returns>void</returns>
-        Task OnAfterUpdate(TEntity originalEntity, string columnName, object newValue);
+        Task OnAfterUpdate(TEntity originalEntity);
         
         /// <summary>
         /// This method is called right after an entity is created through it's repository
@@ -74,10 +73,9 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
         /// This method is called right before an entity is updated through it's repository
         /// </summary>
         /// <param name="originalEntity">Entity instance that is to be updated</param>
-        /// <param name="columnName">Column name that is to be updated</param>
-        /// <param name="newValue">New value</param>
+        /// <param name="updateList"></param>
         /// <returns>void or an exception is thrown, in which scenario - do not update this entity instance</returns>
-        Task OnBeforeUpdate(object originalEntity, string columnName, object newValue);
+        Task OnBeforeUpdate(object originalEntity, IList<UploadQueueDto> updateList);
         
         /// <summary>
         /// This method is called right before an entity is created through it's repository
@@ -97,10 +95,8 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
         /// This method is called right after an entity is updated through it's repository
         /// </summary>
         /// <param name="updatedEntity">Entity instance that has been updated</param>
-        /// <param name="columnName">Column name that is to be updated</param>
-        /// <param name="newValue">New value</param>
         /// <returns>void</returns>
-        Task OnAfterUpdate(object updatedEntity, string columnName, object newValue);
+        Task OnAfterUpdate(object updatedEntity);
         
         /// <summary>
         /// This method is called right after an entity is created through it's repository
