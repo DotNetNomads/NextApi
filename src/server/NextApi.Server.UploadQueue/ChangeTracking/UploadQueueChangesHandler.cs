@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NextApi.Common.Entity;
+using NextApi.UploadQueue.Common.UploadQueue;
 
 namespace NextApi.Server.UploadQueue.ChangeTracking
 {
@@ -17,7 +19,7 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
 
 #pragma warning disable 1998
         /// <inheritdoc />
-        public virtual async Task OnBeforeUpdate(TEntity originalEntity, string columnName, object newValue)
+        public virtual async Task OnBeforeUpdate(TEntity originalEntity, IList<UploadQueueDto> updateList)
 #pragma warning restore 1998
         {
         }
@@ -38,7 +40,7 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
 
 #pragma warning disable 1998
         /// <inheritdoc />
-        public virtual async Task OnAfterUpdate(TEntity originalEntity, string columnName, object newValue)
+        public virtual async Task OnAfterUpdate(TEntity originalEntity)
 #pragma warning restore 1998
         {
         }
@@ -57,9 +59,9 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
         }
 
         /// <inheritdoc />
-        public Task OnBeforeUpdate(object originalEntity, string columnName, object newValue)
+        public Task OnBeforeUpdate(object originalEntity, IList<UploadQueueDto> updateList)
         {
-            return OnBeforeUpdate((TEntity)originalEntity, columnName, newValue);
+            return OnBeforeUpdate((TEntity)originalEntity, updateList);
         }
 
         /// <inheritdoc />
@@ -75,9 +77,9 @@ namespace NextApi.Server.UploadQueue.ChangeTracking
         }
 
         /// <inheritdoc />
-        public Task OnAfterUpdate(object updatedEntity, string columnName, object newValue)
+        public Task OnAfterUpdate(object updatedEntity)
         {
-            return OnAfterUpdate((TEntity)updatedEntity, columnName, newValue);
+            return OnAfterUpdate((TEntity)updatedEntity);
         }
 
         /// <inheritdoc />

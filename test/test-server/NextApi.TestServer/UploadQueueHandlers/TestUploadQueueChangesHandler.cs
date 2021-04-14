@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NextApi.Server.UploadQueue.ChangeTracking;
 using NextApi.TestServer.Model;
+using NextApi.UploadQueue.Common.UploadQueue;
 
 namespace NextApi.TestServer.UploadQueueHandlers
 {
@@ -25,7 +27,7 @@ namespace NextApi.TestServer.UploadQueueHandlers
             return Task.CompletedTask;
         }
 
-        public override Task OnBeforeUpdate(TestCity originalEntity, string columnName, object newValue)
+        public override Task OnBeforeUpdate(TestCity originalEntity, IList<UploadQueueDto> updateList)
         {
             if (originalEntity.Id == RejectUpdateGuid)
                 throw new Exception(RejectUpdateGuidMessage);
@@ -46,7 +48,7 @@ namespace NextApi.TestServer.UploadQueueHandlers
             throw new Exception();
         }
 
-        public override Task OnAfterUpdate(TestCity originalEntity, string columnName, object newValue)
+        public override Task OnAfterUpdate(TestCity originalEntity)
         {
             throw new Exception();
         }
