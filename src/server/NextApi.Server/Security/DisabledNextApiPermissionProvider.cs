@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
 using NextApi.Common.Abstractions.Security;
 
@@ -9,15 +9,15 @@ namespace NextApi.Server.Security
     /// </summary>
     public class DisabledNextApiPermissionProvider : INextApiPermissionProvider
     {
+        private static readonly Task<bool> CachedTrue = Task.FromResult(true);
+
         /// <inheritdoc />
-#pragma warning disable 1998
-        public async Task<bool> HasPermission(ClaimsPrincipal userInfo, object permission)
-#pragma warning restore 1998
+        public Task<bool> HasPermission(ClaimsPrincipal userInfo, object permission)
         {
-            return true;
+            return CachedTrue;
         }
 
         /// <inheritdoc />
-        public string[] SupportedPermissions { get; } = {""};
+        public string[] SupportedPermissions { get; } = { "" };
     }
 }
