@@ -1,10 +1,7 @@
-using System;
-using System.IO;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MessagePack;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using NextApi.Common;
 using NextApi.Common.Abstractions.Security;
 using NextApi.Common.Serialization;
@@ -42,46 +39,40 @@ namespace NextApi.Server.Base
             _userAccessor.User = context.User;
             _request.FilesFromClient = form.Files;
 
-            var command = new NextApiCommand
-            {
-                Service = form["Service"].FirstOrDefault(), Method = form["Method"].FirstOrDefault()
-            };
+            var serializationType = GetSerializationType(form);
 
-            var serialization = form["Serialization"].FirstOrDefault();
-            var useMessagePack = serialization == SerializationType.MessagePack.ToString();
-            if (useMessagePack)
-            {
-                var argsFile = form.Files["Args"];
-                using var memoryStream = new MemoryStream();
-                await argsFile.CopyToAsync(memoryStream);
-                var byteArray = memoryStream.ToArray();
-                var args = MessagePackSerializer.Typeless.Deserialize(byteArray);
-                command.Args = (INextApiArgument[]) args;
-            }
-            else
-            {
-                var argsString = form["Args"].FirstOrDefault();
-                command.Args = string.IsNullOrEmpty(argsString)
-                    ? null
-                    : JsonConvert.DeserializeObject<NextApiJsonArgument[]>(argsString, SerializationUtils.GetJsonConfig())
-                        .Cast<INextApiArgument>()
-                        .ToArray();
-            }
+            var command = await CreateCommand(form, serializationType);
 
             var result = await _handler.ExecuteCommand(command);
-            if (result is NextApiFileResponse fileResponse)
+
+            var resultWriter = CommandResultWriters.Create(result, serializationType);
+
+            await resultWriter.Write(context.Response, result);
+        }
+
+        private async Task<NextApiCommand> CreateCommand(IFormCollection form, SerializationType serializationType)
+        {
+            var command = new NextApiCommand
             {
-                await context.Response.SendNextApiFileResponse(fileResponse);
-                return;
+                Service = form["Service"].FirstOrDefault(),
+                Method = form["Method"].FirstOrDefault()
+            };
+
+            var argsExtractor = CommandArgsExtractors.Create(serializationType);
+
+            command.Args = await argsExtractor.Extract(form);
+
+            return command;
+        }
+
+        private SerializationType GetSerializationType(IFormCollection form)
+        {
+            if (Enum.TryParse<SerializationType>(form["Serialization"], true, out var type))
+            {
+                return type;
             }
 
-            if (useMessagePack)
-            {
-                var resultByteArray = MessagePackSerializer.Typeless.Serialize(result);
-                await context.Response.SendByteArray(resultByteArray);
-            }
-            else
-                await context.Response.SendJson(result);
+            return SerializationType.Json;
         }
 
         /// <summary>
