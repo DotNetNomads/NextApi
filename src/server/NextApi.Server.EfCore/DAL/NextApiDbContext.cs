@@ -96,23 +96,39 @@ namespace NextApi.Server.EfCore.DAL
         {
             if (string.IsNullOrWhiteSpace(subjectId))
                 return;
-            if (!(entityEntry.Entity is ILoggedEntity entity))
+            if (!(entityEntry.Entity is ILoggedEntity || entityEntry.Entity is ILoggedSoftDeletableEntity))
                 return;
 
             switch (entityEntry.State)
             {
                 case EntityState.Modified:
-                    entity.UpdatedById = subjectId;
-                    entity.Updated = DateTimeOffset.Now;
+                    switch (entityEntry.Entity)
+                    {
+                        case ILoggedSoftDeletableEntity loggedSoftDeletableEntity:
+                            if (loggedSoftDeletableEntity.IsRemoved && string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById))
+                                loggedSoftDeletableEntity.RemovedById = subjectId;
+                            if (loggedSoftDeletableEntity.IsRemoved && !loggedSoftDeletableEntity.Removed.HasValue)
+                                loggedSoftDeletableEntity.Removed = DateTimeOffset.Now;
+                            break;
+                        case ILoggedEntity entity:
+                            entity.UpdatedById = subjectId;
+                            entity.Updated = DateTimeOffset.Now;
+                            break;
+                    }
                     break;
                 case EntityState.Added:
-                {
-                    if (string.IsNullOrWhiteSpace(entity.CreatedById))
-                        entity.CreatedById = subjectId;
-                    if (!entity.Created.HasValue)
-                        entity.Created = DateTimeOffset.Now;
-                    break;
-                }
+                    {
+                        switch (entityEntry.Entity)
+                        {
+                            case ILoggedEntity entity:
+                                if (string.IsNullOrWhiteSpace(entity.CreatedById))
+                                    entity.CreatedById = subjectId;
+                                if (!entity.Created.HasValue)
+                                    entity.Created = DateTimeOffset.Now;
+                                break;
+                        }
+                        break;
+                    }
             }
         }
 

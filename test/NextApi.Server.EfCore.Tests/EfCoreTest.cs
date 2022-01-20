@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
@@ -37,10 +37,12 @@ namespace NextApi.Server.EfCore.Tests
             {
                 var entityToAdd = new TestEntity()
                 {
-                    Name = "TestEntityToAdd", Date = new DateTime(2019, 10, 24, 4, 4, 4), Id = entityGuid
+                    Name = "TestEntityToAdd",
+                    Date = new DateTime(2019, 10, 24, 4, 4, 4),
+                    Id = entityGuid
                 };
 
-                var entityToAdd1 = new TestEntity() {Name = "TestEntityToAdd", Id = entityGuid2};
+                var entityToAdd1 = new TestEntity() { Name = "TestEntityToAdd", Id = entityGuid2 };
 
                 await repo.AddAsync(entityToAdd);
                 await repo.AddAsync(entityToAdd1);
@@ -107,8 +109,8 @@ namespace NextApi.Server.EfCore.Tests
             var repo = provider.GetService<TestSoftDeletableRepository>();
             var unitOfWork = provider.GetService<IUnitOfWork>();
 
-            var createdEntity1 = new TestSoftDeletableEntity() {Name = "name1"};
-            var createdEntity2 = new TestSoftDeletableEntity() {Name = "name2"};
+            var createdEntity1 = new TestSoftDeletableEntity() { Name = "name1" };
+            var createdEntity2 = new TestSoftDeletableEntity() { Name = "name2" };
 
             await repo.AddAsync(createdEntity1);
             await repo.AddAsync(createdEntity2);
@@ -134,6 +136,49 @@ namespace NextApi.Server.EfCore.Tests
         }
 
         [Fact]
+        public async Task CheckLoggedSoftDeletable()
+        {
+            using var scope = Services;
+            var provider = scope.ServiceProvider;
+            var repo = provider.GetService<TestLoggedSoftDeletableRepository>();
+            var unitOfWork = provider.GetService<IUnitOfWork>();
+
+            var createdEntity1 = new TestLoggedSoftDeletableEntity() { Name = "name1" };
+            var createdEntity2 = new TestLoggedSoftDeletableEntity() { Name = "name2" };
+
+            await repo.AddAsync(createdEntity1);
+            await repo.AddAsync(createdEntity2);
+            await unitOfWork.CommitAsync();
+
+            // check entities successfully created
+            Assert.True(createdEntity1.Id > 0 && !createdEntity1.IsRemoved);
+            Assert.True(createdEntity2.Id > 0 && !createdEntity2.IsRemoved);
+
+            // check soft-editable mechanism not ovverwrite removal
+            createdEntity1.Name = "name11";
+            await repo.UpdateAsync(createdEntity1);
+            Assert.False(createdEntity1.IsRemoved);
+            Assert.Null(createdEntity1.RemovedById);
+            Assert.Null(createdEntity1.Removed);
+
+            // check soft-deletable mechanism
+            await repo.DeleteAsync(createdEntity1);
+            await unitOfWork.CommitAsync();
+
+            // check entity soft-deleted
+            Assert.True(createdEntity1.IsRemoved);
+            Assert.Null(await repo.GetByIdAsync(createdEntity1.Id));
+            Assert.True(createdEntity1.Removed > DateTimeOffset.MinValue);
+            Assert.NotNull(createdEntity1.RemovedById);
+            Assert.True(await repo.GetAll().CountAsync() == 1);
+
+            // disable soft-deletable mechanism and check again
+            repo.EnableSoftDeletable(false);
+            Assert.NotNull(await repo.GetByIdAsync(createdEntity1.Id));
+            Assert.True(await repo.GetAll().CountAsync() == 2);
+        }
+
+        [Fact]
         public async Task CheckAudit()
         {
             using var scope = Services;
@@ -141,7 +186,7 @@ namespace NextApi.Server.EfCore.Tests
             var repo = provider.GetService<TestAuditEntityRepository>();
             var unitOfWork = provider.GetService<IUnitOfWork>();
 
-            var entity1 = new TestAuditEntity() {Name = "name1"};
+            var entity1 = new TestAuditEntity() { Name = "name1" };
 
             await repo.AddAsync(entity1);
             await unitOfWork.CommitAsync();
@@ -175,7 +220,7 @@ namespace NextApi.Server.EfCore.Tests
             // enable-or-disable logging
             columnChangesLogger.LoggingEnabled = loggingEnabled;
 
-            var entity = new TestColumnChangesEnabledEntity {Name = $"testColumnLog{loggingEnabled}"};
+            var entity = new TestColumnChangesEnabledEntity { Name = $"testColumnLog{loggingEnabled}" };
 
             await repo.AddAsync(entity);
             await unitOfWork.CommitAsync();
@@ -199,7 +244,7 @@ namespace NextApi.Server.EfCore.Tests
             var unitOfWork = provider.GetService<IUnitOfWork>();
             var columnChangesLogger = provider.GetService<IColumnChangesLogger>();
 
-            var entity = new TestEntity {Name = "lolkek2222"};
+            var entity = new TestEntity { Name = "lolkek2222" };
 
             await repo.AddAsync(entity);
             await unitOfWork.CommitAsync();
@@ -231,9 +276,9 @@ namespace NextApi.Server.EfCore.Tests
                 }
             };
 
-            var testEntity = new TestEntity() {Name = "Keks lol 44"};
+            var testEntity = new TestEntity() { Name = "Keks lol 44" };
             await repoTestEntity.AddAsync(testEntity);
-            await repoSoftRemoveEntity.AddAsync(new TestSoftDeletableEntity() {Name = "blah"});
+            await repoSoftRemoveEntity.AddAsync(new TestSoftDeletableEntity() { Name = "blah" });
             await unitOfWork.CommitAsync();
             Assert.True(eventOccured);
         }
@@ -250,6 +295,7 @@ namespace NextApi.Server.EfCore.Tests
             builder.AddColumnChangesLogger<TestDbContext>();
             builder.AddTransient<TestEntityRepository>();
             builder.AddTransient<TestSoftDeletableRepository>();
+            builder.AddTransient<TestLoggedSoftDeletableRepository>();
             builder.AddTransient<TestEntityPredicatesRepository>();
             builder.AddTransient<TestAuditEntityRepository>();
             builder.AddTransient<TestColumnChangesRepo>();
