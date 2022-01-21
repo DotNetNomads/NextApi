@@ -34,7 +34,9 @@ namespace NextApi.Server.EfCore.Tests.Base
             if (!res) return;
             switch (entityEntry.State)
             {
-                case EntityState.Modified when entityEntry.Entity is ILoggedSoftDeletableEntity<int?> {IsRemoved: true} loggedSoftDeletableEntity:
+                case EntityState.Modified
+                    when entityEntry.Entity is ILoggedSoftDeletableEntity<int?> {IsRemoved: true} loggedSoftDeletableEntity
+                         && (!loggedSoftDeletableEntity.RemovedById.HasValue || !loggedSoftDeletableEntity.Removed.HasValue):
                     loggedSoftDeletableEntity.RemovedById ??= subjectIdParsed;
                     loggedSoftDeletableEntity.Removed ??= DateTimeOffset.Now;
                     break;

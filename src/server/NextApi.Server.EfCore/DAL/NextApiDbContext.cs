@@ -101,7 +101,9 @@ namespace NextApi.Server.EfCore.DAL
 
             switch (entityEntry.State)
             {
-                case EntityState.Modified when entityEntry.Entity is ILoggedSoftDeletableEntity {IsRemoved: true} loggedSoftDeletableEntity:
+                case EntityState.Modified
+                    when entityEntry.Entity is ILoggedSoftDeletableEntity {IsRemoved: true} loggedSoftDeletableEntity
+                         && (string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById) || !loggedSoftDeletableEntity.Removed.HasValue):
                     if (string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById))
                         loggedSoftDeletableEntity.RemovedById = subjectId;
                     loggedSoftDeletableEntity.Removed ??= DateTimeOffset.Now;

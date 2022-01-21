@@ -157,6 +157,7 @@ namespace NextApi.Server.EfCore.Tests
             // check update not cause removal
             createdEntity1.Name = "name11";
             await repo.UpdateAsync(createdEntity1);
+            await unitOfWork.CommitAsync();
             Assert.False(createdEntity1.IsRemoved);
             Assert.Null(createdEntity1.RemovedById);
             Assert.Null(createdEntity1.Removed);
@@ -164,6 +165,14 @@ namespace NextApi.Server.EfCore.Tests
             // check soft-deletable mechanism
             await repo.DeleteAsync(createdEntity1);
             await unitOfWork.CommitAsync();
+
+            // check update after removal
+            await Task.Delay(1000);
+            var updated = createdEntity1.Updated;
+            createdEntity1.Name = "name618146486";
+            await repo.UpdateAsync(createdEntity1);
+            await unitOfWork.CommitAsync();
+            Assert.NotEqual(updated, createdEntity1.Updated);
 
             // check entity soft-deleted
             Assert.True(createdEntity1.IsRemoved);
