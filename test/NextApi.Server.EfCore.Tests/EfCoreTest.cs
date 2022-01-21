@@ -154,7 +154,7 @@ namespace NextApi.Server.EfCore.Tests
             Assert.True(createdEntity1.Id > 0 && !createdEntity1.IsRemoved);
             Assert.True(createdEntity2.Id > 0 && !createdEntity2.IsRemoved);
 
-            // check soft-editable mechanism not ovverwrite removal
+            // check update not cause removal
             createdEntity1.Name = "name11";
             await repo.UpdateAsync(createdEntity1);
             Assert.False(createdEntity1.IsRemoved);

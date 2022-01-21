@@ -101,34 +101,20 @@ namespace NextApi.Server.EfCore.DAL
 
             switch (entityEntry.State)
             {
-                case EntityState.Modified:
-                    switch (entityEntry.Entity)
-                    {
-                        case ILoggedSoftDeletableEntity loggedSoftDeletableEntity:
-                            if (loggedSoftDeletableEntity.IsRemoved && string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById))
-                                loggedSoftDeletableEntity.RemovedById = subjectId;
-                            if (loggedSoftDeletableEntity.IsRemoved && !loggedSoftDeletableEntity.Removed.HasValue)
-                                loggedSoftDeletableEntity.Removed = DateTimeOffset.Now;
-                            break;
-                        case ILoggedEntity entity:
-                            entity.UpdatedById = subjectId;
-                            entity.Updated = DateTimeOffset.Now;
-                            break;
-                    }
+                case EntityState.Modified when entityEntry.Entity is ILoggedSoftDeletableEntity {IsRemoved: true} loggedSoftDeletableEntity:
+                    if (string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById))
+                        loggedSoftDeletableEntity.RemovedById = subjectId;
+                    loggedSoftDeletableEntity.Removed ??= DateTimeOffset.Now;
                     break;
-                case EntityState.Added:
-                    {
-                        switch (entityEntry.Entity)
-                        {
-                            case ILoggedEntity entity:
-                                if (string.IsNullOrWhiteSpace(entity.CreatedById))
-                                    entity.CreatedById = subjectId;
-                                if (!entity.Created.HasValue)
-                                    entity.Created = DateTimeOffset.Now;
-                                break;
-                        }
-                        break;
-                    }
+                case EntityState.Modified when entityEntry.Entity is ILoggedEntity entity:
+                    entity.UpdatedById = subjectId;
+                    entity.Updated = DateTimeOffset.Now;
+                    break;
+                case EntityState.Added when entityEntry.Entity is ILoggedEntity entity:
+                    if (string.IsNullOrWhiteSpace(entity.CreatedById))
+                        entity.CreatedById = subjectId;
+                    entity.Created ??= DateTimeOffset.Now;
+                    break;
             }
         }
 
