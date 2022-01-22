@@ -96,23 +96,27 @@ namespace NextApi.Server.EfCore.DAL
         {
             if (string.IsNullOrWhiteSpace(subjectId))
                 return;
-            if (!(entityEntry.Entity is ILoggedEntity entity))
+            if (!(entityEntry.Entity is ILoggedEntity || entityEntry.Entity is ILoggedSoftDeletableEntity))
                 return;
 
             switch (entityEntry.State)
             {
-                case EntityState.Modified:
+                case EntityState.Modified
+                    when entityEntry.Entity is ILoggedSoftDeletableEntity {IsRemoved: true} loggedSoftDeletableEntity
+                         && (string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById) || !loggedSoftDeletableEntity.Removed.HasValue):
+                    if (string.IsNullOrWhiteSpace(loggedSoftDeletableEntity.RemovedById))
+                        loggedSoftDeletableEntity.RemovedById = subjectId;
+                    loggedSoftDeletableEntity.Removed ??= DateTimeOffset.Now;
+                    break;
+                case EntityState.Modified when entityEntry.Entity is ILoggedEntity entity:
                     entity.UpdatedById = subjectId;
                     entity.Updated = DateTimeOffset.Now;
                     break;
-                case EntityState.Added:
-                {
+                case EntityState.Added when entityEntry.Entity is ILoggedEntity entity:
                     if (string.IsNullOrWhiteSpace(entity.CreatedById))
                         entity.CreatedById = subjectId;
-                    if (!entity.Created.HasValue)
-                        entity.Created = DateTimeOffset.Now;
+                    entity.Created ??= DateTimeOffset.Now;
                     break;
-                }
             }
         }
 

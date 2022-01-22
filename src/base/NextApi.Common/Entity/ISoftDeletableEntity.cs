@@ -1,4 +1,4 @@
-namespace NextApi.Common.Entity
+﻿namespace NextApi.Common.Entity
 {
     /// <summary>
     /// Interface indicates that entity can be soft deleted
