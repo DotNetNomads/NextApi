@@ -295,6 +295,11 @@ namespace NextApi.Client
             {
                 try
                 {
+                    var resultByteArray = await response.Content.ReadAsByteArrayAsync();
+                    var result = (NextApiResponse)MessagePackSerializer.Typeless.Deserialize(resultByteArray);
+                    if (!result.Success)
+                        throw NextApiClientUtils.NextApiException(result.Error);
+
                     return await NextApiClientUtils.ProcessNextApiFileResponse(response) as dynamic;
                 }
                 catch (Exception ex)
