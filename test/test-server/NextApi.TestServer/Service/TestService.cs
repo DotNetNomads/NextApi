@@ -111,8 +111,13 @@ namespace NextApi.TestServer.Service
             return tempPath;
         }
 
-        public async Task<NextApiFileResponse> GetFile(string path)
+        public async Task<NextApiFileResponse> GetFile(string path, bool throwException = false)
         {
+            if (throwException)
+            {
+                throw new NextApiException(nameof(throwException), "generated exception");
+            }
+
             var fileName = "белонька.jpg";
             var fileStream = new FileStream(path, FileMode.Open);
             return new NextApiFileResponse(fileName, fileStream);

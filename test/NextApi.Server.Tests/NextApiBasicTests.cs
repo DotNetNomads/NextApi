@@ -195,11 +195,13 @@ namespace NextApi.Server.Tests
             Assert.Equal(newArg, newResult);
         }
 
-        [Fact]
-        public async Task UploadFileAndDownloadTest()
+        [Theory]
+        [InlineData(SerializationType.Json)]
+        [InlineData(SerializationType.MessagePack)]
+        public async Task UploadFileAndDownloadTest(SerializationType serializationType)
         {
             // upload only for http
-            var service = ResolveTestService();
+            var service = ResolveTestService(NextApiTransport.Http, serializationType);
 
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var filePath = Path.Combine(baseDir, "TestData", "белонька.jpg");
@@ -219,6 +221,30 @@ namespace NextApi.Server.Tests
             // download mime typed
             var typed = await service.GetFileMimeTyped(resultFilePath);
             Assert.Equal("image/jpeg", typed.MimeType);
+        }
+
+        [Theory]
+        [InlineData(SerializationType.Json)]
+        [InlineData(SerializationType.MessagePack)]
+        public async Task UploadFileAndDownloadTestException(SerializationType serializationType)
+        {
+            // upload only for http
+            var service = ResolveTestService(NextApiTransport.Http, serializationType);
+
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var filePath = Path.Combine(baseDir, "TestData", "белонька.jpg");
+            var originalBytes = File.ReadAllBytes(filePath);
+
+            var resultFilePath = await service.UploadFile(new MemoryStream(originalBytes), "белонька.jpg");
+
+            // download and check exception
+            var nextApiException = await Assert.ThrowsAsync<NextApiException>(async () =>
+            {
+                 await service.GetFile(resultFilePath, throwException: true);
+            });
+
+            Assert.Equal("throwException", nextApiException.Code);
+            Assert.Equal("throwException generated exception \n", nextApiException.Message);
         }
 
         [Fact]

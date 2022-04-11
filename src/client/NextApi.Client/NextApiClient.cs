@@ -181,7 +181,7 @@ namespace NextApi.Client
                     await Task.Delay(ReconnectDelayMs);
                     await connection.StartAsync();
                 };
-            connection.On("NextApiEvent", new[] {typeof(NextApiEventMessage)}, ProcessNextApiEvent);
+            connection.On("NextApiEvent", new[] { typeof(NextApiEventMessage) }, ProcessNextApiEvent);
             return connection;
         }
 
@@ -289,9 +289,22 @@ namespace NextApi.Client
                 throw new NextApiException(NextApiErrorCode.HttpError, ex.Message);
             }
 
-            // check that response can processed as json
+            switch (httpSerializationType)
+            {
+                case SerializationType.Json:
+                    return await InvokeHttpJson<T>(response);
+                case SerializationType.MessagePack:
+                    return await InvokeHttpMessagePack<T>(response);
+                default:
+                    throw new Exception($"Unsupported serialization type {HttpSerializationType}");
+            }
+        }
+
+        private async Task<T> InvokeHttpJson<T>(HttpResponseMessage response)
+        {
             var mediaType = response.Content.Headers.ContentType.MediaType;
-            if (!mediaType.Contains("application/json") && typeof(T) == typeof(NextApiFileResponse))
+
+            if (typeof(T) == typeof(NextApiFileResponse) && !mediaType.Contains("application/json"))
             {
                 try
                 {
@@ -308,30 +321,40 @@ namespace NextApi.Client
                 }
             }
 
-            switch (httpSerializationType)
-            {
-                case SerializationType.Json:
-                {
-                    // process as normal nextapi response
-                    var data = await response.Content.ReadAsStringAsync();
-                    var result =
-                        JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, SerializationUtils.GetJsonConfig());
-                    if (!result.Success)
-                        throw NextApiClientUtils.NextApiException(result.Error);
+            var data = await response.Content.ReadAsStringAsync();
+            var result =
+                JsonConvert.DeserializeObject<NextApiResponseJsonWrapper<T>>(data, SerializationUtils.GetJsonConfig());
 
-                    return result.Data;
-                }
-                case SerializationType.MessagePack:
-                {
-                    var resultByteArray = await response.Content.ReadAsByteArrayAsync();
-                    var result = (NextApiResponse) MessagePackSerializer.Typeless.Deserialize(resultByteArray);
-                    if (!result.Success)
-                        throw NextApiClientUtils.NextApiException(result.Error);
-                    return (T) result.Data;
-                }
-                default:
-                    throw new Exception($"Unsupported serialization type {HttpSerializationType}");
+            if (!result.Success)
+            {
+                throw NextApiClientUtils.NextApiException(result.Error);
             }
+
+            return result.Data;
+        }
+
+        private async Task<T> InvokeHttpMessagePack<T>(HttpResponseMessage response)
+        {
+            var mediaType = response.Content.Headers.ContentType.MediaType;
+
+            if (typeof(T) == typeof(NextApiFileResponse) && !mediaType.Contains("application/json"))
+            {
+                try
+                {
+                    return await NextApiClientUtils.ProcessNextApiFileResponse(response) as dynamic;
+                }
+                catch { }
+            }
+
+            var resultByteArray = await response.Content.ReadAsByteArrayAsync();
+            var result = (NextApiResponse)MessagePackSerializer.Typeless.Deserialize(resultByteArray);
+
+            if (!result.Success)
+            {
+                throw NextApiClientUtils.NextApiException(result.Error);
+            }
+
+            return (T)result.Data;
         }
 
         private async Task<NextApiFileResponse> ProcessNextApiFileResponse(HttpResponseMessage response)
