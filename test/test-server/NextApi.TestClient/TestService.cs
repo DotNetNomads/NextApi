@@ -24,7 +24,7 @@ namespace NextApi.TestClient
         Task AsyncVoidDenied();
         string GetCurrentUser();
         Task<string> UploadFile(Stream fileStream, string fileName);
-        Task<NextApiFileResponse> GetFile(string path);
+        Task<NextApiFileResponse> GetFile(string path, bool throwException = false);
         Task<NextApiFileResponse> GetFileMimeTyped(string path);
         Task RaiseEvents();
         Task<IArrayItem[]> TestArraySerializationDeserialization(IArrayItem[] data);
@@ -74,8 +74,9 @@ namespace NextApi.TestClient
         public Task<string> UploadFile(Stream fileStream, string fileName) =>
             InvokeService<string>(nameof(UploadFile), new NextApiFileArgument("belloni", fileName, fileStream));
 
-        public Task<NextApiFileResponse> GetFile(string path) =>
-            InvokeService<NextApiFileResponse>(nameof(GetFile), new NextApiArgument(nameof(path), path));
+        public Task<NextApiFileResponse> GetFile(string path, bool throwException = false) =>
+            InvokeService<NextApiFileResponse>(nameof(GetFile), new NextApiArgument(nameof(path), path),
+                                               new NextApiArgument(nameof(throwException), throwException));
 
         public Task<NextApiFileResponse> GetFileMimeTyped(string path) =>
             InvokeService<NextApiFileResponse>(nameof(GetFileMimeTyped), new NextApiArgument(nameof(path), path));
