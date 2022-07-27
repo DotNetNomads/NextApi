@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using NextApi.Common;
@@ -38,6 +38,14 @@ namespace NextApi.Server.Base
         /// <returns>Response from called service</returns>
         public async Task<dynamic> ExecuteCommand(NextApiCommand command)
         {
+            command.Args = new INextApiArgument[]
+            {
+                new NextApiArgument()
+                {
+                    Name = command.ArgumentName,
+                    Value = command.ArgumentValue
+                }
+            };
             // set current nextapi user
             _nextApiUserAccessor.User = Context.User;
             // set current request info

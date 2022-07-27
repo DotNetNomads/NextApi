@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace NextApi.Common
 {
@@ -19,5 +19,13 @@ namespace NextApi.Common
         /// Method arguments. Will be parsed and passed when method invoke.
         /// </summary>
         public INextApiArgument[] Args { get; set; }
+        /// <summary>
+        /// Argument Name
+        /// </summary>
+        public string ArgumentName { get; set; }
+        /// <summary>
+        /// Argument value
+        /// </summary>
+        public object ArgumentValue { get; set; }
     }
 }
